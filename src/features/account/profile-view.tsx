@@ -98,7 +98,10 @@ export function ProfileView() {
           <div>
             <dt className="text-muted text-[13px]">{t("memberSince")}</dt>
             <dd className="m-0 mt-0.5 font-semibold">
-              {format.dateTime(new Date(SESSION_STUB.memberSince), { dateStyle: "medium" })}
+              {format.dateTime(new Date(SESSION_STUB.memberSince), {
+                dateStyle: "medium",
+                timeZone: "UTC",
+              })}
             </dd>
           </div>
           <div>

@@ -781,5 +781,299 @@
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
       "retry": "Reintentar"
     }
+  },
+  "ProjectNav": {
+    "projects": "Proyectos",
+    "done": "Hecho",
+    "pending": "Pendiente",
+    "operations": "{count} op.",
+    "unconfirmed": "{count} sin confirmar",
+    "availableAfterVerification": "Disponible tras verificar"
+  },
+  "Projects": {
+    "title": "Proyectos",
+    "greeting": "{running, plural, =0 {Hola, {name}. No tienes ejecuciones en curso.} one {Hola, {name}. Tienes una ejecución en curso.} other {Hola, {name}. Tienes # ejecuciones en curso.}}",
+    "newProject": "Nuevo proyecto",
+    "summary": {
+      "projects": "Proyectos",
+      "open": "Hallazgos abiertos",
+      "running": "Ejecución en curso",
+      "pending": "Pendiente de verificación"
+    },
+    "search": "Buscar proyecto",
+    "searchPlaceholder": "Buscar por nombre o URL",
+    "orderBy": "Ordenar por",
+    "order": {
+      "lastRun": "Última ejecución",
+      "name": "Nombre",
+      "createdAt": "Fecha de creación"
+    },
+    "open": "Abrir",
+    "viewProgress": "Ver progreso",
+    "verify": "Verificar propiedad",
+    "settings": "Ajustes",
+    "delete": "Eliminar",
+    "moreActions": "Más acciones para {name}",
+    "runningBadge": "Ejecución en curso · {percent} %",
+    "openFindings": "Hallazgos abiertos",
+    "lastRun": "Última ejecución",
+    "now": "Ahora",
+    "noRuns": "Sin ejecuciones",
+    "addAnother": {
+      "title": "Agrega otra API",
+      "text": "Crea el proyecto, carga el contrato, verifica que es tuya y ejecuta las pruebas."
+    },
+    "empty": {
+      "title": "Aún no tienes proyectos",
+      "text": "Crea tu primer proyecto para evaluar una API con su contrato OpenAPI.",
+      "action": "Crear proyecto"
+    },
+    "deleteDialog": {
+      "title": "Eliminar el proyecto «{name}»",
+      "description": "Esta acción no se puede deshacer. Los recursos que la plataforma creó en tu API se eliminarán antes.",
+      "removed": "Se borra",
+      "removed1": "El contrato, sus versiones, identidades y la política de acceso",
+      "removed2": "Ejecuciones, hallazgos y reportes",
+      "confirm": "Eliminar proyecto",
+      "done": "Proyecto «{name}» eliminado"
+    }
+  },
+  "AcceptTerms": {
+    "pageTitle": "Antes de tu primer proyecto",
+    "title": "Términos de uso responsable",
+    "lead": "Hindama envía peticiones reales a la API que registres. Por eso te pedimos aceptarlas. Versión vigente: {version}. Si publicamos una versión nueva, te las mostraremos otra vez antes de seguir.",
+    "rules": {
+      "authorized": {
+        "title": "Solo APIs autorizadas",
+        "text": "Propias o con permiso por escrito de su dueño. Probar APIs ajenas sin permiso está prohibido."
+      },
+      "ownership": {
+        "title": "Demuestras que es tuya",
+        "text": "Verificas el host con un archivo o un registro DNS antes de ejecutar."
+      },
+      "testEnv": {
+        "title": "Prefiere un ambiente de pruebas",
+        "text": "Algunos módulos crean datos o aumentan la carga. Úsalos fuera de producción."
+      },
+      "logged": {
+        "title": "Todo queda registrado",
+        "text": "Las acciones sensibles se guardan en una bitácora que no se puede modificar."
+      }
+    },
+    "readFull": "Leer los términos completos",
+    "accept": "Acepto los términos de uso responsable. Solo probaré APIs propias o con autorización por escrito de su dueño.",
+    "recorded": "Guardamos la versión y la fecha y hora de tu aceptación.",
+    "cancel": "Cancelar",
+    "continue": "Aceptar y continuar",
+    "accepted": "Términos aceptados"
+  },
+  "NewProject": {
+    "stepsLabel": "Pasos",
+    "steps": {
+      "data": {
+        "title": "Datos del proyecto",
+        "note": "En curso"
+      },
+      "contract": {
+        "title": "Contrato OpenAPI",
+        "note": "Se puede omitir"
+      },
+      "verification": {
+        "title": "Verificación",
+        "note": "Se puede omitir"
+      },
+      "done": {
+        "title": "Listo",
+        "note": "Ir al dashboard"
+      }
+    },
+    "form": {
+      "title": "Datos del proyecto",
+      "lead": "Al crearlo quedará como «Pendiente de verificación» hasta que demuestres que la API es tuya.",
+      "name": "Nombre",
+      "description": "Descripción",
+      "optional": "(opcional)",
+      "url": "URL base",
+      "urlHint": "Todas las pruebas se envían a esta dirección, aunque el contrato declare otros servidores.",
+      "cancel": "Cancelar",
+      "submit": "Crear proyecto",
+      "creating": "Creando…"
+    },
+    "created": "Proyecto «{name}» creado",
+    "skip": "Omitir por ahora",
+    "panels": {
+      "contract": {
+        "title": "Carga el contrato",
+        "text": "Importa el contrato OpenAPI 3 en JSON o YAML para que Hindama conozca las operaciones de tu API. Puedes omitir este paso y hacerlo después desde el dashboard.",
+        "action": "Cargar contrato"
+      },
+      "verification": {
+        "title": "Verifica que la API es tuya",
+        "text": "Publica un código en tu host con un archivo o un registro DNS. Hasta verificarlo no podrás ejecutar pruebas, pero puedes volver desde el dashboard.",
+        "action": "Verificar propiedad"
+      },
+      "done": {
+        "title": "Tu proyecto está listo",
+        "text": "Lo que omitiste queda como pendiente en el dashboard del proyecto.",
+        "action": "Ir al dashboard"
+      }
+    },
+    "help": {
+      "urlTitle": "¿Qué URL base puedo usar?",
+      "urlText": "Una dirección pública con HTTP o HTTPS, idealmente de tu ambiente de pruebas. No se aceptan:",
+      "prohibited": {
+        "private": "Redes privadas",
+        "loopback": "Loopback",
+        "linkLocal": "Enlace local",
+        "metadata": "Metadatos de nube"
+      },
+      "nextTitle": "Después de crearlo",
+      "nextText": "Cargas el contrato y verificas la propiedad. Puedes omitir esos pasos y volver a ellos desde el dashboard, pero no podrás ejecutar pruebas hasta verificar."
+    },
+    "errors": {
+      "nameRequired": "Escribe el nombre del proyecto.",
+      "nameTaken": "Ya tienes un proyecto con ese nombre.",
+      "urlRequired": "Escribe la URL base de tu API.",
+      "url": {
+        "invalid": "Escribe una URL completa, por ejemplo https://api.ejemplo.mx.",
+        "protocol": "Solo se aceptan direcciones HTTP o HTTPS.",
+        "private": "No se aceptan direcciones de redes privadas.",
+        "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
+        "linkLocal": "No se aceptan direcciones de enlace local.",
+        "metadata": "No se aceptan direcciones de metadatos de la nube."
+      },
+      "networkTitle": "No pudimos crear el proyecto",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "Dashboard": {
+    "running": {
+      "title": "La ejecución sigue en curso",
+      "text": "Las pruebas continúan ({percent} %). Vuelve a su progreso cuando quieras.",
+      "action": "Ver ejecución"
+    },
+    "unverified": {
+      "title": "Falta verificar la propiedad",
+      "text": "Hasta que demuestres que la API es tuya no podrás ejecutar pruebas.",
+      "action": "Verificar"
+    },
+    "hero": {
+      "none": "Aún sin ejecuciones",
+      "open": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
+      "noneText": "Configura el proyecto y lanza tu primera prueba completa para ver resultados aquí.",
+      "criticalText": "Uno es crítico y persiste desde la primera ejecución. Corrígelo y vuelve a probar.",
+      "cleanText": "La última ejecución no encontró problemas con los módulos elegidos.",
+      "text": "Revisa los hallazgos, corrígelos y vuelve a probar."
+    },
+    "fullTest": "Prueba completa",
+    "repeat": {
+      "button": "Repetir última ejecución",
+      "title": "Ejecución programada",
+      "text": "Se repetirá con la misma configuración."
+    },
+    "blocked": {
+      "unverified": "Falta verificar la propiedad del host.",
+      "goVerify": "Ir a verificación"
+    },
+    "stats": {
+      "requests": "Peticiones",
+      "minutes": "Minutos de duración",
+      "modules": "Módulos ejecutados",
+      "lastRun": "Última ejecución"
+    },
+    "severity": {
+      "title": "Abiertos por severidad",
+      "viewAll": "Ver los {count} hallazgos",
+      "empty": "Aparecerán aquí cuando termine la primera ejecución."
+    },
+    "policy": {
+      "title": "Política de acceso",
+      "text": "{confirmed} de {total} operaciones confirmadas. Las {pending} propuestas pendientes no se usan en las pruebas.",
+      "empty": "Importa el contrato para que Hindama proponga quién debería poder hacer qué.",
+      "review": "Revisar política"
+    },
+    "modules": {
+      "title": "Módulos de prueba",
+      "results": "Resultados de la ejecución n.º {number} · {date}",
+      "names": {
+        "auth": "Autenticación",
+        "config": "Configuración",
+        "objects": "Acceso a objetos",
+        "functions": "Acceso a funciones",
+        "properties": "Propiedades",
+        "resources": "Consumo de recursos",
+        "sql": "Inyección SQL"
+      },
+      "notes": {
+        "auth": "Requiere URL y contrato",
+        "config": "Requiere URL y contrato",
+        "objects": "2 identidades con recursos",
+        "functions": "Requiere una identidad administradora",
+        "properties": "Se confirma en cada ejecución",
+        "resources": "Se confirma en cada ejecución",
+        "sql": "Se confirma en cada ejecución · CWE-89"
+      },
+      "blocked": "Sin identidad administradora: agrega una",
+      "notRun": "No se ejecutó",
+      "findings": "{count, plural, one {# hallazgo} other {# hallazgos}}",
+      "run": "Ejecutar",
+      "runTitle": "Ejecución de «{name}» solicitada",
+      "addIdentity": "Agregar identidad",
+      "emptyTitle": "Aún no hay resultados",
+      "emptyText": "Verifica la propiedad y ejecuta tu primera prueba para ver cada módulo aquí."
+    }
+  },
+  "ProjectSettings": {
+    "crumb": "Ajustes",
+    "pageTitle": "Ajustes del proyecto",
+    "title": "Datos del proyecto",
+    "name": "Nombre",
+    "description": "Descripción",
+    "optional": "(opcional)",
+    "url": "URL base",
+    "urlHint": "Todas las pruebas se envían a esta dirección.",
+    "before": "Antes:",
+    "hostChanged": {
+      "title": "Cambiaste el host",
+      "text": "Al guardar, el proyecto volverá a «Pendiente de verificación» y no podrás ejecutar pruebas hasta verificar el nuevo host. Solo cambia la verificación si cambia el host exacto: la ruta y el puerto no cuentan. Te pediremos confirmarlo."
+    },
+    "discard": "Descartar cambios",
+    "save": "Guardar cambios",
+    "saved": "Cambios guardados",
+    "hostDialog": {
+      "title": "¿Cambiar el host del proyecto?",
+      "text": "El proyecto volverá a «Pendiente de verificación» y no podrás ejecutar pruebas hasta verificar el nuevo host.",
+      "confirm": "Guardar y perder la verificación"
+    },
+    "delete": {
+      "title": "Eliminar proyecto",
+      "lead": "Se borrará de forma permanente, en un máximo de 30 días:",
+      "contract": "El contrato y sus {versions} versiones",
+      "identities": "{count, plural, one {# identidad y sus credenciales} other {# identidades y sus credenciales}}",
+      "resources": "{count, plural, one {# recurso y la política de acceso} other {# recursos y la política de acceso}}",
+      "runs": "Ejecuciones, {findings} hallazgos y sus reportes",
+      "button": "Eliminar proyecto"
+    },
+    "deleteDialog": {
+      "title": "Eliminar el proyecto «{name}»",
+      "description": "Esta acción no se puede deshacer. Los recursos que la plataforma creó en tu API se eliminarán antes.",
+      "removed": "Se borra",
+      "removed1": "El contrato, sus versiones, identidades y la política de acceso",
+      "removed2": "Ejecuciones, hallazgos y reportes"
+    },
+    "deleted": "Proyecto «{name}» eliminado",
+    "errors": {
+      "nameRequired": "Escribe el nombre del proyecto.",
+      "urlRequired": "Escribe la URL base de tu API.",
+      "url": {
+        "invalid": "Escribe una URL completa, por ejemplo https://api.ejemplo.mx.",
+        "protocol": "Solo se aceptan direcciones HTTP o HTTPS.",
+        "private": "No se aceptan direcciones de redes privadas.",
+        "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
+        "linkLocal": "No se aceptan direcciones de enlace local.",
+        "metadata": "No se aceptan direcciones de metadatos de la nube."
+      }
+    }
   }
 }

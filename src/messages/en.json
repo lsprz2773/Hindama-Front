@@ -781,5 +781,299 @@
       "networkText": "Check your connection and try again.",
       "retry": "Retry"
     }
+  },
+  "ProjectNav": {
+    "projects": "Projects",
+    "done": "Done",
+    "pending": "Pending",
+    "operations": "{count} ops.",
+    "unconfirmed": "{count} unconfirmed",
+    "availableAfterVerification": "Available after verification"
+  },
+  "Projects": {
+    "title": "Projects",
+    "greeting": "{running, plural, =0 {Hi, {name}. You have no runs in progress.} one {Hi, {name}. You have one run in progress.} other {Hi, {name}. You have # runs in progress.}}",
+    "newProject": "New project",
+    "summary": {
+      "projects": "Projects",
+      "open": "Open findings",
+      "running": "Run in progress",
+      "pending": "Pending verification"
+    },
+    "search": "Search project",
+    "searchPlaceholder": "Search by name or URL",
+    "orderBy": "Sort by",
+    "order": {
+      "lastRun": "Last run",
+      "name": "Name",
+      "createdAt": "Creation date"
+    },
+    "open": "Open",
+    "viewProgress": "View progress",
+    "verify": "Verify ownership",
+    "settings": "Settings",
+    "delete": "Delete",
+    "moreActions": "More actions for {name}",
+    "runningBadge": "Run in progress · {percent}%",
+    "openFindings": "Open findings",
+    "lastRun": "Last run",
+    "now": "Now",
+    "noRuns": "No runs",
+    "addAnother": {
+      "title": "Add another API",
+      "text": "Create the project, upload the contract, prove it's yours and run the tests."
+    },
+    "empty": {
+      "title": "You don't have any projects yet",
+      "text": "Create your first project to assess an API with its OpenAPI contract.",
+      "action": "Create project"
+    },
+    "deleteDialog": {
+      "title": "Delete the project “{name}”",
+      "description": "This action can't be undone. Resources the platform created in your API will be deleted first.",
+      "removed": "What is deleted",
+      "removed1": "The contract, its versions, identities and the access policy",
+      "removed2": "Runs, findings and reports",
+      "confirm": "Delete project",
+      "done": "Project “{name}” deleted"
+    }
+  },
+  "AcceptTerms": {
+    "pageTitle": "Before your first project",
+    "title": "Responsible-use terms",
+    "lead": "Hindama sends real requests to the API you register. That's why we ask you to accept them. Current version: {version}. If we publish a new version, we'll show them again before you continue.",
+    "rules": {
+      "authorized": {
+        "title": "Authorized APIs only",
+        "text": "Your own or with written permission from the owner. Testing others' APIs without permission is prohibited."
+      },
+      "ownership": {
+        "title": "You prove it's yours",
+        "text": "You verify the host with a file or a DNS record before running."
+      },
+      "testEnv": {
+        "title": "Prefer a test environment",
+        "text": "Some modules create data or increase load. Use them outside production."
+      },
+      "logged": {
+        "title": "Everything is recorded",
+        "text": "Sensitive actions are kept in a log that can't be altered."
+      }
+    },
+    "readFull": "Read the full terms",
+    "accept": "I accept the responsible-use terms. I will only test my own APIs or APIs I have written authorization from the owner to test.",
+    "recorded": "We record the version and the date and time of your acceptance.",
+    "cancel": "Cancel",
+    "continue": "Accept and continue",
+    "accepted": "Terms accepted"
+  },
+  "NewProject": {
+    "stepsLabel": "Steps",
+    "steps": {
+      "data": {
+        "title": "Project details",
+        "note": "In progress"
+      },
+      "contract": {
+        "title": "OpenAPI contract",
+        "note": "Can be skipped"
+      },
+      "verification": {
+        "title": "Verification",
+        "note": "Can be skipped"
+      },
+      "done": {
+        "title": "Done",
+        "note": "Go to the dashboard"
+      }
+    },
+    "form": {
+      "title": "Project details",
+      "lead": "When created it will be “Pending verification” until you prove the API is yours.",
+      "name": "Name",
+      "description": "Description",
+      "optional": "(optional)",
+      "url": "Base URL",
+      "urlHint": "All tests are sent to this address, even if the contract declares other servers.",
+      "cancel": "Cancel",
+      "submit": "Create project",
+      "creating": "Creating…"
+    },
+    "created": "Project “{name}” created",
+    "skip": "Skip for now",
+    "panels": {
+      "contract": {
+        "title": "Upload the contract",
+        "text": "Import the OpenAPI 3 contract in JSON or YAML so Hindama knows your API's operations. You can skip this step and do it later from the dashboard.",
+        "action": "Upload contract"
+      },
+      "verification": {
+        "title": "Prove the API is yours",
+        "text": "Publish a code on your host with a file or a DNS record. Until it's verified you can't run tests, but you can come back from the dashboard.",
+        "action": "Verify ownership"
+      },
+      "done": {
+        "title": "Your project is ready",
+        "text": "Whatever you skipped stays pending on the project's dashboard.",
+        "action": "Go to the dashboard"
+      }
+    },
+    "help": {
+      "urlTitle": "Which base URL can I use?",
+      "urlText": "A public address with HTTP or HTTPS, ideally from your test environment. Not accepted:",
+      "prohibited": {
+        "private": "Private networks",
+        "loopback": "Loopback",
+        "linkLocal": "Link-local",
+        "metadata": "Cloud metadata"
+      },
+      "nextTitle": "After creating it",
+      "nextText": "You upload the contract and verify ownership. You can skip those steps and come back to them from the dashboard, but you won't be able to run tests until you verify."
+    },
+    "errors": {
+      "nameRequired": "Enter the project name.",
+      "nameTaken": "You already have a project with that name.",
+      "urlRequired": "Enter your API's base URL.",
+      "url": {
+        "invalid": "Enter a full URL, for example https://api.example.com.",
+        "protocol": "Only HTTP or HTTPS addresses are accepted.",
+        "private": "Private-network addresses aren't accepted.",
+        "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
+        "linkLocal": "Link-local addresses aren't accepted.",
+        "metadata": "Cloud metadata addresses aren't accepted."
+      },
+      "networkTitle": "We couldn't create the project",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "Dashboard": {
+    "running": {
+      "title": "The run is still in progress",
+      "text": "The tests continue ({percent}%). Come back to its progress whenever you like.",
+      "action": "View run"
+    },
+    "unverified": {
+      "title": "Ownership still needs verification",
+      "text": "Until you prove the API is yours you can't run tests.",
+      "action": "Verify"
+    },
+    "hero": {
+      "none": "No runs yet",
+      "open": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
+      "noneText": "Set up the project and launch your first full test to see results here.",
+      "criticalText": "One is critical and has persisted since the first run. Fix it and test again.",
+      "cleanText": "The last run found no problems with the chosen modules.",
+      "text": "Review the findings, fix them and test again."
+    },
+    "fullTest": "Full test",
+    "repeat": {
+      "button": "Repeat last run",
+      "title": "Run scheduled",
+      "text": "It will repeat with the same configuration."
+    },
+    "blocked": {
+      "unverified": "The host's ownership still needs verification.",
+      "goVerify": "Go to verification"
+    },
+    "stats": {
+      "requests": "Requests",
+      "minutes": "Minutes of duration",
+      "modules": "Modules run",
+      "lastRun": "Last run"
+    },
+    "severity": {
+      "title": "Open by severity",
+      "viewAll": "View all {count} findings",
+      "empty": "They will appear here when the first run finishes."
+    },
+    "policy": {
+      "title": "Access policy",
+      "text": "{confirmed} of {total} operations confirmed. The {pending} pending proposals aren't used in the tests.",
+      "empty": "Import the contract so Hindama can propose who should be able to do what.",
+      "review": "Review policy"
+    },
+    "modules": {
+      "title": "Test modules",
+      "results": "Results of run no. {number} · {date}",
+      "names": {
+        "auth": "Authentication",
+        "config": "Configuration",
+        "objects": "Object access",
+        "functions": "Function access",
+        "properties": "Properties",
+        "resources": "Resource consumption",
+        "sql": "SQL injection"
+      },
+      "notes": {
+        "auth": "Requires URL and contract",
+        "config": "Requires URL and contract",
+        "objects": "2 identities with resources",
+        "functions": "Requires an administrator identity",
+        "properties": "Confirmed on every run",
+        "resources": "Confirmed on every run",
+        "sql": "Confirmed on every run · CWE-89"
+      },
+      "blocked": "No administrator identity: add one",
+      "notRun": "Not run",
+      "findings": "{count, plural, one {# finding} other {# findings}}",
+      "run": "Run",
+      "runTitle": "Run of “{name}” requested",
+      "addIdentity": "Add identity",
+      "emptyTitle": "No results yet",
+      "emptyText": "Verify ownership and run your first test to see each module here."
+    }
+  },
+  "ProjectSettings": {
+    "crumb": "Settings",
+    "pageTitle": "Project settings",
+    "title": "Project details",
+    "name": "Name",
+    "description": "Description",
+    "optional": "(optional)",
+    "url": "Base URL",
+    "urlHint": "All tests are sent to this address.",
+    "before": "Before:",
+    "hostChanged": {
+      "title": "You changed the host",
+      "text": "When you save, the project will go back to “Pending verification” and you won't be able to run tests until you verify the new host. Verification only changes if the exact host changes: the path and port don't count. We'll ask you to confirm."
+    },
+    "discard": "Discard changes",
+    "save": "Save changes",
+    "saved": "Changes saved",
+    "hostDialog": {
+      "title": "Change the project's host?",
+      "text": "The project will go back to “Pending verification” and you won't be able to run tests until you verify the new host.",
+      "confirm": "Save and lose verification"
+    },
+    "delete": {
+      "title": "Delete project",
+      "lead": "It will be permanently deleted, within 30 days at most:",
+      "contract": "The contract and its {versions} versions",
+      "identities": "{count, plural, one {# identity and its credentials} other {# identities and their credentials}}",
+      "resources": "{count, plural, one {# resource and the access policy} other {# resources and the access policy}}",
+      "runs": "Runs, {findings} findings and their reports",
+      "button": "Delete project"
+    },
+    "deleteDialog": {
+      "title": "Delete the project “{name}”",
+      "description": "This action can't be undone. Resources the platform created in your API will be deleted first.",
+      "removed": "What is deleted",
+      "removed1": "The contract, its versions, identities and the access policy",
+      "removed2": "Runs, findings and reports"
+    },
+    "deleted": "Project “{name}” deleted",
+    "errors": {
+      "nameRequired": "Enter the project name.",
+      "urlRequired": "Enter your API's base URL.",
+      "url": {
+        "invalid": "Enter a full URL, for example https://api.example.com.",
+        "protocol": "Only HTTP or HTTPS addresses are accepted.",
+        "private": "Private-network addresses aren't accepted.",
+        "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
+        "linkLocal": "Link-local addresses aren't accepted.",
+        "metadata": "Cloud metadata addresses aren't accepted."
+      }
+    }
   }
 }
