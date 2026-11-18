@@ -9,6 +9,8 @@ interface AuthShellProps {
   lead: string;
   /** Bloque inferior del lado de la presentación (ejemplo de hallazgo, pasos, aviso…). */
   aside?: ReactNode;
+  /** Etiqueta «ADMIN» junto al logo (acceso de administradores). */
+  adminBadge?: boolean;
   /** Formulario o contenido del panel derecho. */
   children: ReactNode;
 }
@@ -17,14 +19,21 @@ interface AuthShellProps {
  * Marco de las pantallas de acceso (V-02 a V-06): presentación a la izquierda,
  * formulario a la derecha y selector de idioma al pie del formulario.
  */
-export function AuthShell({ title, lead, aside, children }: AuthShellProps) {
+export function AuthShell({ title, lead, aside, adminBadge, children }: AuthShellProps) {
   const t = useTranslations("Common");
 
   return (
     <main id="main" className="flex min-h-screen items-center justify-center p-4 sm:p-8">
       <div className="border-line bg-frame flex w-full max-w-[1240px] flex-wrap gap-4 rounded-[36px] border p-4 backdrop-blur-2xl">
         <section className="border-line flex min-w-0 flex-[999_1_480px] flex-col justify-between gap-12 rounded-[28px] border bg-[image:var(--hero)] p-6 sm:p-10">
-          <Logo size="lg" label={t("homeLink")} />
+          <div className="flex items-center gap-3">
+            <Logo size="lg" label={t("homeLink")} />
+            {adminBadge ? (
+              <span className="border-line bg-panel-2 rounded-full border px-2.5 py-1 text-[12.5px] font-bold tracking-[0.04em]">
+                ADMIN
+              </span>
+            ) : null}
+          </div>
           <div className="flex flex-col gap-[18px]">
             <h1 className="font-display max-w-[15ch] text-[40px] leading-none font-medium tracking-[-0.04em] sm:text-6xl">
               {title}
