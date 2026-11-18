@@ -43,7 +43,7 @@ interface ProjectShellProps {
   trail?: Crumb[];
   title: string | ((project: Project) => string);
   subtitle?: string | ((project: Project) => string);
-  actions?: ReactNode;
+  actions?: ReactNode | ((project: Project) => ReactNode);
   children: (project: Project) => ReactNode;
 }
 
@@ -103,7 +103,7 @@ function ProjectShellInner({
       breadcrumb={crumbs}
       title={typeof title === "function" ? title(project) : title}
       subtitle={typeof subtitle === "function" ? subtitle(project) : subtitle}
-      actions={actions}
+      actions={typeof actions === "function" ? actions(project) : actions}
     >
       {children(project)}
     </AppShell>

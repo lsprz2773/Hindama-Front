@@ -196,3 +196,62 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Impresión del reporte (V-32): siempre en claro y sobre papel, sea cual sea el tema de la pantalla.
+ * Se redefinen los tokens para que los textos tenue y de enlace sigan siendo legibles en blanco.
+ */
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --text: #1c1915;
+    --muted: #5f574f;
+    --link: #a8420a;
+    --panel: #ffffff;
+    --panel-2: #f6f5f3;
+    --border: rgba(40, 30, 20, 0.18);
+    --border-strong: rgba(40, 30, 20, 0.4);
+    --code-bg: #f3f1ee;
+    --danger: #d92d3f;
+    --success: #2e8a6e;
+    --warning: #b4541a;
+    --sev-1: #d92d3f;
+    --sev-2: #e08a00;
+    --sev-3: #c7b21e;
+    --sev-4: #3fa894;
+    --sev-5: #a39b92;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .print-break {
+    break-before: page;
+  }
+
+  .print-avoid {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  size: auto;
+  margin: 16mm;
+}
