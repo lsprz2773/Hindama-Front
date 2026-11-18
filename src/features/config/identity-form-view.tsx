@@ -38,6 +38,9 @@ const FIELDS: Record<AuthForm, { key: FieldKey; secret?: boolean }[]> = {
   header: [{ key: "headerName" }, { key: "headerValue", secret: true }],
 };
 
+/** Nombre válido de cabecera o cookie (RFC 9110, «token»): sin espacios ni separadores. */
+const TOKEN = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/;
+
 type TestResult = { ok: boolean } | null;
 
 function IdentityForm({ project, identity }: { project: Project; identity?: Identity }) {
@@ -67,10 +70,24 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
 
   function validate() {
     const next: Record<string, string> = {};
-    if (!name.trim()) next.name = t("errors.nameRequired");
+    const trimmed = name.trim();
+    if (!trimmed) next.name = t("errors.nameRequired");
+    else if (trimmed.length > 60) next.name = t("errors.nameTooLong");
+    else if (
+      identities.some(
+        (i) => i.id !== identity?.id && i.name.toLowerCase() === trimmed.toLowerCase(),
+      )
+    )
+      next.name = t("errors.nameTaken");
     for (const field of fields) {
       const hidden = field.secret && keepsSecret && !replacing[field.key];
-      if (!hidden && !values[field.key]?.trim()) next[field.key] = t("errors.fieldRequired");
+      const value = values[field.key]?.trim() ?? "";
+      if (hidden) continue;
+      if (!value) next[field.key] = t("errors.fieldRequired");
+      else if (field.key === "endpoint" && !/^(\/|https?:\/\/)\S+$/i.test(value))
+        next[field.key] = t("errors.endpoint");
+      else if ((field.key === "headerName" || field.key === "cookieName") && !TOKEN.test(value))
+        next[field.key] = t("errors.tokenName");
     }
     setErrors(next);
     return Object.keys(next).length === 0;
