@@ -156,6 +156,7 @@
   --color-progress: var(--progress);
   --color-progress-bg: var(--progress-bg);
   --color-selected: var(--selected);
+  --color-sidebar: #161514;
   --color-sev-1: var(--sev-1);
   --color-sev-2: var(--sev-2);
   --color-sev-3: var(--sev-3);
