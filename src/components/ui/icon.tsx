@@ -1,0 +1,57 @@
+import type { SVGProps } from "react";
+
+/** Trazos de los iconos del diseño (viewBox 24, trazo redondeado). */
+const PATHS = {
+  logo: "M12 2.5l8 4.6v9.8l-8 4.6-8-4.6V7.1zM8.5 12l2.5 2.5 4.5-5",
+  check: "M5 12.5l4.5 4.5L19 7.5",
+  x: "M6 6l12 12M18 6L6 18",
+  info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5h.01",
+  alert: "M12 3l10 18H2zM12 10v5M12 18h.01",
+  alertCircle: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7.5v5M12 16h.01",
+  xCircle: "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18zM9 9l6 6M15 9l-6 6",
+  globe:
+    "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z",
+  chevronDown: "M6 9l6 6 6-6",
+  chevronLeft: "M15 6l-6 6 6 6",
+  chevronRight: "M9 6l6 6-6 6",
+  mail: "M3 6h18v12H3zM3 7l9 6 9-6",
+  lock: "M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4",
+  eye: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  eyeOff:
+    "M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.3 3.9M6.6 7.6C3.9 9.4 2 12 2 12s3.6 6 10 6c1.5 0 2.9-.3 4.1-.8M9.9 9.9a3 3 0 0 0 4.2 4.2",
+  clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
+  file: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6",
+  list: "M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2",
+  refresh: "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7",
+  spinner: "M12 3a9 9 0 1 0 9 9",
+  circle: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
+} as const;
+
+export type IconName = keyof typeof PATHS;
+
+interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
+  name: IconName;
+  size?: number;
+  strokeWidth?: number;
+}
+
+/** Icono decorativo; si lleva significado, el texto adyacente o `aria-label` lo da. */
+export function Icon({ name, size = 20, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg
+      aria-hidden={props["aria-label"] ? undefined : true}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="flex-none"
+      {...props}
+    >
+      <path d={PATHS[name]} />
+    </svg>
+  );
+}

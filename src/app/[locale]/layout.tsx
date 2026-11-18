@@ -3,6 +3,7 @@ import { JetBrains_Mono, Lexend, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ToastProvider } from "@/components/ui/toast";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -28,6 +29,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "Common" });
 
   return (
     <html
@@ -35,7 +37,15 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
       className={`${jakarta.variable} ${lexend.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <a
+            href="#main"
+            className="bg-accent text-on-accent sr-only z-[200] rounded-xl px-4 py-2 font-bold focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+          >
+            {t("skipToContent")}
+          </a>
+          <ToastProvider>{children}</ToastProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

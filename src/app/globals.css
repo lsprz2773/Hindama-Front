@@ -19,7 +19,7 @@
   --panel-2: rgba(255, 255, 255, 0.08);
   --hero:
     radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.42), transparent 70%),
-    rgba(255, 255, 255, 0.05);
+    linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05));
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.22);
   --text: #f5f2ee;
@@ -41,6 +41,11 @@
   --progress: #ff9a5c;
   --progress-bg: rgba(255, 107, 26, 0.18);
   --selected: rgba(255, 107, 26, 0.18);
+  --sev-1: #ff4d5e;
+  --sev-2: #ffb020;
+  --sev-3: #eee07a;
+  --sev-4: #7fd1c1;
+  --sev-5: #a7a29c;
 }
 
 @media (prefers-color-scheme: light) {
@@ -55,7 +60,7 @@
     --panel-2: rgba(255, 255, 255, 0.8);
     --hero:
       radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
-      rgba(255, 255, 255, 0.5);
+      linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
     --border: rgba(40, 30, 20, 0.1);
     --border-strong: rgba(40, 30, 20, 0.26);
     --text: #1c1915;
@@ -77,6 +82,11 @@
     --progress: #a8420a;
     --progress-bg: rgba(255, 107, 26, 0.16);
     --selected: rgba(255, 107, 26, 0.14);
+    --sev-1: #d92d3f;
+    --sev-2: #e08a00;
+    --sev-3: #c7b21e;
+    --sev-4: #3fa894;
+    --sev-5: #a39b92;
   }
 }
 
@@ -91,7 +101,7 @@
   --panel-2: rgba(255, 255, 255, 0.8);
   --hero:
     radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
-    rgba(255, 255, 255, 0.5);
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
   --border: rgba(40, 30, 20, 0.1);
   --border-strong: rgba(40, 30, 20, 0.26);
   --text: #1c1915;
@@ -113,6 +123,11 @@
   --progress: #a8420a;
   --progress-bg: rgba(255, 107, 26, 0.16);
   --selected: rgba(255, 107, 26, 0.14);
+  --sev-1: #d92d3f;
+  --sev-2: #e08a00;
+  --sev-3: #c7b21e;
+  --sev-4: #3fa894;
+  --sev-5: #a39b92;
 }
 
 @theme inline {
@@ -141,6 +156,11 @@
   --color-progress: var(--progress);
   --color-progress-bg: var(--progress-bg);
   --color-selected: var(--selected);
+  --color-sev-1: var(--sev-1);
+  --color-sev-2: var(--sev-2);
+  --color-sev-3: var(--sev-3);
+  --color-sev-4: var(--sev-4);
+  --color-sev-5: var(--sev-5);
   --font-sans: var(--font-jakarta), "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-lexend), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
