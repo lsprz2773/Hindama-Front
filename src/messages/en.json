@@ -168,5 +168,153 @@
       "resendTitle": "We couldn't resend the code",
       "retry": "Retry"
     }
+  },
+  "ForgotPassword": {
+    "meta": "Recover password",
+    "heroTitle": "Get back in",
+    "heroLead": "First we confirm the code we sent you. Then you set the new password.",
+    "stepsLabel": "Steps",
+    "steps": {
+      "email": "Your email",
+      "code": "Code",
+      "password": "New password"
+    },
+    "email": "Email address",
+    "codeLegend": "Code from the email",
+    "step1": {
+      "heading": "Forgot your password?",
+      "text": "Enter your account email and we'll send you a code.",
+      "submit": "Send code"
+    },
+    "step2": {
+      "heading": "Enter the code",
+      "text": "If the email is registered, you'll receive a code. Check <b>{email}</b>.",
+      "useOther": "Use another email",
+      "hint": "You can't set the new password until the code is valid.",
+      "submit": "Verify code",
+      "noCode": "Code didn't arrive or already expired?",
+      "resend": "Request another code",
+      "resendIn": "Request another code in {time}"
+    },
+    "step3": {
+      "heading": "Set your new password",
+      "text": "Choose a password that meets the requirements.",
+      "password": "New password",
+      "confirm": "Confirm password",
+      "submit": "Change password"
+    },
+    "verified": "Code verified",
+    "sending": "Sending…",
+    "verifying": "Verifying…",
+    "saving": "Saving…",
+    "backToSignIn": "Back to sign in",
+    "resentTitle": "Code sent",
+    "resentText": "If the email is registered, you'll receive a new code.",
+    "successTitle": "Password changed",
+    "successText": "You can now sign in with your new password.",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "rateLimit": "Too many requests. Wait a few minutes before requesting another code.",
+      "codeInvalid": "The code isn't correct. Check it and try again.",
+      "codeExpired": "The code has expired. Request a new one.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "passwordRequired": "Choose a password.",
+      "passwordWeak": "The password doesn't meet all the requirements yet.",
+      "passwordReused": "Choose a password different from the previous one.",
+      "confirmRequired": "Repeat the password.",
+      "confirmMismatch": "The passwords don't match.",
+      "networkTitle": "We couldn't complete the step",
+      "networkText": "Check your connection and try again.",
+      "resendTitle": "We couldn't send the code",
+      "retry": "Retry"
+    }
+  },
+  "Terms": {
+    "title": "Terms of use",
+    "badge": "Current version 2026-10-30 · draft pending legal review",
+    "lead": "These rules apply to everyone who uses Hindama. By creating your account, and before your first project, you confirm that you accept them.",
+    "tocLabel": "Contents",
+    "tocHeading": "Contents",
+    "noteTitle": "The most important thing",
+    "noteText": "You may only test APIs you own or have written authorization to test. If you can't prove it, don't use Hindama on that API.",
+    "sections": {
+      "service": {
+        "title": "Purpose of the service",
+        "text": "Hindama runs automated security tests on REST APIs based on their OpenAPI 3 contract and on the access policy declared by their owner."
+      },
+      "responsible": {
+        "title": "Responsible use",
+        "text": "You may only register and test APIs you own or for which you hold written authorization from their owner. Testing third-party APIs without authorization is prohibited and may be a crime."
+      },
+      "ownership": {
+        "title": "Ownership verification",
+        "text": "Before any test you must prove that you control the API's domain. The verification is checked again before every run."
+      },
+      "limits": {
+        "title": "Limits and test environment",
+        "text": "We recommend using a test environment. The rate, concurrency, volume and duration limits you configure are respected at all times."
+      },
+      "activity": {
+        "title": "Activity log",
+        "text": "Sensitive actions, such as creating projects, launching runs or accepting risks, are recorded in a log that cannot be altered."
+      },
+      "suspension": {
+        "title": "Suspension",
+        "text": "We may suspend accounts that breach these terms and keep the information needed to answer requests from authorities."
+      }
+    }
+  },
+  "Privacy": {
+    "title": "Privacy notice",
+    "badge": "Draft pending legal review · version 1.0 · 30 Oct 2026",
+    "lead": "How we handle your personal data under Mexico's Federal Law on the Protection of Personal Data Held by Private Parties.",
+    "tocLabel": "Contents",
+    "tocHeading": "Contents",
+    "retentionLabel": "Retention periods",
+    "retention": {
+      "database": {
+        "where": "Database",
+        "term": "Immediate"
+      },
+      "backups": {
+        "where": "Backups",
+        "term": "7 days (max. 30)"
+      },
+      "audit": {
+        "where": "Audit log",
+        "term": "6 months"
+      }
+    },
+    "sections": {
+      "data": {
+        "title": "Data we collect",
+        "text": "Name, email address and activity records of your account. From your projects we store the contract, the test identities with encrypted credentials and the results of the runs."
+      },
+      "purpose": {
+        "title": "Purpose",
+        "text": "To operate the platform, run the tests you request, generate reports and keep the service secure. We do not sell or share your data for commercial purposes."
+      },
+      "credentials": {
+        "title": "Test credentials",
+        "text": "They are stored encrypted and never shown in full: only their last 4 characters. In evidence and reports they appear masked."
+      },
+      "retention": {
+        "title": "Retention and deletion",
+        "text": "When you delete a project or your account, the data is deleted from the database immediately. Backups overwrite it within 7 days and, at most, 30. The audit log is kept for 6 months."
+      },
+      "audit": {
+        "title": "Log and anonymous metrics",
+        "text": "The log records what action happened and when, with an internal user identifier and a host fingerprint, never passwords or free text. Usage metrics are anonymous, are not personal data and are kept even if you delete your account."
+      },
+      "rights": {
+        "title": "ARCO rights",
+        "text": "You exercise cancellation yourself by deleting your account from Profile. To access your data, correct it or object to its processing, write to the team's email: privacidad@hindama.mx. We respond within 20 business days at most."
+      },
+      "changes": {
+        "title": "Changes to this notice",
+        "text": "We will publish any change on this page with its version date."
+      }
+    }
   }
 }

@@ -168,5 +168,153 @@
       "resendTitle": "No pudimos reenviar el código",
       "retry": "Reintentar"
     }
+  },
+  "ForgotPassword": {
+    "meta": "Recuperar contraseña",
+    "heroTitle": "Recupera el acceso",
+    "heroLead": "Primero confirmamos el código que te enviamos. Después defines la contraseña nueva.",
+    "stepsLabel": "Pasos",
+    "steps": {
+      "email": "Tu correo",
+      "code": "Código",
+      "password": "Nueva contraseña"
+    },
+    "email": "Correo electrónico",
+    "codeLegend": "Código del correo",
+    "step1": {
+      "heading": "¿Olvidaste tu contraseña?",
+      "text": "Escribe el correo de tu cuenta y te enviaremos un código.",
+      "submit": "Enviar código"
+    },
+    "step2": {
+      "heading": "Escribe el código",
+      "text": "Si el correo está registrado, recibirás un código. Revisa <b>{email}</b>.",
+      "useOther": "Usar otro correo",
+      "hint": "Hasta que el código sea válido no podrás definir la contraseña nueva.",
+      "submit": "Verificar código",
+      "noCode": "¿El código no llegó o ya venció?",
+      "resend": "Pedir otro código",
+      "resendIn": "Pedir otro código en {time}"
+    },
+    "step3": {
+      "heading": "Define tu nueva contraseña",
+      "text": "Elige una contraseña que cumpla los requisitos.",
+      "password": "Nueva contraseña",
+      "confirm": "Confirmar contraseña",
+      "submit": "Cambiar contraseña"
+    },
+    "verified": "Código verificado",
+    "sending": "Enviando…",
+    "verifying": "Verificando…",
+    "saving": "Guardando…",
+    "backToSignIn": "Volver a iniciar sesión",
+    "resentTitle": "Código enviado",
+    "resentText": "Si el correo está registrado, recibirás un código nuevo.",
+    "successTitle": "Contraseña cambiada",
+    "successText": "Ya puedes iniciar sesión con tu contraseña nueva.",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "rateLimit": "Demasiadas solicitudes. Espera unos minutos antes de pedir otro código.",
+      "codeInvalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "codeExpired": "El código venció. Pide uno nuevo.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "passwordRequired": "Elige una contraseña.",
+      "passwordWeak": "La contraseña aún no cumple todos los requisitos.",
+      "passwordReused": "Elige una contraseña distinta de la anterior.",
+      "confirmRequired": "Repite la contraseña.",
+      "confirmMismatch": "Las contraseñas no coinciden.",
+      "networkTitle": "No pudimos completar el paso",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "resendTitle": "No pudimos enviar el código",
+      "retry": "Reintentar"
+    }
+  },
+  "Terms": {
+    "title": "Términos de uso",
+    "badge": "Versión vigente 2026-10-30 · borrador para revisión legal",
+    "lead": "Estas reglas aplican a toda persona que use Hindama. Al crear tu cuenta y antes de tu primer proyecto confirmas que las aceptas.",
+    "tocLabel": "Contenido",
+    "tocHeading": "Contenido",
+    "noteTitle": "Lo más importante",
+    "noteText": "Solo pruebas APIs propias o con autorización por escrito. Si no puedes demostrarlo, no uses Hindama sobre esa API.",
+    "sections": {
+      "service": {
+        "title": "Objeto del servicio",
+        "text": "Hindama ejecuta pruebas automatizadas de seguridad sobre APIs REST a partir de su contrato OpenAPI 3 y de la política de acceso que declara su responsable."
+      },
+      "responsible": {
+        "title": "Uso responsable",
+        "text": "Solo puedes registrar y probar APIs propias o para las que tengas autorización por escrito de su dueño. Probar APIs de terceros sin autorización está prohibido y puede constituir un delito."
+      },
+      "ownership": {
+        "title": "Verificación de propiedad",
+        "text": "Antes de cualquier prueba debes demostrar que controlas el dominio de la API. La verificación se comprueba de nuevo antes de cada ejecución."
+      },
+      "limits": {
+        "title": "Límites y ambiente de pruebas",
+        "text": "Recomendamos usar un ambiente de pruebas. Los límites de velocidad, concurrencia, volumen y duración que configures se respetan en todo momento."
+      },
+      "activity": {
+        "title": "Registro de actividad",
+        "text": "Las acciones sensibles, como crear proyectos, lanzar ejecuciones o aceptar riesgos, quedan en una bitácora que no se puede modificar."
+      },
+      "suspension": {
+        "title": "Suspensión",
+        "text": "Podemos suspender cuentas que incumplan estos términos y conservar la información necesaria para atender requerimientos de autoridad."
+      }
+    }
+  },
+  "Privacy": {
+    "title": "Aviso de privacidad",
+    "badge": "Borrador para revisión legal · versión 1.0 · 30 oct 2026",
+    "lead": "Cómo tratamos tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.",
+    "tocLabel": "Contenido",
+    "tocHeading": "Contenido",
+    "retentionLabel": "Plazos de conservación",
+    "retention": {
+      "database": {
+        "where": "Base de datos",
+        "term": "Inmediato"
+      },
+      "backups": {
+        "where": "Respaldos",
+        "term": "7 días (máx. 30)"
+      },
+      "audit": {
+        "where": "Bitácora de auditoría",
+        "term": "6 meses"
+      }
+    },
+    "sections": {
+      "data": {
+        "title": "Datos que recabamos",
+        "text": "Nombre, correo electrónico y registros de actividad de tu cuenta. De tus proyectos guardamos el contrato, las identidades de prueba con credenciales cifradas y los resultados de las ejecuciones."
+      },
+      "purpose": {
+        "title": "Finalidad",
+        "text": "Operar la plataforma, ejecutar las pruebas que solicitas, generar reportes y mantener la seguridad del servicio. No vendemos ni compartimos tus datos con fines comerciales."
+      },
+      "credentials": {
+        "title": "Credenciales de prueba",
+        "text": "Se guardan cifradas y nunca se muestran completas: solo sus últimos 4 caracteres. En evidencias y reportes aparecen enmascaradas."
+      },
+      "retention": {
+        "title": "Conservación y borrado",
+        "text": "Al eliminar un proyecto o tu cuenta, los datos se borran de la base de datos de inmediato. Los respaldos los sobrescriben en 7 días y, como máximo, en 30. La bitácora de auditoría se conserva 6 meses."
+      },
+      "audit": {
+        "title": "Bitácora y métricas anónimas",
+        "text": "La bitácora guarda qué acción ocurrió y cuándo, con un identificador interno de usuario y una huella del host, nunca contraseñas ni textos libres. Las métricas de uso son anónimas, no son datos personales y se conservan aunque elimines tu cuenta."
+      },
+      "rights": {
+        "title": "Derechos ARCO",
+        "text": "La cancelación la ejerces tú mismo eliminando tu cuenta desde Perfil. Para acceder a tus datos, rectificarlos u oponerte a su tratamiento, escribe al correo del equipo: privacidad@hindama.mx. Respondemos en un máximo de 20 días hábiles."
+      },
+      "changes": {
+        "title": "Cambios a este aviso",
+        "text": "Publicaremos cualquier cambio en esta página con su fecha de versión."
+      }
+    }
   }
 }
