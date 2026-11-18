@@ -44,6 +44,8 @@ const PATHS = {
   plus: "M12 5v14M5 12h14",
   search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4",
   play: "M7 4l13 8-13 8z",
+  stop: "M7 7h10v10H7z",
+  download: "M12 3v12M7 10l5 5 5-5M4 20h16",
 } as const;
 
 export type IconName = keyof typeof PATHS;

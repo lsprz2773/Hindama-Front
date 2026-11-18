@@ -129,7 +129,11 @@ export function Sidebar({ role, project, collapsed = false }: SidebarProps) {
                     href={href}
                     icon={item.icon}
                     label={t(`project.${item.key}`)}
-                    active={isActive(href, item.path === "")}
+                    active={
+                      isActive(href, item.path === "") ||
+                      (item.key === "history" &&
+                        pathname.startsWith(`/projects/${project.id}/runs/`))
+                    }
                     open={open}
                     note={locked ?? note?.text}
                     noteWarning={Boolean(locked) || note?.warning}

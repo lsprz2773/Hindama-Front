@@ -42,7 +42,7 @@ interface ProjectShellProps {
   /** Migas intermedias y final bajo el proyecto (en lugar de `section`). */
   trail?: Crumb[];
   title: string | ((project: Project) => string);
-  subtitle?: string;
+  subtitle?: string | ((project: Project) => string);
   actions?: ReactNode;
   children: (project: Project) => ReactNode;
 }
@@ -102,7 +102,7 @@ function ProjectShellInner({
       project={nav}
       breadcrumb={crumbs}
       title={typeof title === "function" ? title(project) : title}
-      subtitle={subtitle}
+      subtitle={typeof subtitle === "function" ? subtitle(project) : subtitle}
       actions={actions}
     >
       {children(project)}
