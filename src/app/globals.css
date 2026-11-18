@@ -29,6 +29,7 @@
   --menu: rgba(42, 43, 47, 0.98);
   --toast: rgba(48, 49, 54, 0.97);
   --track: rgba(255, 255, 255, 0.12);
+  --code-bg: rgba(0, 0, 0, 0.28);
 
   --danger: #ff4d5e;
   --danger-bg: rgba(255, 77, 94, 0.14);
@@ -70,6 +71,7 @@
     --menu: rgba(250, 250, 251, 0.97);
     --toast: rgba(250, 250, 251, 0.97);
     --track: rgba(40, 30, 20, 0.12);
+    --code-bg: rgba(255, 255, 255, 0.8);
 
     --danger: #d92d3f;
     --danger-bg: rgba(217, 45, 63, 0.1);
@@ -111,6 +113,7 @@
   --menu: rgba(250, 250, 251, 0.97);
   --toast: rgba(250, 250, 251, 0.97);
   --track: rgba(40, 30, 20, 0.12);
+  --code-bg: rgba(255, 255, 255, 0.8);
 
   --danger: #d92d3f;
   --danger-bg: rgba(217, 45, 63, 0.1);
@@ -145,6 +148,7 @@
   --color-menu: var(--menu);
   --color-toast: var(--toast);
   --color-track: var(--track);
+  --color-code-bg: var(--code-bg);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --color-success: var(--success);

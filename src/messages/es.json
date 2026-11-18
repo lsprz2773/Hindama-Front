@@ -595,5 +595,22 @@
     "profile": "Perfil",
     "language": "Idioma",
     "signOut": "Cerrar sesión"
+  },
+  "Copy": {
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyWhat": "Copiar {what}",
+    "failed": "No se pudo copiar",
+    "failedText": "Selecciona el texto y cópialo a mano."
+  },
+  "HttpViewer": {
+    "truncated": "se recorta a partir de 10 KB · {kb} KB en total"
+  },
+  "RiskConfirmation": {
+    "title": "Activaste módulos que modifican datos o cargan el servidor",
+    "explanation": "Solo actúan sobre recursos que crea Hindama y que se eliminan al terminar. Confirma cada módulo: la confirmación se pide en cada ejecución.",
+    "confirmModule": "Confirmar {name}",
+    "understand": "Entiendo el riesgo y confirmo que este es un ambiente de pruebas.",
+    "pending": "{count, plural, one {Falta confirmar # módulo.} other {Faltan por confirmar # módulos.}}"
   }
 }

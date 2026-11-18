@@ -595,5 +595,22 @@
     "profile": "Profile",
     "language": "Language",
     "signOut": "Sign out"
+  },
+  "Copy": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyWhat": "Copy {what}",
+    "failed": "Couldn't copy",
+    "failedText": "Select the text and copy it by hand."
+  },
+  "HttpViewer": {
+    "truncated": "trimmed beyond 10 KB · {kb} KB in total"
+  },
+  "RiskConfirmation": {
+    "title": "You enabled modules that modify data or load the server",
+    "explanation": "They only act on resources that Hindama creates and deletes when finished. Confirm each module: confirmation is requested on every run.",
+    "confirmModule": "Confirm {name}",
+    "understand": "I understand the risk and confirm this is a test environment.",
+    "pending": "{count, plural, one {# module still needs confirmation.} other {# modules still need confirmation.}}"
   }
 }
