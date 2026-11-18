@@ -551,8 +551,8 @@
     "typeToConfirm": "Escribe <code>{text}</code> para confirmar"
   },
   "AcceptRisk": {
-    "title": "Aceptar el riesgo",
-    "description": "Elige el motivo y explica la decisión. Queda registrada y se puede revertir.",
+    "title": "Descartar este hallazgo",
+    "description": "Pasa a «Riesgo aceptado» y deja de contar entre los abiertos. Elige el motivo.",
     "reason": "Motivo",
     "reasons": {
       "accepted": "Riesgo aceptado",
@@ -561,9 +561,18 @@
     "justification": "Justificación",
     "required": "(obligatoria)",
     "placeholder": "Explica por qué se acepta este riesgo",
-    "help": "Queda en el historial del hallazgo.",
+    "help": "Se guarda en el historial del hallazgo, no en la bitácora.",
     "tooShort": "Escribe una justificación de al menos {min} caracteres.",
-    "submit": "Guardar decisión"
+    "submit": "Descartar hallazgo",
+    "reasonText": {
+      "accepted": "El hallazgo es real y decides no corregirlo por ahora.",
+      "false_positive": "El hallazgo no es real: la API se comporta como se espera."
+    },
+    "notes": {
+      "audit": "En la bitácora queda la acción, no tu justificación: no se guardan textos libres.",
+      "stays": "Si la ejecución vuelve a detectarlo, seguirá aceptado.",
+      "revert": "Puedes revertirlo y volverá a «Persistente»."
+    }
   },
   "Sidebar": {
     "label": "Navegación principal",
@@ -1506,6 +1515,378 @@
     "errors": {
       "ownerTitle": "Falta el campo propietario",
       "ownerText": "Las plantillas de propiedad necesitan un campo propietario para guardarse."
+    }
+  },
+  "ConfigureRun": {
+    "title": "Nueva ejecución",
+    "crumb": "Nueva ejecución",
+    "crumbRuns": "Ejecuciones",
+    "modules": {
+      "title": "Módulos de prueba",
+      "lead": "Elige qué categorías de OWASP API Top 10 se probarán en esta ejecución.",
+      "selected": "{count, plural, =0 {Ninguno seleccionado} one {# seleccionado} other {# seleccionados}}",
+      "noAdmin": "Requiere una identidad administradora",
+      "addIdentity": "Agregar identidad",
+      "notes": {
+        "auth": "Tokens, sesiones y credenciales",
+        "config": "Cabeceras, CORS y mensajes de error",
+        "objects": "Cada identidad frente a recursos ajenos",
+        "functions": "Funciones administrativas con un usuario común",
+        "properties": "Modifica datos de prueba que crea Hindama",
+        "resources": "Carga el servidor con peticiones repetidas",
+        "sql": "Envía cargas de inyección; modifica datos de prueba"
+      },
+      "risk": "Riesgo"
+    },
+    "risk": {
+      "medium": "Riesgo medio",
+      "high": "Riesgo alto"
+    },
+    "riskSummary": "Módulos elegidos: {names}.",
+    "limits": {
+      "title": "Límites de la ejecución",
+      "lead": "Protegen tu servidor: la ejecución se detiene al alcanzar cualquiera.",
+      "rps": "Peticiones por segundo",
+      "concurrency": "Peticiones en paralelo",
+      "total": "Peticiones en total",
+      "duration": "Duración máxima (minutos)",
+      "max": "Máximo permitido: {max}",
+      "outOfRange": "Escribe un número entero entre 1 y {max}."
+    },
+    "checks": {
+      "title": "Antes de ejecutar",
+      "verified": "La URL base está verificada",
+      "noActive": "No hay otra ejecución activa",
+      "https": "La URL usa HTTPS",
+      "policy": "La política de limpieza está confirmada"
+    },
+    "run": "{count, plural, =0 {Ejecutar pruebas} one {Ejecutar # módulo} other {Ejecutar # módulos}}",
+    "starting": "Iniciando…",
+    "started": "Ejecución iniciada",
+    "confirmFirst": "Confirma cada módulo de riesgo para poder ejecutar.",
+    "readOnly": {
+      "title": "Qué hace Hindama",
+      "text": "Las pruebas solo crean recursos propios y los eliminan al terminar. Nunca tocan datos que ya existían en tu API."
+    },
+    "blocked": {
+      "unverified": "Verifica la URL base del proyecto antes de ejecutar.",
+      "goVerify": "Ir a verificación",
+      "active": "Ya hay una ejecución en curso.",
+      "viewRun": "Ver la ejecución"
+    }
+  },
+  "RunProgress": {
+    "title": "Ejecución en curso",
+    "crumb": "En curso",
+    "crumbHistory": "Ejecuciones",
+    "live": "En vivo",
+    "completed": "Terminada",
+    "started": "Iniciada a las {time} · {modules, plural, one {# módulo} other {# módulos}}",
+    "now": "Probando ahora: <b>{module}</b>",
+    "progressLabel": "Avance de la ejecución",
+    "stats": {
+      "requests": "Peticiones enviadas",
+      "minutes": "Tiempo transcurrido",
+      "speed": "Velocidad"
+    },
+    "viewResults": "Ver resultados",
+    "cancel": "Cancelar ejecución",
+    "found": "{count, plural, =0 {Aún sin hallazgos} one {# hallazgo hasta ahora} other {# hallazgos hasta ahora}}",
+    "recent": "Más recientes",
+    "noneYet": "Los hallazgos aparecerán aquí en cuanto se detecten.",
+    "modules": "Módulos",
+    "moduleDone": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "moduleRunning": "En curso · {percent} %",
+    "modulePending": "En espera",
+    "notices": {
+      "title": "Avisos",
+      "expired": {
+        "title": "El token de {name} venció",
+        "text": "Se omitieron sus pruebas. Actualiza el token y vuelve a ejecutar.",
+        "action": "Actualizar"
+      },
+      "blocked": {
+        "title": "{count, plural, one {# petición bloqueada} other {# peticiones bloqueadas}}",
+        "text": "Tu API respondió <code>429</code>. Hindama redujo la velocidad automáticamente."
+      }
+    },
+    "cancelDialog": {
+      "title": "¿Cancelar la ejecución n.º {number}?",
+      "text": "Se conservan los {count, plural, one {# hallazgo} other {# hallazgos}} encontrados hasta ahora y se eliminan los recursos de prueba creados.",
+      "confirm": "Cancelar ejecución",
+      "keep": "Seguir ejecutando"
+    },
+    "cancelled": "Ejecución n.º {number} cancelada",
+    "finished": "Ejecución n.º {number} terminada",
+    "none": {
+      "title": "No hay una ejecución en curso",
+      "text": "Inicia una nueva ejecución para ver su avance aquí.",
+      "action": "Nueva ejecución"
+    }
+  },
+  "RunTabs": {
+    "label": "Vistas de la ejecución",
+    "summary": "Resumen",
+    "matrix": "Matriz de acceso",
+    "findings": "Hallazgos ({count})"
+  },
+  "RunResults": {
+    "title": "Ejecución n.º {number}",
+    "crumbHistory": "Historial",
+    "none": {
+      "title": "Aún no hay ejecuciones",
+      "text": "Cuando termines tu primera ejecución, sus resultados aparecerán aquí.",
+      "action": "Nueva ejecución"
+    },
+    "report": "Generar reporte",
+    "export": "Exportar a Excel",
+    "exported": "Exportación lista",
+    "exportedText": "El archivo se descargó con los hallazgos de la ejecución.",
+    "retest": "Volver a probar",
+    "retestBusy": "Ya hay una ejecución en curso",
+    "retestStarted": "Repitiendo la ejecución n.º {number}",
+    "completed": "Completada · {date}",
+    "data": "Datos de la ejecución",
+    "end": {
+      "normal": "Fin: normal"
+    },
+    "contract": "Contrato {version}",
+    "repeat": "Repetición de la ejecución n.º {number}",
+    "headline": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "headlineText": "{new, plural, one {# es nuevo} other {# son nuevos}} y {regressions, plural, one {# es una regresión} other {# son regresiones}} de algo que ya estaba resuelto.",
+    "viewFindings": "Ver hallazgos",
+    "stats": {
+      "requests": "Peticiones",
+      "minutes": "Minutos de duración",
+      "modules": "Módulos ejecutados",
+      "blocked": "Peticiones bloqueadas"
+    },
+    "comparison": {
+      "title": "Frente a la ejecución n.º {number}",
+      "first": "Primera ejecución",
+      "firstText": "No hay una ejecución anterior con la que comparar.",
+      "new": "Nuevos",
+      "persistent": "Persistentes",
+      "resolved": "Resueltos",
+      "regression": "Regresiones",
+      "note": "Un hallazgo es regresión cuando reaparece tras haberse marcado como resuelto."
+    },
+    "bySeverity": "Por severidad",
+    "modules": "Módulos",
+    "limits": "Límites: {rps} req/s · {concurrency} concurrentes · {total} peticiones · {minutes} min",
+    "moduleBlocked": "No se ejecutó: falta identidad administradora",
+    "moduleNotSelected": "No seleccionado",
+    "moduleFindings": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "incomplete": "incompleto",
+    "notices": {
+      "title": "Avisos",
+      "expired": {
+        "title": "{name} tenía la credencial vencida",
+        "text": "Se omitieron {count} pruebas de Acceso a objetos. Los resultados de ese módulo están incompletos."
+      },
+      "skipped": {
+        "title": "{module} no se ejecutó",
+        "text": "Falta una identidad con rol de administrador."
+      }
+    },
+    "top": "Más graves"
+  },
+  "Matrix": {
+    "title": "Matriz de acceso",
+    "onlyDiscrepancies": "Solo discrepancias",
+    "legend": {
+      "title": "Leyenda",
+      "allow": "Permitido, como se esperaba",
+      "deny": "Denegado, como se esperaba",
+      "discrepancy": "Discrepancia: abre el hallazgo",
+      "error": "Error: la prueba no pudo completarse",
+      "skipped": "Omitido o no aplica, con su motivo"
+    },
+    "summary": "{rows, plural, one {# operación} other {# operaciones}} · {identities} identidades · {discrepancies, plural, one {# discrepancia} other {# discrepancias}}",
+    "none": {
+      "title": "No hay discrepancias",
+      "text": "Todas las identidades recibieron la respuesta esperada."
+    },
+    "empty": {
+      "title": "Esta ejecución no tiene matriz",
+      "text": "La matriz se genera cuando se prueba el módulo de acceso a objetos con al menos dos identidades."
+    },
+    "caption": "Respuesta de cada operación para cada identidad",
+    "operation": "Operación y política",
+    "roles": {
+      "unauthenticated": "Sin autenticar",
+      "owner": "Usuario · dueño",
+      "user": "Usuario",
+      "other": "Otro"
+    },
+    "global": "Toda la API · CORS y cabeceras",
+    "ownedBy": "de {name}",
+    "templates": {
+      "authenticated": "Cualquier autenticado",
+      "ownerOrAdmin": "Propietario o administrador",
+      "owner": "Solo propietario",
+      "admin": "Solo administrador",
+      "public": "Pública",
+      "global": "Comprobación global"
+    },
+    "expected": {
+      "allow": "Esperado: permitir",
+      "deny": "Esperado: denegar"
+    },
+    "discrepancy": "Discrepancia",
+    "error": "Error",
+    "notApplicable": "No aplica",
+    "usesAnonymous": "Usa la identidad anónima",
+    "notTested": "No probado",
+    "expiredCredential": "Credencial vencida",
+    "cors": "CORS abierto",
+    "timeout": "Tiempo agotado"
+  },
+  "Findings": {
+    "title": "Hallazgos",
+    "subtitle": "Estado actual del proyecto, con los resultados de la ejecución n.º {number}.",
+    "subtitleNone": "Aún no hay ejecuciones en este proyecto.",
+    "export": "Exportar a Excel",
+    "exported": "Exportación lista",
+    "exportedText": "{count, plural, one {Se exportó # hallazgo.} other {Se exportaron # hallazgos.}} Solo incluye los filtrados.",
+    "empty": {
+      "title": "Aún no hay hallazgos",
+      "text": "Ejecuta las pruebas para ver aquí lo que encontremos en tu API.",
+      "action": "Nueva ejecución"
+    },
+    "filters": {
+      "title": "Filtros",
+      "module": "Módulo",
+      "severity": "Severidad",
+      "status": "Estado",
+      "reason": "Motivo de descarte",
+      "allModules": "Todos los módulos",
+      "allSeverities": "Todas",
+      "all": "Todos",
+      "clear": "Limpiar filtros"
+    },
+    "status": {
+      "open": "Abiertos"
+    },
+    "reason": {
+      "all": "Riesgo aceptado y falso positivo",
+      "accepted": "Riesgo aceptado",
+      "false_positive": "Falso positivo"
+    },
+    "chips": {
+      "status": "Estado: {value}",
+      "module": "Módulo: {value}",
+      "severity": "Severidad: {value}",
+      "reason": "Motivo: {value}",
+      "remove": "Quitar filtro «{filter}»"
+    },
+    "showing": "Mostrando {shown} de {total} · ordenados por severidad · «Exportar a Excel» incluye solo los filtrados",
+    "openCount": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
+    "count": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "cols": {
+      "severity": "Severidad",
+      "finding": "Hallazgo y operación",
+      "module": "Módulo",
+      "identity": "Identidad",
+      "classification": "Clasificación",
+      "status": "Estado"
+    },
+    "open": "Abrir {title}"
+  },
+  "FindingDetail": {
+    "crumb": "Hallazgo",
+    "notFound": "Hallazgo no encontrado",
+    "summary": "Resumen del hallazgo",
+    "severity": "Severidad {severity}",
+    "fields": {
+      "operation": "Operación",
+      "identity": "Identidad",
+      "module": "Módulo",
+      "owasp": "OWASP",
+      "cwe": "CWE"
+    },
+    "newTab": "(se abre en una pestaña nueva)",
+    "retest": "Volver a probar",
+    "retestStarted": "Probando de nuevo este hallazgo",
+    "retestText": "Solo se repite esta operación; verás el resultado en unos segundos.",
+    "acceptRisk": "Aceptar el riesgo",
+    "accepted": {
+      "accepted": "Riesgo aceptado",
+      "falsePositive": "Descartado como falso positivo",
+      "note": "Si una ejecución lo vuelve a detectar, seguirá aceptado. Puedes revertirlo y volverá a «{status}»."
+    },
+    "statusName": {
+      "new": "Nuevo",
+      "persistent": "Persistente",
+      "regression": "Regresión",
+      "resolved": "Resuelto",
+      "acceptedRisk": "Riesgo aceptado"
+    },
+    "revert": "Revertir",
+    "reverted": "El hallazgo volvió a «{status}»",
+    "toast": {
+      "accepted": "Riesgo aceptado",
+      "falsePositive": "Hallazgo descartado como falso positivo"
+    },
+    "policies": {
+      "owner": "Solo propietario",
+      "admin": "Solo administrador",
+      "authenticated": "Cualquier autenticado",
+      "public": "Pública",
+      "global": "Comprobación global"
+    },
+    "expected": {
+      "title": "Esperado según la política «{policy}»",
+      "denied": "Denegado",
+      "secure": "Configuración segura",
+      "text": {
+        "owner": "403 o 404: el recurso pertenece a otro usuario",
+        "admin": "403: la operación es solo para administradores",
+        "authenticated": "401: se requiere una credencial válida y vigente",
+        "public": "Cualquier identidad puede consultarla",
+        "global": "La respuesta no debe exponer el comportamiento o el valor inseguro"
+      }
+    },
+    "observed": {
+      "title": "Observado como {identity}",
+      "404": "404 No encontrado",
+      "500": "500 Error del servidor",
+      "text": {
+        "owner": "La API devolvió el recurso completo",
+        "admin": "La API ejecutó la operación sin ser administrador",
+        "authenticated": "La API respondió sin validar la credencial como se esperaba",
+        "public": "La API respondió",
+        "global": "La respuesta incluye el comportamiento descrito en el hallazgo"
+      }
+    },
+    "evidence": {
+      "title": "Evidencia de la ejecución {run}",
+      "copyCurl": "Copiar como curl",
+      "request": "Petición",
+      "masked": "Credencial enmascarada",
+      "response": "Respuesta · {status}",
+      "size": "{bytes} bytes"
+    },
+    "fix": {
+      "title": "Cómo corregirlo",
+      "API1": "Antes de devolver un recurso, comprueba en el servidor que pertenezca al usuario del token. Compara el identificador del propietario con el del usuario autenticado y responde 404 cuando no coincida, para no revelar que existe.",
+      "API2": "Valida la firma, la vigencia y el destinatario del token en cada petición. Rechaza con 401 las credenciales vencidas o revocadas y no aceptes tokens sin expiración.",
+      "API3": "Define una lista de campos permitidos por operación y descarta el resto. Nunca asignes directamente el cuerpo de la petición al modelo: campos como el estado o el rol solo los cambia el servidor.",
+      "API4": "Limita el tamaño de página, el número de peticiones por identidad y la duración de cada una. Responde 429 con Retry-After cuando se alcance el límite.",
+      "API5": "Verifica el rol en el servidor para cada función administrativa, no solo en la interfaz. Niega por omisión y concede el acceso explícitamente.",
+      "API8": "Revisa la configuración del servidor: agrega las cabeceras de seguridad, restringe CORS a orígenes conocidos y devuelve errores genéricos sin trazas ni versiones.",
+      "API9": "Mantén un inventario de las operaciones y versiones expuestas. Deshabilita los métodos y las rutas que no estén documentados."
+    },
+    "history": {
+      "title": "Historial",
+      "run": "Ejecución {number}",
+      "reason": {
+        "new": "Detectado por primera vez en la ejecución {number}",
+        "persistent": "Se detectó de nuevo en la ejecución {number}",
+        "regression": "Reapareció tras haberse resuelto",
+        "resolved": "Ya no se detectó en la ejecución {number}",
+        "acceptedRisk": "Riesgo aceptado"
+      }
     }
   }
 }

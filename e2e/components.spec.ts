@@ -66,13 +66,13 @@ test.describe("fase 0 · componentes comunes", () => {
     await page.goto("/design-system");
     await page.getByRole("button", { name: "Aceptar riesgo (C-09)" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Guardar decisión" }).click();
+    await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
     await expect(dialog.getByRole("alert")).toContainText("al menos 10 caracteres");
 
     await dialog.getByRole("radio", { name: "Falso positivo" }).check();
     await dialog.getByRole("textbox").fill("La API solo se expone dentro de la red interna.");
     await expect(dialog.getByText("47/500")).toBeVisible();
-    await dialog.getByRole("button", { name: "Guardar decisión" }).click();
+    await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
     await expect(dialog).toBeHidden();
     await expect(page.getByRole("status").filter({ hasText: "Decisión guardada" })).toContainText(
       "false_positive",

@@ -551,8 +551,8 @@
     "typeToConfirm": "Type <code>{text}</code> to confirm"
   },
   "AcceptRisk": {
-    "title": "Accept the risk",
-    "description": "Choose the reason and explain the decision. It is recorded and can be reverted.",
+    "title": "Dismiss this finding",
+    "description": "It moves to “Accepted risk” and stops counting among the open ones. Choose the reason.",
     "reason": "Reason",
     "reasons": {
       "accepted": "Accepted risk",
@@ -561,9 +561,18 @@
     "justification": "Justification",
     "required": "(required)",
     "placeholder": "Explain why this risk is accepted",
-    "help": "It stays in the finding's history.",
+    "help": "It is saved in the finding's history, not in the audit log.",
     "tooShort": "Write a justification of at least {min} characters.",
-    "submit": "Save decision"
+    "submit": "Dismiss finding",
+    "reasonText": {
+      "accepted": "The finding is real and you decide not to fix it for now.",
+      "false_positive": "The finding is not real: the API behaves as expected."
+    },
+    "notes": {
+      "audit": "The audit log records the action, not your justification: free text is never stored.",
+      "stays": "If a run detects it again, it stays accepted.",
+      "revert": "You can revert it and it will go back to “Persistent”."
+    }
   },
   "Sidebar": {
     "label": "Main navigation",
@@ -1506,6 +1515,378 @@
     "errors": {
       "ownerTitle": "The owner field is missing",
       "ownerText": "Ownership templates need an owner field to be saved."
+    }
+  },
+  "ConfigureRun": {
+    "title": "New run",
+    "crumb": "New run",
+    "crumbRuns": "Runs",
+    "modules": {
+      "title": "Test modules",
+      "lead": "Choose which OWASP API Top 10 categories to test in this run.",
+      "selected": "{count, plural, =0 {None selected} other {# selected}}",
+      "noAdmin": "Requires an administrator identity",
+      "addIdentity": "Add identity",
+      "notes": {
+        "auth": "Tokens, sessions and credentials",
+        "config": "Headers, CORS and error messages",
+        "objects": "Each identity against other people's resources",
+        "functions": "Administrative functions with a regular user",
+        "properties": "Modifies test data that Hindama creates",
+        "resources": "Loads the server with repeated requests",
+        "sql": "Sends injection payloads; modifies test data"
+      },
+      "risk": "Risk"
+    },
+    "risk": {
+      "medium": "Medium risk",
+      "high": "High risk"
+    },
+    "riskSummary": "Selected modules: {names}.",
+    "limits": {
+      "title": "Run limits",
+      "lead": "They protect your server: the run stops as soon as any of them is reached.",
+      "rps": "Requests per second",
+      "concurrency": "Parallel requests",
+      "total": "Total requests",
+      "duration": "Maximum duration (minutes)",
+      "max": "Maximum allowed: {max}",
+      "outOfRange": "Enter a whole number between 1 and {max}."
+    },
+    "checks": {
+      "title": "Before running",
+      "verified": "The base URL is verified",
+      "noActive": "No other run is active",
+      "https": "The URL uses HTTPS",
+      "policy": "The cleanup policy is confirmed"
+    },
+    "run": "{count, plural, =0 {Run tests} one {Run # module} other {Run # modules}}",
+    "starting": "Starting…",
+    "started": "Run started",
+    "confirmFirst": "Confirm every risk module to run.",
+    "readOnly": {
+      "title": "What Hindama does",
+      "text": "Tests only create their own resources and delete them when finished. They never touch data that already existed in your API."
+    },
+    "blocked": {
+      "unverified": "Verify the project's base URL before running.",
+      "goVerify": "Go to verification",
+      "active": "A run is already in progress.",
+      "viewRun": "View the run"
+    }
+  },
+  "RunProgress": {
+    "title": "Run in progress",
+    "crumb": "In progress",
+    "crumbHistory": "Runs",
+    "live": "Live",
+    "completed": "Finished",
+    "started": "Started at {time} · {modules, plural, one {# module} other {# modules}}",
+    "now": "Testing now: <b>{module}</b>",
+    "progressLabel": "Run progress",
+    "stats": {
+      "requests": "Requests sent",
+      "minutes": "Elapsed time",
+      "speed": "Speed"
+    },
+    "viewResults": "View results",
+    "cancel": "Cancel run",
+    "found": "{count, plural, =0 {No findings yet} one {# finding so far} other {# findings so far}}",
+    "recent": "Most recent",
+    "noneYet": "Findings will appear here as soon as they are detected.",
+    "modules": "Modules",
+    "moduleDone": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "moduleRunning": "Running · {percent} %",
+    "modulePending": "Waiting",
+    "notices": {
+      "title": "Notices",
+      "expired": {
+        "title": "{name}'s token expired",
+        "text": "Its tests were skipped. Update the token and run again.",
+        "action": "Update"
+      },
+      "blocked": {
+        "title": "{count, plural, one {# request blocked} other {# requests blocked}}",
+        "text": "Your API answered <code>429</code>. Hindama slowed down automatically."
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel run no. {number}?",
+      "text": "The {count, plural, one {# finding} other {# findings}} found so far are kept and the test resources created are deleted.",
+      "confirm": "Cancel run",
+      "keep": "Keep running"
+    },
+    "cancelled": "Run no. {number} cancelled",
+    "finished": "Run no. {number} finished",
+    "none": {
+      "title": "There is no run in progress",
+      "text": "Start a new run to follow its progress here.",
+      "action": "New run"
+    }
+  },
+  "RunTabs": {
+    "label": "Run views",
+    "summary": "Summary",
+    "matrix": "Access matrix",
+    "findings": "Findings ({count})"
+  },
+  "RunResults": {
+    "title": "Run no. {number}",
+    "crumbHistory": "History",
+    "none": {
+      "title": "There are no runs yet",
+      "text": "When you finish your first run, its results will appear here.",
+      "action": "New run"
+    },
+    "report": "Generate report",
+    "export": "Export to Excel",
+    "exported": "Export ready",
+    "exportedText": "The file was downloaded with the run's findings.",
+    "retest": "Test again",
+    "retestBusy": "A run is already in progress",
+    "retestStarted": "Repeating run no. {number}",
+    "completed": "Completed · {date}",
+    "data": "Run details",
+    "end": {
+      "normal": "End: normal"
+    },
+    "contract": "Contract {version}",
+    "repeat": "Repeat of run no. {number}",
+    "headline": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "headlineText": "{new, plural, one {# is new} other {# are new}} and {regressions, plural, one {# is a regression} other {# are regressions}} of something that was already resolved.",
+    "viewFindings": "View findings",
+    "stats": {
+      "requests": "Requests",
+      "minutes": "Minutes elapsed",
+      "modules": "Modules run",
+      "blocked": "Blocked requests"
+    },
+    "comparison": {
+      "title": "Compared with run no. {number}",
+      "first": "First run",
+      "firstText": "There is no earlier run to compare with.",
+      "new": "New",
+      "persistent": "Persistent",
+      "resolved": "Resolved",
+      "regression": "Regressions",
+      "note": "A finding is a regression when it comes back after being marked as resolved."
+    },
+    "bySeverity": "By severity",
+    "modules": "Modules",
+    "limits": "Limits: {rps} req/s · {concurrency} concurrent · {total} requests · {minutes} min",
+    "moduleBlocked": "Not run: no administrator identity",
+    "moduleNotSelected": "Not selected",
+    "moduleFindings": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "incomplete": "incomplete",
+    "notices": {
+      "title": "Notices",
+      "expired": {
+        "title": "{name} had an expired credential",
+        "text": "{count} Object access tests were skipped. That module's results are incomplete."
+      },
+      "skipped": {
+        "title": "{module} was not run",
+        "text": "An identity with the administrator role is missing."
+      }
+    },
+    "top": "Most severe"
+  },
+  "Matrix": {
+    "title": "Access matrix",
+    "onlyDiscrepancies": "Only discrepancies",
+    "legend": {
+      "title": "Legend",
+      "allow": "Allowed, as expected",
+      "deny": "Denied, as expected",
+      "discrepancy": "Discrepancy: opens the finding",
+      "error": "Error: the test could not finish",
+      "skipped": "Skipped or not applicable, with its reason"
+    },
+    "summary": "{rows, plural, one {# operation} other {# operations}} · {identities} identities · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
+    "none": {
+      "title": "There are no discrepancies",
+      "text": "Every identity got the expected response."
+    },
+    "empty": {
+      "title": "This run has no matrix",
+      "text": "The matrix is built when the object access module is tested with at least two identities."
+    },
+    "caption": "Response of each operation for each identity",
+    "operation": "Operation and policy",
+    "roles": {
+      "unauthenticated": "Unauthenticated",
+      "owner": "User · owner",
+      "user": "User",
+      "other": "Other"
+    },
+    "global": "Whole API · CORS and headers",
+    "ownedBy": "of {name}",
+    "templates": {
+      "authenticated": "Any authenticated user",
+      "ownerOrAdmin": "Owner or administrator",
+      "owner": "Owner only",
+      "admin": "Administrator only",
+      "public": "Public",
+      "global": "Global check"
+    },
+    "expected": {
+      "allow": "Expected: allow",
+      "deny": "Expected: deny"
+    },
+    "discrepancy": "Discrepancy",
+    "error": "Error",
+    "notApplicable": "Not applicable",
+    "usesAnonymous": "Uses the anonymous identity",
+    "notTested": "Not tested",
+    "expiredCredential": "Expired credential",
+    "cors": "Open CORS",
+    "timeout": "Timed out"
+  },
+  "Findings": {
+    "title": "Findings",
+    "subtitle": "Current state of the project, with the results of run no. {number}.",
+    "subtitleNone": "There are no runs in this project yet.",
+    "export": "Export to Excel",
+    "exported": "Export ready",
+    "exportedText": "{count, plural, one {# finding was exported.} other {# findings were exported.}} It only includes the filtered ones.",
+    "empty": {
+      "title": "There are no findings yet",
+      "text": "Run the tests to see here what we find in your API.",
+      "action": "New run"
+    },
+    "filters": {
+      "title": "Filters",
+      "module": "Module",
+      "severity": "Severity",
+      "status": "Status",
+      "reason": "Dismissal reason",
+      "allModules": "All modules",
+      "allSeverities": "All",
+      "all": "All",
+      "clear": "Clear filters"
+    },
+    "status": {
+      "open": "Open"
+    },
+    "reason": {
+      "all": "Accepted risk and false positive",
+      "accepted": "Accepted risk",
+      "false_positive": "False positive"
+    },
+    "chips": {
+      "status": "Status: {value}",
+      "module": "Module: {value}",
+      "severity": "Severity: {value}",
+      "reason": "Reason: {value}",
+      "remove": "Remove filter “{filter}”"
+    },
+    "showing": "Showing {shown} of {total} · sorted by severity · “Export to Excel” includes only the filtered ones",
+    "openCount": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
+    "count": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "cols": {
+      "severity": "Severity",
+      "finding": "Finding and operation",
+      "module": "Module",
+      "identity": "Identity",
+      "classification": "Classification",
+      "status": "Status"
+    },
+    "open": "Open {title}"
+  },
+  "FindingDetail": {
+    "crumb": "Finding",
+    "notFound": "Finding not found",
+    "summary": "Finding summary",
+    "severity": "{severity} severity",
+    "fields": {
+      "operation": "Operation",
+      "identity": "Identity",
+      "module": "Module",
+      "owasp": "OWASP",
+      "cwe": "CWE"
+    },
+    "newTab": "(opens in a new tab)",
+    "retest": "Test again",
+    "retestStarted": "Testing this finding again",
+    "retestText": "Only this operation is repeated; you will see the result in a few seconds.",
+    "acceptRisk": "Accept the risk",
+    "accepted": {
+      "accepted": "Risk accepted",
+      "falsePositive": "Dismissed as a false positive",
+      "note": "If a run detects it again, it stays accepted. You can revert it and it will go back to “{status}”."
+    },
+    "statusName": {
+      "new": "New",
+      "persistent": "Persistent",
+      "regression": "Regression",
+      "resolved": "Resolved",
+      "acceptedRisk": "Accepted risk"
+    },
+    "revert": "Revert",
+    "reverted": "The finding went back to “{status}”",
+    "toast": {
+      "accepted": "Risk accepted",
+      "falsePositive": "Finding dismissed as a false positive"
+    },
+    "policies": {
+      "owner": "Owner only",
+      "admin": "Administrator only",
+      "authenticated": "Any authenticated user",
+      "public": "Public",
+      "global": "Global check"
+    },
+    "expected": {
+      "title": "Expected by the “{policy}” policy",
+      "denied": "Denied",
+      "secure": "Secure configuration",
+      "text": {
+        "owner": "403 or 404: the resource belongs to another user",
+        "admin": "403: the operation is for administrators only",
+        "authenticated": "401: a valid, current credential is required",
+        "public": "Any identity can read it",
+        "global": "The response must not expose the insecure behavior or value"
+      }
+    },
+    "observed": {
+      "title": "Observed as {identity}",
+      "404": "404 Not Found",
+      "500": "500 Server error",
+      "text": {
+        "owner": "The API returned the whole resource",
+        "admin": "The API ran the operation without being an administrator",
+        "authenticated": "The API answered without validating the credential as expected",
+        "public": "The API answered",
+        "global": "The response includes the behavior described in the finding"
+      }
+    },
+    "evidence": {
+      "title": "Evidence from run {run}",
+      "copyCurl": "Copy as curl",
+      "request": "Request",
+      "masked": "Credential masked",
+      "response": "Response · {status}",
+      "size": "{bytes} bytes"
+    },
+    "fix": {
+      "title": "How to fix it",
+      "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
+      "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
+      "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
+      "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
+      "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
+      "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
+      "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
+    },
+    "history": {
+      "title": "History",
+      "run": "Run {number}",
+      "reason": {
+        "new": "First detected in run {number}",
+        "persistent": "Detected again in run {number}",
+        "regression": "Came back after being resolved",
+        "resolved": "No longer detected in run {number}",
+        "acceptedRisk": "Risk accepted"
+      }
     }
   }
 }

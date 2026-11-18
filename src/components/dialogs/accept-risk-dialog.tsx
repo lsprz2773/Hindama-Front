@@ -88,7 +88,7 @@ export function AcceptRiskDialog({
             <label
               key={value}
               className={cn(
-                "flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border px-3.5 text-[14.5px]",
+                "flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border px-3.5 py-2 text-[14.5px]",
                 selected ? "border-accent bg-selected font-semibold" : "border-line bg-panel-2",
               )}
             >
@@ -101,7 +101,12 @@ export function AcceptRiskDialog({
                 disabled={busy}
                 className="accent-accent size-[18px]"
               />
-              {t(`reasons.${value}`)}
+              <span className="flex flex-col">
+                <b className="font-semibold">{t(`reasons.${value}`)}</b>
+                <span className="text-muted text-[13px] font-normal">
+                  {t(`reasonText.${value}`)}
+                </span>
+              </span>
             </label>
           );
         })}
@@ -138,6 +143,12 @@ export function AcceptRiskDialog({
           </span>
         </div>
       </div>
+
+      <ul className="text-muted m-0 flex list-disc flex-col gap-1 pl-[18px] text-[13.5px] leading-[1.45]">
+        <li>{t("notes.audit")}</li>
+        <li>{t("notes.stays")}</li>
+        <li>{t("notes.revert")}</li>
+      </ul>
     </Modal>
   );
 }
