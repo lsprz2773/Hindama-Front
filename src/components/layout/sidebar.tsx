@@ -150,7 +150,7 @@ export function Sidebar({ role, project, collapsed = false }: SidebarProps) {
           active={isActive("/profile")}
           open={open}
         />
-        <NavItem href="/" icon="logout" label={t("signOut")} active={false} open={open} />
+        <NavItem href="/sign-in" icon="logout" label={t("signOut")} active={false} open={open} />
       </div>
     </nav>
   );

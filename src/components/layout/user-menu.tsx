@@ -51,7 +51,7 @@ export function UserMenu({ name }: { name: string }) {
           </div>
           <DropdownMenu.Separator className="bg-line my-1 h-px" />
           <DropdownMenu.Item
-            onSelect={() => router.push("/")}
+            onSelect={() => router.push("/sign-in")}
             className="data-[highlighted]:bg-selected flex min-h-11 cursor-pointer items-center gap-3 rounded-[14px] px-3 text-[14.5px] outline-none"
           >
             <Icon name="logout" size={18} />
