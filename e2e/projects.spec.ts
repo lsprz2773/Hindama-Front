@@ -163,7 +163,7 @@ test.describe("V-16 dashboard del proyecto", () => {
   test("proyecto con ejecución en curso muestra el aviso y su progreso", async ({ page }) => {
     await page.goto("/projects/inventario");
     await expect(page.getByText("La ejecución sigue en curso")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ver ejecución" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver ejecución" }).first()).toBeVisible();
   });
 
   test("un proyecto que no existe muestra el 404", async ({ page }) => {
