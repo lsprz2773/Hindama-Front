@@ -443,5 +443,157 @@
       "text": "Part of Hindama isn't responding right now. Your data is safe; try again in a few minutes.",
       "action": "Retry"
     }
+  },
+  "Status": {
+    "project": {
+      "verified": "Verified",
+      "pendingVerification": "Pending verification",
+      "verificationLost": "Verification lost",
+      "concluded": "Concluded"
+    },
+    "run": {
+      "queued": "Queued",
+      "running": "Running",
+      "cancelling": "Cancelling",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "identity": {
+      "active": "Active",
+      "expiredCredential": "Credential expired",
+      "untested": "Not tested"
+    },
+    "finding": {
+      "open": "Open",
+      "new": "New",
+      "persistent": "Persistent",
+      "regression": "Regression",
+      "resolved": "Resolved",
+      "acceptedRisk": "Accepted risk"
+    }
+  },
+  "States": {
+    "reference": "Reference {id}",
+    "retry": "Retry",
+    "retrying": "Retrying…",
+    "noResults": {
+      "title": "Nothing matches your filters",
+      "text": "Try another severity or clear the filters to see everything.",
+      "action": "Clear filters"
+    },
+    "loadError": {
+      "title": "We couldn't load {subject}",
+      "text": "It's a problem on our side. Your data is safe."
+    },
+    "forbidden": {
+      "title": "You don't have permission to see this",
+      "text": "This content belongs to another account or another role.",
+      "action": "Back to my projects"
+    },
+    "rateLimited": {
+      "title": "Too many requests",
+      "text": "Wait a moment before trying again.",
+      "retryIn": "Retry in {time}"
+    },
+    "unavailable": {
+      "title": "The service is unavailable",
+      "text": "We're restoring it. Your runs in progress are not lost."
+    }
+  },
+  "Warnings": {
+    "persistent": "Persistent",
+    "momentary": "Right now",
+    "url_no_tls": {
+      "title": "The base URL uses unencrypted HTTP",
+      "text": "Test credentials would travel unprotected. Use HTTPS if your API allows it; you can continue with HTTP if the environment is for testing."
+    },
+    "url_unresolved": {
+      "title": "The host doesn't resolve in DNS yet",
+      "text": "We saved the project anyway. You'll be able to verify ownership once the DNS record exists."
+    },
+    "project_verification_lost": {
+      "title": "You changed the host and verification was lost",
+      "text": "Verify ownership again before running tests. Changing only the path or port doesn't affect verification."
+    },
+    "contract_servers_mismatch": {
+      "title": "The contract declares servers different from your base URL",
+      "text": "Tests always target the project's base URL. Confirm it's the right one."
+    },
+    "contract_external_reference": {
+      "title": "The contract uses external references",
+      "text": "We don't download references to other files or sites, so those parts aren't analyzed."
+    },
+    "contract_unparsed_element": {
+      "title": "An element of the contract couldn't be interpreted",
+      "text": "We skipped it and imported the rest. Location in the document:"
+    },
+    "contract_unchanged": {
+      "title": "This version is identical to the previous one",
+      "text": "There are no changes to record, so we didn't create a new version."
+    }
+  },
+  "PendingResources": {
+    "title": "{count, plural, one {# resource was left undeleted in your API} other {# resources were left undeleted in your API}}",
+    "text": "Hindama created them during this run and couldn't delete them after 3 attempts. Delete them by hand to leave your environment clean. Errors are shown without credentials.",
+    "tableLabel": "Resources pending deletion",
+    "operation": "Operation",
+    "location": "Location",
+    "attempts": "Attempts",
+    "attemptsOf": "{done} of {total}",
+    "lastError": "Last error"
+  },
+  "Dialogs": {
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "genericError": "The action couldn't be completed",
+    "genericErrorText": "Try again.",
+    "typeToConfirm": "Type <code>{text}</code> to confirm"
+  },
+  "AcceptRisk": {
+    "title": "Accept the risk",
+    "description": "Choose the reason and explain the decision. It is recorded and can be reverted.",
+    "reason": "Reason",
+    "reasons": {
+      "accepted": "Accepted risk",
+      "false_positive": "False positive"
+    },
+    "justification": "Justification",
+    "required": "(required)",
+    "placeholder": "Explain why this risk is accepted",
+    "help": "It stays in the finding's history.",
+    "tooShort": "Write a justification of at least {min} characters.",
+    "submit": "Save decision"
+  },
+  "Sidebar": {
+    "label": "Main navigation",
+    "home": "Hindama, home",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu",
+    "projects": "Projects",
+    "administration": "Administration",
+    "statistics": "Statistics",
+    "auditLog": "Audit log",
+    "profile": "Profile",
+    "signOut": "Sign out",
+    "project": {
+      "summary": "Summary",
+      "verification": "Verification",
+      "contract": "Contract",
+      "identities": "Identities",
+      "resources": "Resources",
+      "policy": "Policy",
+      "history": "History",
+      "findings": "Findings",
+      "settings": "Settings"
+    }
+  },
+  "Breadcrumb": {
+    "label": "Breadcrumb"
+  },
+  "UserMenu": {
+    "profile": "Profile",
+    "language": "Language",
+    "signOut": "Sign out"
   }
 }

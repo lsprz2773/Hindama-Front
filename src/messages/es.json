@@ -443,5 +443,157 @@
       "text": "Una parte de Hindama no responde en este momento. Tus datos están a salvo; vuelve a intentarlo en unos minutos.",
       "action": "Reintentar"
     }
+  },
+  "Status": {
+    "project": {
+      "verified": "Verificado",
+      "pendingVerification": "Pendiente de verificación",
+      "verificationLost": "Verificación perdida",
+      "concluded": "Concluido"
+    },
+    "run": {
+      "queued": "En cola",
+      "running": "En curso",
+      "cancelling": "Cancelando",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "failed": "Fallida"
+    },
+    "identity": {
+      "active": "Activa",
+      "expiredCredential": "Credencial vencida",
+      "untested": "Sin probar"
+    },
+    "finding": {
+      "open": "Abierto",
+      "new": "Nuevo",
+      "persistent": "Persistente",
+      "regression": "Regresión",
+      "resolved": "Resuelto",
+      "acceptedRisk": "Riesgo aceptado"
+    }
+  },
+  "States": {
+    "reference": "Referencia {id}",
+    "retry": "Reintentar",
+    "retrying": "Reintentando…",
+    "noResults": {
+      "title": "Nada coincide con tus filtros",
+      "text": "Prueba con otra severidad o limpia los filtros para ver todo.",
+      "action": "Limpiar filtros"
+    },
+    "loadError": {
+      "title": "No pudimos cargar {subject}",
+      "text": "Es un problema nuestro. Tus datos están a salvo."
+    },
+    "forbidden": {
+      "title": "No tienes permiso para ver esto",
+      "text": "Este contenido pertenece a otra cuenta o a otra función.",
+      "action": "Volver a mis proyectos"
+    },
+    "rateLimited": {
+      "title": "Demasiadas solicitudes",
+      "text": "Espera un momento antes de volver a intentarlo.",
+      "retryIn": "Reintentar en {time}"
+    },
+    "unavailable": {
+      "title": "El servicio no está disponible",
+      "text": "Estamos restableciéndolo. Tus ejecuciones en curso no se pierden."
+    }
+  },
+  "Warnings": {
+    "persistent": "Persistente",
+    "momentary": "Solo ahora",
+    "url_no_tls": {
+      "title": "La URL base usa HTTP sin cifrar",
+      "text": "Las credenciales de prueba viajarían sin protección. Usa HTTPS si tu API lo permite; puedes continuar con HTTP si el entorno es de pruebas."
+    },
+    "url_unresolved": {
+      "title": "El host todavía no resuelve en DNS",
+      "text": "Guardamos el proyecto de todos modos. Podrás verificar la propiedad cuando el registro DNS exista."
+    },
+    "project_verification_lost": {
+      "title": "Cambiaste el host y se perdió la verificación",
+      "text": "Verifica de nuevo la propiedad antes de ejecutar pruebas. Cambiar solo la ruta o el puerto no afecta la verificación."
+    },
+    "contract_servers_mismatch": {
+      "title": "El contrato declara servidores distintos a tu URL base",
+      "text": "Las pruebas se dirigen siempre a la URL base del proyecto. Confirma que es la correcta."
+    },
+    "contract_external_reference": {
+      "title": "El contrato usa referencias externas",
+      "text": "No descargamos referencias a otros archivos o sitios, por eso esas partes no se analizan."
+    },
+    "contract_unparsed_element": {
+      "title": "Un elemento del contrato no se pudo interpretar",
+      "text": "Lo omitimos y importamos el resto. Ubicación en el documento:"
+    },
+    "contract_unchanged": {
+      "title": "Esta versión es idéntica a la anterior",
+      "text": "No hay cambios que registrar, así que no creamos una versión nueva."
+    }
+  },
+  "PendingResources": {
+    "title": "{count, plural, one {# recurso quedó sin eliminar en tu API} other {# recursos quedaron sin eliminar en tu API}}",
+    "text": "Hindama los creó durante esta ejecución y no pudo borrarlos tras 3 intentos. Elimínalos a mano para dejar tu entorno limpio. Los errores se muestran sin credenciales.",
+    "tableLabel": "Recursos pendientes de eliminar",
+    "operation": "Operación",
+    "location": "Ubicación",
+    "attempts": "Intentos",
+    "attemptsOf": "{done} de {total}",
+    "lastError": "Último error"
+  },
+  "Dialogs": {
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "genericError": "No se pudo completar la acción",
+    "genericErrorText": "Inténtalo de nuevo.",
+    "typeToConfirm": "Escribe <code>{text}</code> para confirmar"
+  },
+  "AcceptRisk": {
+    "title": "Aceptar el riesgo",
+    "description": "Elige el motivo y explica la decisión. Queda registrada y se puede revertir.",
+    "reason": "Motivo",
+    "reasons": {
+      "accepted": "Riesgo aceptado",
+      "false_positive": "Falso positivo"
+    },
+    "justification": "Justificación",
+    "required": "(obligatoria)",
+    "placeholder": "Explica por qué se acepta este riesgo",
+    "help": "Queda en el historial del hallazgo.",
+    "tooShort": "Escribe una justificación de al menos {min} caracteres.",
+    "submit": "Guardar decisión"
+  },
+  "Sidebar": {
+    "label": "Navegación principal",
+    "home": "Hindama, inicio",
+    "collapse": "Contraer menú",
+    "expand": "Expandir menú",
+    "projects": "Proyectos",
+    "administration": "Administración",
+    "statistics": "Estadísticas",
+    "auditLog": "Bitácora",
+    "profile": "Perfil",
+    "signOut": "Cerrar sesión",
+    "project": {
+      "summary": "Resumen",
+      "verification": "Verificación",
+      "contract": "Contrato",
+      "identities": "Identidades",
+      "resources": "Recursos",
+      "policy": "Política",
+      "history": "Historial",
+      "findings": "Hallazgos",
+      "settings": "Ajustes"
+    }
+  },
+  "Breadcrumb": {
+    "label": "Ruta"
+  },
+  "UserMenu": {
+    "profile": "Perfil",
+    "language": "Idioma",
+    "signOut": "Cerrar sesión"
   }
 }
