@@ -1,26 +1,173 @@
 @import "tailwindcss";
 
+/*
+ * Tokens del diseño «vidrio cálido» (lienzo «Diseño de pantallas Hindama»).
+ * Oscuro por defecto; el claro sigue la preferencia del sistema y puede forzarse
+ * con data-theme="light" | "dark" en <html>.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --accent: #ff6b1a;
+  --on-accent: #16110d;
+
+  --bg:
+    radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.1), transparent 60%),
+    radial-gradient(800px 700px at 85% 90%, rgba(110, 112, 118, 0.28), transparent 60%),
+    linear-gradient(160deg, #3b3c40 0%, #242528 55%, #18191b 100%);
+  --frame: rgba(255, 255, 255, 0.03);
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel-2: rgba(255, 255, 255, 0.08);
+  --hero:
+    radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.42), transparent 70%),
+    rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --text: #f5f2ee;
+  --muted: #b3aba3;
+  --link: #ff9a5c;
+  --field: rgba(0, 0, 0, 0.25);
+  --menu: rgba(42, 43, 47, 0.98);
+  --toast: rgba(48, 49, 54, 0.97);
+  --track: rgba(255, 255, 255, 0.12);
+
+  --danger: #ff4d5e;
+  --danger-bg: rgba(255, 77, 94, 0.14);
+  --success: #7fd1c1;
+  --success-bg: rgba(127, 209, 193, 0.16);
+  --warning: #ffb020;
+  --warning-bg: rgba(255, 176, 32, 0.16);
+  --info: #a7a29c;
+  --info-bg: rgba(167, 162, 156, 0.16);
+  --progress: #ff9a5c;
+  --progress-bg: rgba(255, 107, 26, 0.18);
+  --selected: rgba(255, 107, 26, 0.18);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg:
+      radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.8), transparent 60%),
+      radial-gradient(800px 700px at 85% 90%, rgba(140, 142, 148, 0.3), transparent 60%),
+      linear-gradient(160deg, #eeeff1 0%, #d8d9dc 60%, #c6c7cb 100%);
+    --frame: rgba(255, 255, 255, 0.4);
+    --panel: rgba(255, 255, 255, 0.66);
+    --panel-2: rgba(255, 255, 255, 0.8);
+    --hero:
+      radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
+      rgba(255, 255, 255, 0.5);
+    --border: rgba(40, 30, 20, 0.1);
+    --border-strong: rgba(40, 30, 20, 0.26);
+    --text: #1c1915;
+    --muted: #5f574f;
+    --link: #a8420a;
+    --field: #ffffff;
+    --menu: rgba(250, 250, 251, 0.97);
+    --toast: rgba(250, 250, 251, 0.97);
+    --track: rgba(40, 30, 20, 0.12);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --danger: #d92d3f;
+    --danger-bg: rgba(217, 45, 63, 0.1);
+    --success: #2e8a6e;
+    --success-bg: rgba(46, 138, 110, 0.14);
+    --warning: #b4541a;
+    --warning-bg: rgba(224, 138, 0, 0.16);
+    --info: #5f574f;
+    --info-bg: rgba(95, 87, 79, 0.12);
+    --progress: #a8420a;
+    --progress-bg: rgba(255, 107, 26, 0.16);
+    --selected: rgba(255, 107, 26, 0.14);
   }
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:
+    radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(800px 700px at 85% 90%, rgba(140, 142, 148, 0.3), transparent 60%),
+    linear-gradient(160deg, #eeeff1 0%, #d8d9dc 60%, #c6c7cb 100%);
+  --frame: rgba(255, 255, 255, 0.4);
+  --panel: rgba(255, 255, 255, 0.66);
+  --panel-2: rgba(255, 255, 255, 0.8);
+  --hero:
+    radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
+    rgba(255, 255, 255, 0.5);
+  --border: rgba(40, 30, 20, 0.1);
+  --border-strong: rgba(40, 30, 20, 0.26);
+  --text: #1c1915;
+  --muted: #5f574f;
+  --link: #a8420a;
+  --field: #ffffff;
+  --menu: rgba(250, 250, 251, 0.97);
+  --toast: rgba(250, 250, 251, 0.97);
+  --track: rgba(40, 30, 20, 0.12);
+
+  --danger: #d92d3f;
+  --danger-bg: rgba(217, 45, 63, 0.1);
+  --success: #2e8a6e;
+  --success-bg: rgba(46, 138, 110, 0.14);
+  --warning: #b4541a;
+  --warning-bg: rgba(224, 138, 0, 0.16);
+  --info: #5f574f;
+  --info-bg: rgba(95, 87, 79, 0.12);
+  --progress: #a8420a;
+  --progress-bg: rgba(255, 107, 26, 0.16);
+  --selected: rgba(255, 107, 26, 0.14);
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-frame: var(--frame);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-link: var(--link);
+  --color-field: var(--field);
+  --color-menu: var(--menu);
+  --color-toast: var(--toast);
+  --color-track: var(--track);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-progress: var(--progress);
+  --color-progress-bg: var(--progress-bg);
+  --color-selected: var(--selected);
+  --font-sans: var(--font-jakarta), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-lexend), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
+}
+
+html {
+  background: var(--bg);
+  background-attachment: fixed;
+  min-height: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: var(--font-sans);
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
