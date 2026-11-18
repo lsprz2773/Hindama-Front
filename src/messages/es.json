@@ -1075,5 +1075,437 @@
         "metadata": "No se aceptan direcciones de metadatos de la nube."
       }
     }
+  },
+  "Verification": {
+    "crumb": "Verificación",
+    "title": "Verifica que la API es tuya",
+    "verifiedTitle": "Propiedad verificada",
+    "verifiedText": "Comprobamos que controlas {host}. Se vuelve a comprobar antes de cada ejecución.",
+    "codeTitle": "Código de verificación de este proyecto",
+    "copyCode": "Copiar código",
+    "codeText": "Publícalo en el host <code>{host}</code> con uno de los dos métodos. Solo quien controla el dominio puede hacerlo.",
+    "methodTitle": "Elige cómo publicarlo",
+    "methodLabel": "Método de verificación",
+    "file": {
+      "tab": "Archivo en el servidor",
+      "step1": "Crea un archivo de texto cuyo único contenido sea el código.",
+      "step2": "Publícalo en esta dirección exacta:",
+      "step3": "Comprueba que se abre en el navegador y pulsa Verificar.",
+      "urlLabel": "dirección del archivo"
+    },
+    "dns": {
+      "tab": "Registro DNS TXT",
+      "step1": "En el panel de tu proveedor DNS, crea un registro TXT con este nombre de host:",
+      "step2": "Usa el código como valor del registro:",
+      "step3": "Guarda el registro y pulsa Verificar.",
+      "hostLabel": "nombre de host",
+      "valueLabel": "valor del registro",
+      "noteTitle": "La propagación puede tardar",
+      "noteText": "Un registro DNS nuevo puede tardar desde minutos hasta algunas horas en ser visible. Si falla, espera un poco y vuelve a intentarlo."
+    },
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "lastAttempt": "Último intento hace unos segundos",
+    "noAttempts": "Aún no has intentado verificar",
+    "success": "Propiedad verificada",
+    "failure": {
+      "expected": "Esperábamos",
+      "found": "Encontramos",
+      "howTitle": "Cómo corregirlo:",
+      "mismatch": {
+        "title": "No pudimos verificar: el contenido del archivo es distinto",
+        "how": "deja solo el código en el archivo, sin espacios ni saltos de línea al final, y vuelve a pulsar Verificar."
+      },
+      "notFound": {
+        "title": "No pudimos verificar: no encontramos el archivo",
+        "how": "comprueba que la dirección abre el archivo en el navegador."
+      }
+    },
+    "help": {
+      "whyTitle": "Por qué lo pedimos",
+      "whyText": "Hindama solo prueba APIs de quien puede demostrar que las controla. Así evitamos que se use para atacar servicios ajenos.",
+      "everyRunTitle": "Se revisa en cada ejecución",
+      "everyRunText": "La comprobación puede tardar hasta 20 segundos. Antes de cada ejecución volvemos a comprobar el código. Si lo retiras, la ejecución se cancela y el proyecto vuelve a «Pendiente de verificación».",
+      "commonTitle": "Fallas comunes",
+      "common1": "Archivo no encontrado (404)",
+      "common2": "Contenido distinto al código",
+      "common3": "Registro DNS ausente",
+      "common4": "Error de conexión con el host",
+      "common5": "El host resuelve a una dirección no permitida: se bloquea y queda en la bitácora"
+    }
+  },
+  "Contract": {
+    "crumb": "Contrato",
+    "title": "Contrato OpenAPI",
+    "history": "Historial de versiones",
+    "current": "Versión actual · importada el {date}",
+    "meta": "Formato YAML · origen: archivo · OpenAPI 3.1.0 · huella 9f3c…a1b7",
+    "summary": {
+      "openapi": "OpenAPI",
+      "operations": "Operaciones",
+      "schemas": "Esquemas",
+      "security": "Esquema de seguridad"
+    },
+    "empty": {
+      "title": "Aún no hay contrato",
+      "text": "Importa el contrato OpenAPI 3 de tu API para que Hindama conozca sus operaciones y proponga una política de acceso."
+    },
+    "import": {
+      "title": "Importar nueva versión",
+      "versions": "Ver {count} versiones",
+      "sourceLabel": "Origen del contrato",
+      "file": "Subir archivo",
+      "url": "Desde URL",
+      "drop": "Arrastra el archivo o elígelo",
+      "limits": ".json, .yaml o .yml · máximo 5 MB · OpenAPI 3.0 o 3.1",
+      "urlLabel": "URL del contrato",
+      "urlHint": "Debe ser una dirección pública que devuelva el contrato.",
+      "submit": "Importar y comparar",
+      "importing": "Importando…"
+    },
+    "imported": "Contrato importado",
+    "importedText": "Revisa los avisos y confirma la política de acceso.",
+    "next": "Siguiente paso: verificar la propiedad del host",
+    "warnings": "{count, plural, one {# aviso de esta versión} other {# avisos de esta versión}}",
+    "operations": {
+      "title": "{count} operaciones",
+      "filterLabel": "Filtrar por método",
+      "all": "Todos",
+      "search": "Buscar operación",
+      "searchPlaceholder": "Buscar ruta o resumen",
+      "security": {
+        "bearer": "bearer",
+        "public": "pública"
+      },
+      "detail": "Detalle de {method} {path}",
+      "params": "Parámetros",
+      "paramPath": "ruta · string (uuid)",
+      "paramQuery": "consulta · string, opcional",
+      "responses": "Respuestas",
+      "r401": "Sin autenticar",
+      "r404": "No existe",
+      "declaredSecurity": "Seguridad declarada",
+      "seePolicy": "Ver en la política de acceso",
+      "none": "Ninguna operación coincide.",
+      "showing": "Mostrando {shown} de {total}"
+    },
+    "errors": {
+      "type": "El archivo debe ser .json, .yaml o .yml.",
+      "size": "El archivo supera los 5 MB.",
+      "noFile": "Elige un archivo de contrato.",
+      "url": "Escribe una URL completa del contrato."
+    }
+  },
+  "ContractVersions": {
+    "crumb": "Versiones",
+    "title": "Versiones del contrato",
+    "count": "{count, plural, one {# versión} other {# versiones}}",
+    "current": "Actual",
+    "comparing": "Comparando",
+    "originUrl": "URL",
+    "originFile": "Archivo",
+    "originFileNamed": "Archivo {name}",
+    "operations": "{count} operaciones",
+    "warningsOf": "Avisos de {version}",
+    "back": "Volver a la versión actual",
+    "diffTitle": "{from} frente a {to}",
+    "summary": {
+      "added": "{count, plural, one {Agregada} other {Agregadas}}",
+      "modified": "{count, plural, one {Modificada} other {Modificadas}}",
+      "removed": "{count, plural, one {Eliminada} other {Eliminadas}}"
+    },
+    "reviewPolicy": {
+      "title": "Revisa la política",
+      "text": "Las {count} operaciones nuevas tienen una plantilla propuesta que no se usará en las pruebas hasta que la confirmes.",
+      "link": "Ir a la política"
+    },
+    "changes": "Cambios por operación",
+    "kind": {
+      "added": "Agregada",
+      "modified": "Modificada",
+      "removed": "Eliminada"
+    },
+    "details": {
+      "patch": "Cuerpo: nuevo campo «status» (string, enum). Seguridad sin cambios.",
+      "list": "Nuevo parámetro de consulta «createdAfter». Respuesta 200 agrega «nextCursor».",
+      "delete": "Ahora responde 409 si el pedido ya se envió.",
+      "health": "Se quitó el esquema de seguridad: ahora es pública."
+    }
+  },
+  "Identities": {
+    "crumb": "Identidades",
+    "title": "Identidades",
+    "add": "Agregar identidad",
+    "lead": "Cuentas de prueba de tu API. Hindama se autentica como cada una para comprobar quién puede hacer qué. Usa cuentas de un ambiente de pruebas, nunca de clientes reales.",
+    "requirements": {
+      "title": "Lo que necesita cada módulo",
+      "objects": {
+        "title": "Acceso a objetos",
+        "ok": "Dos identidades autenticadas, cada una con recursos propios. Lo cumples.",
+        "missing": "Necesitas dos identidades autenticadas, cada una con recursos propios."
+      },
+      "functions": {
+        "title": "Acceso a funciones",
+        "ok": "Una identidad normal y una con rol de administrador. Lo cumples.",
+        "missing": "Una identidad normal y una con rol de administrador. Te falta la administradora."
+      }
+    },
+    "count": "{count, plural, one {# identidad} other {# identidades}}",
+    "roles": {
+      "admin": "Administrador",
+      "user": "Usuario",
+      "other": "Otro",
+      "otherNamed": "Otro: {name}"
+    },
+    "auth": {
+      "none": "No envía credenciales",
+      "login": "Login automático",
+      "bearer": "Token Bearer",
+      "cookie": "Cookie de sesión",
+      "header": "Cabecera personalizada"
+    },
+    "status": {
+      "active": "Activa",
+      "expiredCredential": "Credencial vencida · 401",
+      "untested": "Sin probar"
+    },
+    "testedAgo": "probada hace {time}",
+    "noResources": "0 · sin recursos",
+    "alwaysExists": "Siempre existe",
+    "edit": "Editar",
+    "test": {
+      "button": "Probar",
+      "okTitle": "{name}: la credencial funciona",
+      "failedTitle": "{name}: la credencial falló",
+      "failedText": "La API respondió 401 Unauthorized. Reemplázala y vuelve a probar."
+    },
+    "delete": {
+      "label": "Eliminar {name}",
+      "title": "Eliminar la identidad «{name}»",
+      "text": "Esta acción no se puede deshacer.",
+      "heading": "Qué pasa",
+      "item1": "Se borran su credencial y sus recursos.",
+      "item2": "Sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada».",
+      "confirm": "Eliminar identidad",
+      "done": "Identidad «{name}» eliminada"
+    },
+    "deleteNote": "Al eliminar una identidad, sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada»."
+  },
+  "IdentityForm": {
+    "newCrumb": "Nueva",
+    "newTitle": "Agregar identidad",
+    "editTitle": "Editar identidad",
+    "name": "Nombre",
+    "role": {
+      "label": "Rol declarado",
+      "admin": "Administrador",
+      "user": "Usuario",
+      "other": "Otro",
+      "otherName": "Nombre del rol",
+      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política."
+    },
+    "auth": {
+      "label": "Forma de autenticación",
+      "login": {
+        "title": "Login automático",
+        "note": "Usuario y contraseña"
+      },
+      "bearer": {
+        "title": "Token Bearer",
+        "note": "Authorization: Bearer"
+      },
+      "cookie": {
+        "title": "Cookie de sesión",
+        "note": "Nombre y valor"
+      },
+      "header": {
+        "title": "Cabecera personalizada",
+        "note": "Nombre y valor"
+      }
+    },
+    "fields": {
+      "user": "Usuario",
+      "password": "Contraseña",
+      "endpoint": "Endpoint de login",
+      "token": "Token",
+      "cookieName": "Nombre de la cookie",
+      "cookieValue": "Valor",
+      "headerName": "Nombre de la cabecera",
+      "headerValue": "Valor"
+    },
+    "endsIn": "Termina en ••••{last4}",
+    "replace": "Reemplazar",
+    "loginNote": "Durante la ejecución obtenemos y renovamos el token automáticamente.",
+    "test": {
+      "title": "Probar credencial",
+      "operation": "Operación protegida",
+      "run": "Probar ahora",
+      "testing": "Probando…",
+      "ok": "La API respondió 200 OK.",
+      "okText": "La credencial funciona.",
+      "failed": "La API respondió 401 Unauthorized.",
+      "failedText": "El token parece vencido. Reemplázalo y vuelve a probar. Nunca mostramos la credencial en los resultados."
+    },
+    "cancel": "Cancelar",
+    "save": "Guardar identidad",
+    "saved": "Identidad «{name}» guardada",
+    "failedDialog": {
+      "title": "La prueba de la credencial falló",
+      "text": "La última prueba respondió 401. Si la guardas así, los módulos que usen esta identidad omitirán sus operaciones.",
+      "confirm": "Guardar de todos modos",
+      "cancel": "Volver a editar"
+    },
+    "help": {
+      "encryptedTitle": "Tus credenciales están cifradas",
+      "encryptedText": "Las guardamos con AES-256-GCM. Después de guardarlas solo verás los últimos 4 caracteres, y en evidencias y reportes aparecen enmascaradas.",
+      "whichTitle": "¿Qué forma elijo?",
+      "login": "si los tokens vencen pronto.",
+      "bearer": "si tienes un token de larga duración.",
+      "cookie": "si tu API usa sesiones.",
+      "header": "para llaves de API."
+    },
+    "errors": {
+      "nameRequired": "Escribe el nombre de la identidad.",
+      "fieldRequired": "Este campo es obligatorio."
+    }
+  },
+  "Resources": {
+    "crumb": "Recursos",
+    "title": "Recursos por identidad",
+    "lead": "Indica qué objetos de tu API pertenecen a cada identidad. Así Acceso a objetos puede comprobar si una identidad alcanza los de otra.",
+    "kinds": {
+      "order": "Pedido",
+      "user": "Usuario",
+      "address": "Dirección",
+      "none": "No es de un usuario"
+    },
+    "origin": {
+      "discovered": "Descubierto",
+      "manual": "Agregado a mano"
+    },
+    "status": {
+      "confirmed": "Confirmado",
+      "pending": "Por confirmar"
+    },
+    "confirm": "Confirmar",
+    "params": {
+      "title": "1. Identificadores de recursos",
+      "lead": "Parámetros de ruta que detectamos en el contrato. Desmarca los que no identifican un objeto con dueño.",
+      "empty": "Importa un contrato para detectar los identificadores.",
+      "isId": "{param} es identificador"
+    },
+    "discover": {
+      "title": "2. Descubrir recursos",
+      "text": "Llamamos como cada identidad solo a las operaciones GET de listado, como <code>GET /orders</code>, y proponemos lo que encontremos.",
+      "button": "Descubrir recursos",
+      "running": "Buscando…",
+      "found": "Encontrados",
+      "toConfirm": "Por confirmar",
+      "done": "{count, plural, one {Se encontró un recurso nuevo} other {Se encontraron # recursos nuevos}}"
+    },
+    "review": {
+      "title": "3. Revisa los recursos de cada identidad",
+      "identity": "Identidad"
+    },
+    "noIdentities": {
+      "title": "Aún no hay identidades",
+      "text": "Agrega al menos una identidad para asignarle recursos.",
+      "action": "Agregar identidad"
+    },
+    "empty": {
+      "title": "{name} no tiene recursos",
+      "text": "Acceso a objetos no podrá probar esta identidad. Descubre recursos de nuevo o agrégalos a mano."
+    },
+    "add": {
+      "kind": "Tipo",
+      "value": "Identificador",
+      "button": "Agregar a {name}"
+    },
+    "delete": {
+      "label": "Eliminar {value}",
+      "title": "Eliminar el recurso",
+      "text": "Se quitará «{value}» de esta identidad. No se borra nada en tu API.",
+      "confirm": "Eliminar recurso"
+    },
+    "errors": {
+      "valueRequired": "Escribe el identificador del recurso."
+    },
+    "locked": {
+      "title": "Disponible tras verificar",
+      "text": "Los recursos se descubren llamando a tu API, así que primero debes verificar la propiedad del host.",
+      "action": "Ir a verificación"
+    }
+  },
+  "Policy": {
+    "crumb": "Política",
+    "title": "Política de acceso",
+    "template": {
+      "public": "Pública",
+      "authenticated": "Cualquier autenticado",
+      "owner": "Solo propietario",
+      "ownerOrAdmin": "Propietario o administrador",
+      "admin": "Solo administrador"
+    },
+    "templates": {
+      "title": "Las cinco plantillas",
+      "public": "Cualquiera, incluso sin autenticarse.",
+      "authenticated": "Toda identidad con sesión válida.",
+      "owner": "Solo el dueño del objeto indicado por el campo propietario.",
+      "ownerOrAdmin": "El dueño o una identidad con rol de administrador.",
+      "admin": "Solo identidades con rol de administrador."
+    },
+    "progress": {
+      "title": "{confirmed} de {total} confirmadas",
+      "label": "Operaciones confirmadas",
+      "text": "{count, plural, one {La propuesta sin confirmar no se usa} other {Las # propuestas sin confirmar no se usan}} en Acceso a objetos ni Acceso a funciones.",
+      "modified": "Última modificación: Luis Selvas, 27 oct 2026, 18:40."
+    },
+    "orphan": {
+      "title": "{count, plural, one {# regla huérfana} other {# reglas huérfanas}}",
+      "text": "<code>DELETE /orders/export</code> ya no está en el contrato v2.4.0 y aún tiene política. No se usa en las pruebas: puedes quitarla. Las plantillas de propiedad necesitan un campo propietario para guardarse.",
+      "remove": "Quitar regla"
+    },
+    "operations": "Operaciones",
+    "filters": {
+      "label": "Filtrar por estado",
+      "all": "Todas · {count}",
+      "proposed": "Propuestas · {count}",
+      "confirmed": "Confirmadas · {count}"
+    },
+    "search": "Buscar ruta",
+    "bulk": {
+      "label": "Acciones en bloque",
+      "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
+      "apply": "Aplicar plantilla",
+      "button": "Aplicar y confirmar"
+    },
+    "select": "Seleccionar {method} {path}",
+    "templateOf": "Plantilla de {method} {path}",
+    "ownerOf": "Campo propietario de {method} {path}",
+    "noOwner": "Elige el campo propietario",
+    "notApplicable": "No aplica",
+    "bearer": "bearer",
+    "status": {
+      "confirmed": "Confirmada",
+      "proposed": "Propuesta"
+    },
+    "confirm": "Confirmar",
+    "showing": "Mostrando {shown} de {total} rutas ·",
+    "viewContract": "Ver el contrato",
+    "save": "Guardar política",
+    "saved": "Política guardada",
+    "empty": {
+      "title": "Sin operaciones",
+      "text": "Importa un contrato para proponer la política."
+    },
+    "noContract": {
+      "title": "Primero importa el contrato",
+      "text": "La política se propone a partir de las operaciones de tu contrato OpenAPI.",
+      "action": "Importar contrato"
+    },
+    "errors": {
+      "ownerTitle": "Falta el campo propietario",
+      "ownerText": "Las plantillas de propiedad necesitan un campo propietario para guardarse."
+    }
   }
 }

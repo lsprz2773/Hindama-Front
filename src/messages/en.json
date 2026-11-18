@@ -1075,5 +1075,437 @@
         "metadata": "Cloud metadata addresses aren't accepted."
       }
     }
+  },
+  "Verification": {
+    "crumb": "Verification",
+    "title": "Prove the API is yours",
+    "verifiedTitle": "Ownership verified",
+    "verifiedText": "We checked that you control {host}. It is checked again before every run.",
+    "codeTitle": "This project's verification code",
+    "copyCode": "Copy code",
+    "codeText": "Publish it on the host <code>{host}</code> using one of the two methods. Only someone who controls the domain can do it.",
+    "methodTitle": "Choose how to publish it",
+    "methodLabel": "Verification method",
+    "file": {
+      "tab": "File on the server",
+      "step1": "Create a text file whose only content is the code.",
+      "step2": "Publish it at this exact address:",
+      "step3": "Check that it opens in the browser and press Verify.",
+      "urlLabel": "file address"
+    },
+    "dns": {
+      "tab": "DNS TXT record",
+      "step1": "In your DNS provider's panel, create a TXT record with this host name:",
+      "step2": "Use the code as the record's value:",
+      "step3": "Save the record and press Verify.",
+      "hostLabel": "host name",
+      "valueLabel": "record value",
+      "noteTitle": "Propagation can take a while",
+      "noteText": "A new DNS record can take from minutes to a few hours to be visible. If it fails, wait a bit and try again."
+    },
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "lastAttempt": "Last attempt a few seconds ago",
+    "noAttempts": "You haven't tried to verify yet",
+    "success": "Ownership verified",
+    "failure": {
+      "expected": "We expected",
+      "found": "We found",
+      "howTitle": "How to fix it:",
+      "mismatch": {
+        "title": "We couldn't verify: the file's content is different",
+        "how": "leave only the code in the file, with no spaces or trailing newline, and press Verify again."
+      },
+      "notFound": {
+        "title": "We couldn't verify: we couldn't find the file",
+        "how": "check that the address opens the file in the browser."
+      }
+    },
+    "help": {
+      "whyTitle": "Why we ask for it",
+      "whyText": "Hindama only tests APIs whose owners can prove they control them. That keeps it from being used to attack other people's services.",
+      "everyRunTitle": "Checked on every run",
+      "everyRunText": "The check can take up to 20 seconds. Before every run we check the code again. If you remove it, the run is cancelled and the project goes back to “Pending verification”.",
+      "commonTitle": "Common failures",
+      "common1": "File not found (404)",
+      "common2": "Content different from the code",
+      "common3": "Missing DNS record",
+      "common4": "Connection error with the host",
+      "common5": "The host resolves to a disallowed address: it is blocked and recorded in the log"
+    }
+  },
+  "Contract": {
+    "crumb": "Contract",
+    "title": "OpenAPI contract",
+    "history": "Version history",
+    "current": "Current version · imported on {date}",
+    "meta": "YAML format · source: file · OpenAPI 3.1.0 · fingerprint 9f3c…a1b7",
+    "summary": {
+      "openapi": "OpenAPI",
+      "operations": "Operations",
+      "schemas": "Schemas",
+      "security": "Security scheme"
+    },
+    "empty": {
+      "title": "No contract yet",
+      "text": "Import your API's OpenAPI 3 contract so Hindama knows its operations and can propose an access policy."
+    },
+    "import": {
+      "title": "Import new version",
+      "versions": "View {count} versions",
+      "sourceLabel": "Contract source",
+      "file": "Upload file",
+      "url": "From URL",
+      "drop": "Drag the file or choose it",
+      "limits": ".json, .yaml or .yml · max 5 MB · OpenAPI 3.0 or 3.1",
+      "urlLabel": "Contract URL",
+      "urlHint": "It must be a public address that returns the contract.",
+      "submit": "Import and compare",
+      "importing": "Importing…"
+    },
+    "imported": "Contract imported",
+    "importedText": "Review the warnings and confirm the access policy.",
+    "next": "Next step: verify the host's ownership",
+    "warnings": "{count, plural, one {# warning for this version} other {# warnings for this version}}",
+    "operations": {
+      "title": "{count} operations",
+      "filterLabel": "Filter by method",
+      "all": "All",
+      "search": "Search operation",
+      "searchPlaceholder": "Search path or summary",
+      "security": {
+        "bearer": "bearer",
+        "public": "public"
+      },
+      "detail": "Details of {method} {path}",
+      "params": "Parameters",
+      "paramPath": "path · string (uuid)",
+      "paramQuery": "query · string, optional",
+      "responses": "Responses",
+      "r401": "Unauthenticated",
+      "r404": "Doesn't exist",
+      "declaredSecurity": "Declared security",
+      "seePolicy": "See in the access policy",
+      "none": "No operation matches.",
+      "showing": "Showing {shown} of {total}"
+    },
+    "errors": {
+      "type": "The file must be .json, .yaml or .yml.",
+      "size": "The file exceeds 5 MB.",
+      "noFile": "Choose a contract file.",
+      "url": "Enter a full contract URL."
+    }
+  },
+  "ContractVersions": {
+    "crumb": "Versions",
+    "title": "Contract versions",
+    "count": "{count, plural, one {# version} other {# versions}}",
+    "current": "Current",
+    "comparing": "Comparing",
+    "originUrl": "URL",
+    "originFile": "File",
+    "originFileNamed": "File {name}",
+    "operations": "{count} operations",
+    "warningsOf": "Warnings for {version}",
+    "back": "Back to the current version",
+    "diffTitle": "{from} vs {to}",
+    "summary": {
+      "added": "{count, plural, one {Added} other {Added}}",
+      "modified": "{count, plural, one {Modified} other {Modified}}",
+      "removed": "{count, plural, one {Removed} other {Removed}}"
+    },
+    "reviewPolicy": {
+      "title": "Review the policy",
+      "text": "The {count} new operations have a proposed template that won't be used in tests until you confirm it.",
+      "link": "Go to the policy"
+    },
+    "changes": "Changes by operation",
+    "kind": {
+      "added": "Added",
+      "modified": "Modified",
+      "removed": "Removed"
+    },
+    "details": {
+      "patch": "Body: new “status” field (string, enum). Security unchanged.",
+      "list": "New query parameter “createdAfter”. The 200 response adds “nextCursor”.",
+      "delete": "Now responds 409 if the order has already shipped.",
+      "health": "The security scheme was removed: it is now public."
+    }
+  },
+  "Identities": {
+    "crumb": "Identities",
+    "title": "Identities",
+    "add": "Add identity",
+    "lead": "Test accounts for your API. Hindama authenticates as each one to check who can do what. Use accounts from a test environment, never real customers'.",
+    "requirements": {
+      "title": "What each module needs",
+      "objects": {
+        "title": "Object access",
+        "ok": "Two authenticated identities, each with its own resources. You meet it.",
+        "missing": "You need two authenticated identities, each with its own resources."
+      },
+      "functions": {
+        "title": "Function access",
+        "ok": "A regular identity and one with an administrator role. You meet it.",
+        "missing": "A regular identity and one with an administrator role. You're missing the administrator."
+      }
+    },
+    "count": "{count, plural, one {# identity} other {# identities}}",
+    "roles": {
+      "admin": "Administrator",
+      "user": "User",
+      "other": "Other",
+      "otherNamed": "Other: {name}"
+    },
+    "auth": {
+      "none": "Sends no credentials",
+      "login": "Automatic login",
+      "bearer": "Bearer token",
+      "cookie": "Session cookie",
+      "header": "Custom header"
+    },
+    "status": {
+      "active": "Active",
+      "expiredCredential": "Credential expired · 401",
+      "untested": "Not tested"
+    },
+    "testedAgo": "tested {time} ago",
+    "noResources": "0 · no resources",
+    "alwaysExists": "Always exists",
+    "edit": "Edit",
+    "test": {
+      "button": "Test",
+      "okTitle": "{name}: the credential works",
+      "failedTitle": "{name}: the credential failed",
+      "failedText": "The API responded 401 Unauthorized. Replace it and test again."
+    },
+    "delete": {
+      "label": "Delete {name}",
+      "title": "Delete the identity “{name}”",
+      "text": "This action can't be undone.",
+      "heading": "What happens",
+      "item1": "Its credential and resources are deleted.",
+      "item2": "Its open findings move to “Resolved” with the reason “identity deleted”.",
+      "confirm": "Delete identity",
+      "done": "Identity “{name}” deleted"
+    },
+    "deleteNote": "When you delete an identity, its open findings move to “Resolved” with the reason “identity deleted”."
+  },
+  "IdentityForm": {
+    "newCrumb": "New",
+    "newTitle": "Add identity",
+    "editTitle": "Edit identity",
+    "name": "Name",
+    "role": {
+      "label": "Declared role",
+      "admin": "Administrator",
+      "user": "User",
+      "other": "Other",
+      "otherName": "Role name",
+      "hint": "The role this account has in your API. It is used to compare against the policy."
+    },
+    "auth": {
+      "label": "Authentication method",
+      "login": {
+        "title": "Automatic login",
+        "note": "Username and password"
+      },
+      "bearer": {
+        "title": "Bearer token",
+        "note": "Authorization: Bearer"
+      },
+      "cookie": {
+        "title": "Session cookie",
+        "note": "Name and value"
+      },
+      "header": {
+        "title": "Custom header",
+        "note": "Name and value"
+      }
+    },
+    "fields": {
+      "user": "Username",
+      "password": "Password",
+      "endpoint": "Login endpoint",
+      "token": "Token",
+      "cookieName": "Cookie name",
+      "cookieValue": "Value",
+      "headerName": "Header name",
+      "headerValue": "Value"
+    },
+    "endsIn": "Ends in ••••{last4}",
+    "replace": "Replace",
+    "loginNote": "During the run we obtain and renew the token automatically.",
+    "test": {
+      "title": "Test credential",
+      "operation": "Protected operation",
+      "run": "Test now",
+      "testing": "Testing…",
+      "ok": "The API responded 200 OK.",
+      "okText": "The credential works.",
+      "failed": "The API responded 401 Unauthorized.",
+      "failedText": "The token seems expired. Replace it and test again. We never show the credential in results."
+    },
+    "cancel": "Cancel",
+    "save": "Save identity",
+    "saved": "Identity “{name}” saved",
+    "failedDialog": {
+      "title": "The credential test failed",
+      "text": "The last test responded 401. If you save it like this, modules that use this identity will skip their operations.",
+      "confirm": "Save anyway",
+      "cancel": "Back to editing"
+    },
+    "help": {
+      "encryptedTitle": "Your credentials are encrypted",
+      "encryptedText": "We store them with AES-256-GCM. After saving you'll only see the last 4 characters, and in evidence and reports they appear masked.",
+      "whichTitle": "Which method should I choose?",
+      "login": "if tokens expire soon.",
+      "bearer": "if you have a long-lived token.",
+      "cookie": "if your API uses sessions.",
+      "header": "for API keys."
+    },
+    "errors": {
+      "nameRequired": "Enter the identity's name.",
+      "fieldRequired": "This field is required."
+    }
+  },
+  "Resources": {
+    "crumb": "Resources",
+    "title": "Resources by identity",
+    "lead": "Say which objects in your API belong to each identity. That way Object access can check whether one identity reaches another's.",
+    "kinds": {
+      "order": "Order",
+      "user": "User",
+      "address": "Address",
+      "none": "Not a user's"
+    },
+    "origin": {
+      "discovered": "Discovered",
+      "manual": "Added by hand"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "pending": "To confirm"
+    },
+    "confirm": "Confirm",
+    "params": {
+      "title": "1. Resource identifiers",
+      "lead": "Path parameters we detected in the contract. Uncheck those that don't identify an owned object.",
+      "empty": "Import a contract to detect identifiers.",
+      "isId": "{param} is an identifier"
+    },
+    "discover": {
+      "title": "2. Discover resources",
+      "text": "We call, as each identity, only the listing GET operations, such as <code>GET /orders</code>, and propose what we find.",
+      "button": "Discover resources",
+      "running": "Searching…",
+      "found": "Found",
+      "toConfirm": "To confirm",
+      "done": "{count, plural, one {One new resource found} other {# new resources found}}"
+    },
+    "review": {
+      "title": "3. Review each identity's resources",
+      "identity": "Identity"
+    },
+    "noIdentities": {
+      "title": "No identities yet",
+      "text": "Add at least one identity to assign resources to it.",
+      "action": "Add identity"
+    },
+    "empty": {
+      "title": "{name} has no resources",
+      "text": "Object access won't be able to test this identity. Discover resources again or add them by hand."
+    },
+    "add": {
+      "kind": "Type",
+      "value": "Identifier",
+      "button": "Add to {name}"
+    },
+    "delete": {
+      "label": "Delete {value}",
+      "title": "Delete the resource",
+      "text": "“{value}” will be removed from this identity. Nothing is deleted in your API.",
+      "confirm": "Delete resource"
+    },
+    "errors": {
+      "valueRequired": "Enter the resource's identifier."
+    },
+    "locked": {
+      "title": "Available after verification",
+      "text": "Resources are discovered by calling your API, so you must first verify the host's ownership.",
+      "action": "Go to verification"
+    }
+  },
+  "Policy": {
+    "crumb": "Policy",
+    "title": "Access policy",
+    "template": {
+      "public": "Public",
+      "authenticated": "Any authenticated",
+      "owner": "Owner only",
+      "ownerOrAdmin": "Owner or administrator",
+      "admin": "Administrator only"
+    },
+    "templates": {
+      "title": "The five templates",
+      "public": "Anyone, even unauthenticated.",
+      "authenticated": "Every identity with a valid session.",
+      "owner": "Only the owner of the object indicated by the owner field.",
+      "ownerOrAdmin": "The owner or an identity with an administrator role.",
+      "admin": "Only identities with an administrator role."
+    },
+    "progress": {
+      "title": "{confirmed} of {total} confirmed",
+      "label": "Confirmed operations",
+      "text": "{count, plural, one {The unconfirmed proposal isn't used} other {The # unconfirmed proposals aren't used}} in Object access or Function access.",
+      "modified": "Last modified: Luis Selvas, 27 Oct 2026, 18:40."
+    },
+    "orphan": {
+      "title": "{count, plural, one {# orphan rule} other {# orphan rules}}",
+      "text": "<code>DELETE /orders/export</code> is no longer in contract v2.4.0 and still has a policy. It isn't used in tests: you can remove it. Ownership templates need an owner field to be saved.",
+      "remove": "Remove rule"
+    },
+    "operations": "Operations",
+    "filters": {
+      "label": "Filter by status",
+      "all": "All · {count}",
+      "proposed": "Proposed · {count}",
+      "confirmed": "Confirmed · {count}"
+    },
+    "search": "Search path",
+    "bulk": {
+      "label": "Bulk actions",
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "apply": "Apply template",
+      "button": "Apply and confirm"
+    },
+    "select": "Select {method} {path}",
+    "templateOf": "Template of {method} {path}",
+    "ownerOf": "Owner field of {method} {path}",
+    "noOwner": "Choose the owner field",
+    "notApplicable": "Not applicable",
+    "bearer": "bearer",
+    "status": {
+      "confirmed": "Confirmed",
+      "proposed": "Proposed"
+    },
+    "confirm": "Confirm",
+    "showing": "Showing {shown} of {total} routes ·",
+    "viewContract": "View the contract",
+    "save": "Save policy",
+    "saved": "Policy saved",
+    "empty": {
+      "title": "No operations",
+      "text": "Import a contract to propose the policy."
+    },
+    "noContract": {
+      "title": "Import the contract first",
+      "text": "The policy is proposed from your OpenAPI contract's operations.",
+      "action": "Import contract"
+    },
+    "errors": {
+      "ownerTitle": "The owner field is missing",
+      "ownerText": "Ownership templates need an owner field to be saved."
+    }
   }
 }
