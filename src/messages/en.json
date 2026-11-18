@@ -5,11 +5,84 @@
   },
   "Common": {
     "appName": "Hindama",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "homeLink": "Hindama, home",
+    "accountNav": "Account",
+    "legalNav": "Legal",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "terms": "Terms of use",
+    "privacy": "Privacy notice"
   },
   "LanguageSelector": {
     "label": "Language",
     "es": "Español",
-    "en": "English"
+    "en": "English",
+    "groupLabel": "Interface language",
+    "current": "Interface language: {language}",
+    "esNote": "Main language",
+    "enNote": "English (/en route)"
+  },
+  "Fields": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "PasswordRules": {
+    "label": "Password requirements",
+    "length": "12 characters or more",
+    "upper": "One uppercase letter",
+    "lower": "One lowercase letter",
+    "digit": "One number",
+    "symbol": "One symbol",
+    "met": " (met)",
+    "pending": " (pending)"
+  },
+  "Toast": {
+    "notifications": "Notifications",
+    "close": "Dismiss notification",
+    "progress": "Progress"
+  },
+  "Modal": {
+    "close": "Close"
+  },
+  "Severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "Informational"
+  },
+  "SignIn": {
+    "meta": "Sign in",
+    "heroTitle": "Assess your API before you publish it",
+    "heroLead": "Security tests guided by the OpenAPI contract and by who should be able to do what. “Hindama” means “to assess” in Estonian.",
+    "exampleCategory": "Object access · API1",
+    "exampleTitle": "One user can read another user's orders",
+    "exampleRequest": "GET /orders/'{orderId}' · User B · 200 OK",
+    "exampleCaption": "Sample finding, with the request that reproduces it.",
+    "heading": "Sign in",
+    "subheading": "Sign in to see your projects and their findings.",
+    "email": "Email address",
+    "emailPlaceholder": "name@company.com",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "Don't have an account yet?",
+    "createAccount": "Create account",
+    "legal": "You may only test your own APIs or APIs you have written authorization from the owner to test.",
+    "terms": "Terms of use",
+    "and": "and",
+    "privacy": "Privacy notice",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Enter your password.",
+      "invalidCredentials": "The email or password is not correct.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't sign you in",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
   }
 }

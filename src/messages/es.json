@@ -5,11 +5,84 @@
   },
   "Common": {
     "appName": "Hindama",
-    "skipToContent": "Saltar al contenido"
+    "skipToContent": "Saltar al contenido",
+    "homeLink": "Hindama, inicio",
+    "accountNav": "Cuenta",
+    "legalNav": "Legales",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "terms": "Términos de uso",
+    "privacy": "Aviso de privacidad"
   },
   "LanguageSelector": {
     "label": "Idioma",
     "es": "Español",
-    "en": "English"
+    "en": "English",
+    "groupLabel": "Idioma de la interfaz",
+    "current": "Idioma de la interfaz: {language}",
+    "esNote": "Idioma principal",
+    "enNote": "English (ruta /en)"
+  },
+  "Fields": {
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
+  },
+  "PasswordRules": {
+    "label": "Requisitos de la contraseña",
+    "length": "12 caracteres o más",
+    "upper": "Una mayúscula",
+    "lower": "Una minúscula",
+    "digit": "Un número",
+    "symbol": "Un símbolo",
+    "met": " (cumplido)",
+    "pending": " (pendiente)"
+  },
+  "Toast": {
+    "notifications": "Notificaciones",
+    "close": "Cerrar aviso",
+    "progress": "Progreso"
+  },
+  "Modal": {
+    "close": "Cerrar"
+  },
+  "Severity": {
+    "critical": "Crítica",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja",
+    "info": "Informativa"
+  },
+  "SignIn": {
+    "meta": "Iniciar sesión",
+    "heroTitle": "Evalúa tu API antes de publicarla",
+    "heroLead": "Pruebas de seguridad guiadas por el contrato OpenAPI y por quién debería poder hacer qué. «Hindama» significa evaluar en estonio.",
+    "exampleCategory": "Acceso a objetos · API1",
+    "exampleTitle": "Un usuario puede leer pedidos de otro usuario",
+    "exampleRequest": "GET /orders/'{orderId}' · Usuario B · 200 OK",
+    "exampleCaption": "Ejemplo de hallazgo, con la petición que lo reproduce.",
+    "heading": "Inicia sesión",
+    "subheading": "Entra para ver tus proyectos y sus hallazgos.",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "nombre@empresa.com",
+    "password": "Contraseña",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "submit": "Iniciar sesión",
+    "submitting": "Entrando…",
+    "noAccount": "¿Aún no tienes cuenta?",
+    "createAccount": "Crear cuenta",
+    "legal": "Solo puedes probar APIs propias o con autorización por escrito de su dueño.",
+    "terms": "Términos de uso",
+    "and": "y",
+    "privacy": "Aviso de privacidad",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Escribe tu contraseña.",
+      "invalidCredentials": "El correo o la contraseña no son correctos.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de intentarlo de nuevo.",
+      "networkTitle": "No pudimos iniciar sesión",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
   }
 }
