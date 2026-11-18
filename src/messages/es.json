@@ -612,5 +612,174 @@
     "confirmModule": "Confirmar {name}",
     "understand": "Entiendo el riesgo y confirmo que este es un ambiente de pruebas.",
     "pending": "{count, plural, one {Falta confirmar # módulo.} other {Faltan por confirmar # módulos.}}"
+  },
+  "HomeNotice": {
+    "dismiss": "Cerrar",
+    "account_deleted": {
+      "title": "Tu cuenta se eliminó",
+      "text": "Borramos tus proyectos, contratos, identidades, ejecuciones, hallazgos y reportes. Los respaldos se depuran en un máximo de 30 días."
+    },
+    "local_sign_out": {
+      "title": "Cerraste sesión solo en este navegador",
+      "text": "No pudimos avisar al servicio de acceso. Si usas un equipo compartido, vuelve a intentar cerrar sesión más tarde."
+    }
+  },
+  "Profile": {
+    "title": "Perfil",
+    "role": "Rol",
+    "analyst": "Analista",
+    "memberSince": "Miembro desde",
+    "terms": "Términos de uso responsable",
+    "termsValue": "Versión {version}, aceptados el {date}",
+    "roleNote": "El rol lo asigna la plataforma y no se puede cambiar desde aquí.",
+    "security": "Seguridad",
+    "password": "Contraseña",
+    "passwordChanged": "{days, plural, one {Cambiada por última vez hace # día} other {Cambiada por última vez hace # días}}",
+    "changePassword": "Cambiar contraseña",
+    "twoFactor": "Segundo factor (2FA)",
+    "twoFactorOn": "Activado.",
+    "twoFactorOff": "Desactivado. Te recomendamos activarlo.",
+    "enableTwoFactor": "Activar 2FA",
+    "disableTwoFactor": "Desactivar 2FA",
+    "twoFactorDisabled": "Segundo factor desactivado",
+    "preferences": "Preferencias",
+    "language": "Idioma de la interfaz",
+    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido.",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteText": "{count, plural, one {Se borrará tu proyecto con su contrato, identidades, ejecuciones, hallazgos y reportes.} other {Se borrarán tus # proyectos con sus contratos, identidades, ejecuciones, hallazgos y reportes.}} El borrado es permanente y se completa en un máximo de 30 días, incluidos los respaldos.",
+    "deleteButton": "Eliminar mi cuenta",
+    "deleteDialog": {
+      "title": "Eliminar tu cuenta",
+      "description": "Esta acción no se puede deshacer. Al terminar se cerrará tu sesión y volverás a la página de inicio.",
+      "removed": "Se borra",
+      "removed1": "Tu cuenta y tus datos de acceso",
+      "removed2": "{count, plural, one {Tu proyecto con contrato e identidades} other {Tus # proyectos con contratos e identidades}}",
+      "removed3": "Ejecuciones, hallazgos y reportes",
+      "kept": "Se conserva",
+      "kept1": "Métricas de uso anónimas",
+      "kept2": "Bitácora de auditoría durante 6 meses, sin tu correo"
+    }
+  },
+  "ChangePassword": {
+    "title": "Cambiar contraseña",
+    "description": "Escribe la actual y define una nueva. Tus otras sesiones seguirán abiertas.",
+    "current": "Contraseña actual",
+    "new": "Contraseña nueva",
+    "confirm": "Confirmar contraseña nueva",
+    "submit": "Cambiar contraseña",
+    "successTitle": "Contraseña actualizada",
+    "successText": "Usa la nueva contraseña la próxima vez que inicies sesión.",
+    "done": "Listo",
+    "errors": {
+      "currentRequired": "Escribe tu contraseña actual.",
+      "currentWrong": "La contraseña actual no es correcta.",
+      "weak": "La contraseña nueva aún no cumple todos los requisitos.",
+      "reused": "Elige una contraseña distinta de la anterior.",
+      "mismatch": "Las contraseñas no coinciden."
+    }
+  },
+  "DisableTwoFactor": {
+    "title": "Desactivar el segundo factor",
+    "description": "Escribe un código vigente de tu app de autenticación para confirmar que eres tú.",
+    "legend": "Código de la app",
+    "submit": "Desactivar 2FA",
+    "invalid": "El código no es correcto o ya venció."
+  },
+  "TwoFactorSetup": {
+    "title": "Activa el segundo factor",
+    "crumb": "Segundo factor",
+    "adminCrumb": "Administración",
+    "mandatoryHeading": "Configura el segundo factor para continuar",
+    "mandatoryTitle": "Tu rol requiere segundo factor",
+    "mandatoryText": "Como administrador debes configurarlo antes de entrar al panel. No se puede omitir.",
+    "step1": {
+      "title": "Instala una app de autenticación",
+      "text": "Cualquiera que genere códigos de 6 dígitos (TOTP) sirve."
+    },
+    "step2": {
+      "title": "Escanea este código",
+      "qrLabel": "Código QR para agregar Hindama a tu app",
+      "manual": "¿No puedes escanear? Escribe esta clave en la app:",
+      "keyLabel": "clave"
+    },
+    "step3": {
+      "title": "Confirma con un código",
+      "text": "Escribe el código que muestra la app para comprobar que quedó bien configurada.",
+      "legend": "Código de 6 dígitos"
+    },
+    "confirm": "Confirmar",
+    "confirming": "Confirmando…",
+    "cancel": "Cancelar",
+    "enabled": "Segundo factor activado",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código ya venció. Escribe el que aparece ahora en tu app.",
+      "networkTitle": "No pudimos activar el segundo factor",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "SecondFactor": {
+    "meta": "Código de segundo factor",
+    "metaAdmin": "Código de segundo factor · administradores",
+    "heroTitle": "Un paso más",
+    "intro": "Tu cuenta tiene activado el segundo factor. Lo pedimos en cada inicio de sesión.",
+    "introAdmin": "Las cuentas de administrador siempre usan segundo factor. Escribe el código de tu app para entrar al panel.",
+    "tipTitle": "Abre tu app de autenticación",
+    "tipText": "Por ejemplo Google Authenticator, Microsoft Authenticator o 1Password. Busca la entrada «Hindama».",
+    "heading": "Código de 6 dígitos",
+    "subheading": "El código cambia cada 30 segundos.",
+    "legend": "Código de la app",
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "back": "Volver a iniciar sesión",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código anterior ya venció. Escribe el que aparece ahora en tu app.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos verificar el código",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "AdminSignIn": {
+    "meta": "Acceso de administradores",
+    "heroTitle": "Panel de administración",
+    "heroLead": "Estadísticas de uso de la plataforma y bitácora de auditoría. El acceso es independiente del de los analistas y siempre pide un segundo factor.",
+    "steps": {
+      "credentials": {
+        "title": "Correo y contraseña",
+        "text": "Tu cuenta de administrador."
+      },
+      "code": {
+        "title": "Código de verificación",
+        "text": "Obligatorio en cada inicio de sesión."
+      },
+      "panel": {
+        "title": "Panel de estadísticas",
+        "text": "Con la bitácora de auditoría a un clic."
+      }
+    },
+    "noSelfAssign": "Sin autoasignación de rol: las cuentas de administrador las da de alta el equipo de la plataforma.",
+    "heading": "Acceso de administradores",
+    "subheading": "Entra con tu cuenta de administrador. Después te pediremos el código de verificación.",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "nombre@empresa.com",
+    "password": "Contraseña",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "submit": "Continuar",
+    "submitting": "Entrando…",
+    "analyst": "¿Eres analista?",
+    "analystLink": "Inicia sesión aquí",
+    "audit": "Los intentos de acceso quedan registrados en la bitácora de auditoría.",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Escribe tu contraseña.",
+      "invalid": "El correo o la contraseña no son correctos.",
+      "networkTitle": "No pudimos iniciar sesión",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
   }
 }

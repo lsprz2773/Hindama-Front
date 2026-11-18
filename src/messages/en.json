@@ -612,5 +612,174 @@
     "confirmModule": "Confirm {name}",
     "understand": "I understand the risk and confirm this is a test environment.",
     "pending": "{count, plural, one {# module still needs confirmation.} other {# modules still need confirmation.}}"
+  },
+  "HomeNotice": {
+    "dismiss": "Dismiss",
+    "account_deleted": {
+      "title": "Your account was deleted",
+      "text": "We deleted your projects, contracts, identities, runs, findings and reports. Backups are purged within 30 days at most."
+    },
+    "local_sign_out": {
+      "title": "You signed out of this browser only",
+      "text": "We couldn't notify the sign-in service. If you use a shared computer, try signing out again later."
+    }
+  },
+  "Profile": {
+    "title": "Profile",
+    "role": "Role",
+    "analyst": "Analyst",
+    "memberSince": "Member since",
+    "terms": "Responsible-use terms",
+    "termsValue": "Version {version}, accepted on {date}",
+    "roleNote": "The role is assigned by the platform and can't be changed from here.",
+    "security": "Security",
+    "password": "Password",
+    "passwordChanged": "{days, plural, one {Last changed # day ago} other {Last changed # days ago}}",
+    "changePassword": "Change password",
+    "twoFactor": "Two-factor authentication (2FA)",
+    "twoFactorOn": "Enabled.",
+    "twoFactorOff": "Disabled. We recommend enabling it.",
+    "enableTwoFactor": "Enable 2FA",
+    "disableTwoFactor": "Disable 2FA",
+    "twoFactorDisabled": "Two-factor authentication disabled",
+    "preferences": "Preferences",
+    "language": "Interface language",
+    "languageNote": "It is remembered in this browser. Dates and deadlines follow the chosen language.",
+    "deleteAccount": "Delete account",
+    "deleteText": "{count, plural, one {Your project will be deleted with its contract, identities, runs, findings and reports.} other {Your # projects will be deleted with their contracts, identities, runs, findings and reports.}} Deletion is permanent and completes within 30 days at most, backups included.",
+    "deleteButton": "Delete my account",
+    "deleteDialog": {
+      "title": "Delete your account",
+      "description": "This action can't be undone. When it finishes you'll be signed out and returned to the home page.",
+      "removed": "What is deleted",
+      "removed1": "Your account and sign-in data",
+      "removed2": "{count, plural, one {Your project with its contract and identities} other {Your # projects with their contracts and identities}}",
+      "removed3": "Runs, findings and reports",
+      "kept": "What is kept",
+      "kept1": "Anonymous usage metrics",
+      "kept2": "Audit log for 6 months, without your email"
+    }
+  },
+  "ChangePassword": {
+    "title": "Change password",
+    "description": "Enter your current password and set a new one. Your other sessions will stay open.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "submit": "Change password",
+    "successTitle": "Password updated",
+    "successText": "Use the new password the next time you sign in.",
+    "done": "Done",
+    "errors": {
+      "currentRequired": "Enter your current password.",
+      "currentWrong": "The current password isn't correct.",
+      "weak": "The new password doesn't meet all the requirements yet.",
+      "reused": "Choose a password different from the previous one.",
+      "mismatch": "The passwords don't match."
+    }
+  },
+  "DisableTwoFactor": {
+    "title": "Disable two-factor authentication",
+    "description": "Enter a current code from your authenticator app to confirm it's you.",
+    "legend": "App code",
+    "submit": "Disable 2FA",
+    "invalid": "The code isn't correct or has expired."
+  },
+  "TwoFactorSetup": {
+    "title": "Enable two-factor authentication",
+    "crumb": "Two-factor authentication",
+    "adminCrumb": "Administration",
+    "mandatoryHeading": "Set up two-factor authentication to continue",
+    "mandatoryTitle": "Your role requires two-factor authentication",
+    "mandatoryText": "As an administrator you must set it up before entering the panel. It can't be skipped.",
+    "step1": {
+      "title": "Install an authenticator app",
+      "text": "Any app that generates 6-digit codes (TOTP) works."
+    },
+    "step2": {
+      "title": "Scan this code",
+      "qrLabel": "QR code to add Hindama to your app",
+      "manual": "Can't scan? Type this key into the app:",
+      "keyLabel": "key"
+    },
+    "step3": {
+      "title": "Confirm with a code",
+      "text": "Enter the code the app shows to check it was set up correctly.",
+      "legend": "6-digit code"
+    },
+    "confirm": "Confirm",
+    "confirming": "Confirming…",
+    "cancel": "Cancel",
+    "enabled": "Two-factor authentication enabled",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The code has expired. Enter the one your app shows now.",
+      "networkTitle": "We couldn't enable two-factor authentication",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "SecondFactor": {
+    "meta": "Two-factor code",
+    "metaAdmin": "Two-factor code · administrators",
+    "heroTitle": "One more step",
+    "intro": "Your account has two-factor authentication enabled. We ask for it on every sign-in.",
+    "introAdmin": "Administrator accounts always use two-factor authentication. Enter the code from your app to enter the panel.",
+    "tipTitle": "Open your authenticator app",
+    "tipText": "For example Google Authenticator, Microsoft Authenticator or 1Password. Look for the “Hindama” entry.",
+    "heading": "6-digit code",
+    "subheading": "The code changes every 30 seconds.",
+    "legend": "App code",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "back": "Back to sign in",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The previous code has expired. Enter the one your app shows now.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't verify the code",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "AdminSignIn": {
+    "meta": "Administrator sign-in",
+    "heroTitle": "Administration panel",
+    "heroLead": "Platform usage statistics and the audit log. Access is separate from analysts' and always asks for a second factor.",
+    "steps": {
+      "credentials": {
+        "title": "Email and password",
+        "text": "Your administrator account."
+      },
+      "code": {
+        "title": "Verification code",
+        "text": "Required on every sign-in."
+      },
+      "panel": {
+        "title": "Statistics panel",
+        "text": "With the audit log one click away."
+      }
+    },
+    "noSelfAssign": "No self-assigned roles: administrator accounts are created by the platform team.",
+    "heading": "Administrator sign-in",
+    "subheading": "Sign in with your administrator account. Then we'll ask for the verification code.",
+    "email": "Email address",
+    "emailPlaceholder": "name@company.com",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "submit": "Continue",
+    "submitting": "Signing in…",
+    "analyst": "Are you an analyst?",
+    "analystLink": "Sign in here",
+    "audit": "Sign-in attempts are recorded in the audit log.",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Enter your password.",
+      "invalid": "The email or password is not correct.",
+      "networkTitle": "We couldn't sign you in",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
   }
 }
