@@ -39,6 +39,8 @@ interface ProjectShellProps {
   id: string;
   /** Texto de la última miga (sección actual). `null` = es el dashboard. */
   section?: string;
+  /** Migas intermedias y final bajo el proyecto (en lugar de `section`). */
+  trail?: Crumb[];
   title: string | ((project: Project) => string);
   subtitle?: string;
   actions?: ReactNode;
@@ -52,6 +54,7 @@ interface ProjectShellProps {
 export function ProjectShell({
   id,
   section,
+  trail,
   title,
   subtitle,
   actions,
@@ -63,6 +66,7 @@ export function ProjectShell({
     <ProjectShellInner
       project={project}
       section={section}
+      trail={trail}
       title={title}
       subtitle={subtitle}
       actions={actions}
@@ -75,6 +79,7 @@ export function ProjectShell({
 function ProjectShellInner({
   project,
   section,
+  trail,
   title,
   subtitle,
   actions,
@@ -84,8 +89,11 @@ function ProjectShellInner({
   const nav = useProjectNav(project);
   const crumbs: Crumb[] = [
     { label: t("projects"), href: "/projects" },
-    section ? { label: project.name, href: `/projects/${project.id}` } : { label: project.name },
+    section || trail
+      ? { label: project.name, href: `/projects/${project.id}` }
+      : { label: project.name },
     ...(section ? [{ label: section }] : []),
+    ...(trail ?? []),
   ];
   return (
     <AppShell
