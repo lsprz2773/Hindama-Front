@@ -38,7 +38,7 @@ export function historyRows(project: Project): HistoryRun[] {
     const found = SEED_FINDINGS.slice(0, Math.min(6, Math.round((project.running / 58) * 6)));
     rows.push({
       number: (report?.runNumber ?? 0) + 1,
-      date: new Date().toISOString(),
+      date: "2026-10-30T11:02:00Z", // TODO(api): hora real de inicio de la ejecución
       kind: "full",
       modules: 4,
       state: "running",
