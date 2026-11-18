@@ -25,7 +25,8 @@
   },
   "Fields": {
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "digit": "Dígito {index} de {total}"
   },
   "PasswordRules": {
     "label": "Requisitos de la contraseña",
@@ -82,6 +83,89 @@
       "locked": "Demasiados intentos. Espera unos minutos antes de intentarlo de nuevo.",
       "networkTitle": "No pudimos iniciar sesión",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "SignUp": {
+    "meta": "Crear cuenta",
+    "heroTitle": "Tu primera evaluación en cuatro pasos",
+    "heroLead": "Toda cuenta nueva es de analista. Solo tú verás tus proyectos y sus resultados.",
+    "steps": {
+      "one": {
+        "title": "Crea el proyecto",
+        "text": "Nombre y URL base de tu API"
+      },
+      "two": {
+        "title": "Carga el contrato",
+        "text": "OpenAPI 3 en JSON o YAML"
+      },
+      "three": {
+        "title": "Verifica que es tuya",
+        "text": "Con un archivo o un registro DNS"
+      },
+      "four": {
+        "title": "Ejecuta las pruebas",
+        "text": "Y corrige lo que encontremos"
+      }
+    },
+    "heading": "Crea tu cuenta",
+    "subheading": "Te enviaremos un código a tu correo para confirmarla.",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirm": "Confirmar contraseña",
+    "acceptance": "Acepto los <terms>Términos de uso</terms> y el <privacy>Aviso de privacidad</privacy>. Solo probaré APIs propias o con autorización por escrito.",
+    "submit": "Crear cuenta",
+    "submitting": "Creando cuenta…",
+    "existsTitle": "Revisa tu correo",
+    "existsText": "Si podemos crear la cuenta, te enviamos un código para confirmarla. Si ya tienes una cuenta con este correo, <signIn>inicia sesión</signIn> o <recover>recupera tu contraseña</recover>.",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "signIn": "Inicia sesión",
+    "errors": {
+      "nameRequired": "Escribe tu nombre.",
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Elige una contraseña.",
+      "passwordWeak": "La contraseña aún no cumple todos los requisitos.",
+      "confirmRequired": "Repite la contraseña.",
+      "confirmMismatch": "Las contraseñas no coinciden.",
+      "termsRequired": "Para crear tu cuenta debes aceptar los términos de uso y el aviso de privacidad.",
+      "rateLimitTitle": "Demasiados intentos",
+      "rateLimitText": "Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos crear tu cuenta",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "VerifyEmail": {
+    "meta": "Verificar correo",
+    "heroTitle": "Revisa tu correo",
+    "heroLead": "Activamos tu cuenta en cuanto confirmes que el correo es tuyo.",
+    "tipTitle": "Busca un correo de Hindama",
+    "tipText": "Llega en menos de un minuto. Si no lo ves, revisa la carpeta de spam o promociones.",
+    "heading": "Escribe el código",
+    "subheading": "Enviamos un código de 6 dígitos a <b>{email}</b>.",
+    "subheadingNoEmail": "Enviamos un código de 6 dígitos al correo con el que te registraste.",
+    "legend": "Código de verificación",
+    "submit": "Verificar",
+    "submitting": "Verificando…",
+    "noCode": "¿No te llegó?",
+    "resend": "Reenviar código",
+    "resending": "Enviando…",
+    "resendIn": "Reenviar código en {time}",
+    "resentTitle": "Código reenviado",
+    "resentText": "Revisa tu correo; el código anterior ya no sirve.",
+    "wrongEmail": "¿Escribiste mal el correo?",
+    "backToSignUp": "Volver al registro",
+    "successTitle": "Cuenta confirmada",
+    "successText": "Ya puedes iniciar sesión.",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código venció. Pide uno nuevo.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos verificar el código",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "resendTitle": "No pudimos reenviar el código",
       "retry": "Reintentar"
     }
   }

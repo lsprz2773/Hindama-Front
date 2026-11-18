@@ -25,7 +25,8 @@
   },
   "Fields": {
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "digit": "Digit {index} of {total}"
   },
   "PasswordRules": {
     "label": "Password requirements",
@@ -82,6 +83,89 @@
       "locked": "Too many attempts. Wait a few minutes before trying again.",
       "networkTitle": "We couldn't sign you in",
       "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "SignUp": {
+    "meta": "Create account",
+    "heroTitle": "Your first assessment in four steps",
+    "heroLead": "Every new account is an analyst account. Only you will see your projects and their results.",
+    "steps": {
+      "one": {
+        "title": "Create the project",
+        "text": "Name and base URL of your API"
+      },
+      "two": {
+        "title": "Upload the contract",
+        "text": "OpenAPI 3 in JSON or YAML"
+      },
+      "three": {
+        "title": "Prove it's yours",
+        "text": "With a file or a DNS record"
+      },
+      "four": {
+        "title": "Run the tests",
+        "text": "And fix what we find"
+      }
+    },
+    "heading": "Create your account",
+    "subheading": "We'll send a code to your email to confirm it.",
+    "name": "Name",
+    "email": "Email address",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "acceptance": "I accept the <terms>Terms of use</terms> and the <privacy>Privacy notice</privacy>. I will only test my own APIs or APIs I have written authorization to test.",
+    "submit": "Create account",
+    "submitting": "Creating account…",
+    "existsTitle": "Check your email",
+    "existsText": "If we can create the account, we've sent you a code to confirm it. If you already have an account with this email, <signIn>sign in</signIn> or <recover>recover your password</recover>.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "errors": {
+      "nameRequired": "Enter your name.",
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Choose a password.",
+      "passwordWeak": "The password doesn't meet all the requirements yet.",
+      "confirmRequired": "Repeat the password.",
+      "confirmMismatch": "The passwords don't match.",
+      "termsRequired": "To create your account you must accept the terms of use and the privacy notice.",
+      "rateLimitTitle": "Too many attempts",
+      "rateLimitText": "Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't create your account",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "VerifyEmail": {
+    "meta": "Verify email",
+    "heroTitle": "Check your email",
+    "heroLead": "We'll activate your account as soon as you confirm the email is yours.",
+    "tipTitle": "Look for an email from Hindama",
+    "tipText": "It arrives in under a minute. If you don't see it, check your spam or promotions folder.",
+    "heading": "Enter the code",
+    "subheading": "We sent a 6-digit code to <b>{email}</b>.",
+    "subheadingNoEmail": "We sent a 6-digit code to the email you signed up with.",
+    "legend": "Verification code",
+    "submit": "Verify",
+    "submitting": "Verifying…",
+    "noCode": "Didn't get it?",
+    "resend": "Resend code",
+    "resending": "Sending…",
+    "resendIn": "Resend code in {time}",
+    "resentTitle": "Code resent",
+    "resentText": "Check your email; the previous code no longer works.",
+    "wrongEmail": "Typed the wrong email?",
+    "backToSignUp": "Back to sign up",
+    "successTitle": "Account confirmed",
+    "successText": "You can now sign in.",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The code has expired. Request a new one.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't verify the code",
+      "networkText": "Check your connection and try again.",
+      "resendTitle": "We couldn't resend the code",
       "retry": "Retry"
     }
   }
