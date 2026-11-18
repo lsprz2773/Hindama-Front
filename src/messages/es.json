@@ -548,7 +548,14 @@
     "retry": "Reintentar",
     "genericError": "No se pudo completar la acción",
     "genericErrorText": "Inténtalo de nuevo.",
-    "typeToConfirm": "Escribe <code>{text}</code> para confirmar"
+    "typeToConfirm": "Escribe <code>{text}</code> para confirmar",
+    "unsaved": {
+      "title": "¿Salir sin guardar?",
+      "text": "Tienes cambios sin guardar en esta pantalla. Si sales ahora, se pierden.",
+      "heading": "Se perdería",
+      "stay": "Seguir editando",
+      "leave": "Salir sin guardar"
+    }
   },
   "AcceptRisk": {
     "title": "Descartar este hallazgo",
@@ -983,7 +990,15 @@
     },
     "blocked": {
       "unverified": "Falta verificar la propiedad del host.",
-      "goVerify": "Ir a verificación"
+      "goVerify": "Ir a verificación",
+      "noContract": "Importa un contrato OpenAPI primero.",
+      "goContract": "Importar contrato",
+      "active": "Ya hay una ejecución en curso en este proyecto.",
+      "viewRun": "Ver ejecución",
+      "identities": "Necesitas al menos 2 identidades con recursos.",
+      "addIdentity": "Agregar identidad",
+      "policy": "Confirma la política de acceso de {count, plural, one {# operación} other {# operaciones}}.",
+      "reviewPolicy": "Revisar política"
     },
     "stats": {
       "requests": "Peticiones",
@@ -2184,5 +2199,11 @@
       "previous": "Anterior",
       "next": "Siguiente"
     }
+  },
+  "Offline": {
+    "title": "Sin conexión. Reconectando…",
+    "text": "Los datos que ves pueden estar desactualizados. En cuanto vuelva la red, se actualizan solos.",
+    "back": "Conexión recuperada",
+    "backText": "Los datos se actualizaron."
   }
 }

@@ -548,7 +548,14 @@
     "retry": "Retry",
     "genericError": "The action couldn't be completed",
     "genericErrorText": "Try again.",
-    "typeToConfirm": "Type <code>{text}</code> to confirm"
+    "typeToConfirm": "Type <code>{text}</code> to confirm",
+    "unsaved": {
+      "title": "Leave without saving?",
+      "text": "You have unsaved changes on this screen. If you leave now, they are lost.",
+      "heading": "You would lose",
+      "stay": "Keep editing",
+      "leave": "Leave without saving"
+    }
   },
   "AcceptRisk": {
     "title": "Dismiss this finding",
@@ -983,7 +990,15 @@
     },
     "blocked": {
       "unverified": "The host's ownership still needs verification.",
-      "goVerify": "Go to verification"
+      "goVerify": "Go to verification",
+      "noContract": "Import an OpenAPI contract first.",
+      "goContract": "Import contract",
+      "active": "A run is already in progress in this project.",
+      "viewRun": "View run",
+      "identities": "You need at least 2 identities with resources.",
+      "addIdentity": "Add identity",
+      "policy": "Confirm the access policy of {count, plural, one {# operation} other {# operations}}.",
+      "reviewPolicy": "Review policy"
     },
     "stats": {
       "requests": "Requests",
@@ -2184,5 +2199,11 @@
       "previous": "Previous",
       "next": "Next"
     }
+  },
+  "Offline": {
+    "title": "Offline. Reconnecting…",
+    "text": "The data you see may be out of date. As soon as the network is back, it updates by itself.",
+    "back": "Connection restored",
+    "backText": "The data was refreshed."
   }
 }
