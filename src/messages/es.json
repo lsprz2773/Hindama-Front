@@ -316,5 +316,132 @@
         "text": "Publicaremos cualquier cambio en esta página con su fecha de versión."
       }
     }
+  },
+  "Home": {
+    "meta": "Hindama · Evalúa tu API antes de publicarla",
+    "badge": "Para equipos que publican APIs REST",
+    "title": "Encuentra las fallas de tu API antes que alguien más",
+    "lead": "Hindama prueba la seguridad de tu API a partir de su contrato OpenAPI 3 y de quién debería poder hacer qué. Cada falla llega con la petición que la reproduce y te acompaña hasta que la corriges.",
+    "ctaPrimary": "Crear cuenta",
+    "ctaSecondary": "Ver qué prueba",
+    "example": {
+      "title": "Un usuario puede leer pedidos de otro usuario",
+      "request": "GET /orders/8f21 · Usuario B → 200 OK",
+      "advice": "Recomendación: valida que el pedido pertenezca al usuario del token.",
+      "caption": "Ejemplo de hallazgo y de su seguimiento entre ejecuciones."
+    },
+    "cycle": {
+      "detected": "Detectados",
+      "resolved": "Resueltos",
+      "regressions": "Regresiones"
+    },
+    "benefits": {
+      "title": "Qué ganas",
+      "early": {
+        "title": "Detección temprana",
+        "text": "Prueba en tu ambiente de pruebas antes de publicar, no después de un incidente."
+      },
+      "contract": {
+        "title": "Guiado por tu contrato",
+        "text": "Las pruebas salen de tu OpenAPI 3 y de la política de acceso que tú confirmas."
+      },
+      "evidence": {
+        "title": "Evidencia accionable",
+        "text": "Cada hallazgo trae la petición, la respuesta, su categoría OWASP y CWE, y cómo corregirlo."
+      },
+      "followUp": {
+        "title": "Seguimiento hasta el cierre",
+        "text": "Vuelve a probar y ve qué se resolvió, qué persiste y qué regresó."
+      }
+    },
+    "modules": {
+      "title": "Siete módulos de prueba",
+      "subtitle": "Basados en OWASP API Security Top 10 y CWE",
+      "auth": {
+        "name": "Autenticación",
+        "text": "Tokens ausentes, alterados o vencidos."
+      },
+      "config": {
+        "name": "Configuración",
+        "text": "Cabeceras de seguridad, CORS y mensajes de error."
+      },
+      "objects": {
+        "name": "Acceso a objetos",
+        "text": "Un usuario que lee o cambia objetos de otro."
+      },
+      "functions": {
+        "name": "Acceso a funciones",
+        "text": "Usuarios normales que llegan a funciones de administrador."
+      },
+      "properties": {
+        "name": "Propiedades",
+        "text": "Campos expuestos o asignables que no deberían serlo."
+      },
+      "resources": {
+        "name": "Consumo de recursos",
+        "text": "Paginación y tamaños sin límite."
+      },
+      "sql": {
+        "name": "Inyección SQL",
+        "text": "Parámetros que llegan sin filtrar a la base de datos."
+      }
+    },
+    "steps": {
+      "title": "De la falla al cierre",
+      "detect": {
+        "title": "Detecta",
+        "text": "Ejecuta los módulos con límites de velocidad que tú defines."
+      },
+      "fix": {
+        "title": "Corrige",
+        "text": "Usa la evidencia y la recomendación de cada hallazgo."
+      },
+      "retest": {
+        "title": "Vuelve a probar",
+        "text": "Repite la ejecución con la misma configuración en un paso."
+      },
+      "close": {
+        "title": "Cierra",
+        "text": "El proyecto se marca como concluido cuando no quedan fallas abiertas."
+      }
+    },
+    "responsible": {
+      "title": "Uso responsable",
+      "text": "Solo puedes probar APIs propias o con autorización por escrito de su dueño. Antes de ejecutar pruebas, Hindama te pide demostrar que controlas el dominio."
+    }
+  },
+  "Errors": {
+    "reference": "Referencia: {id}",
+    "401": {
+      "title": "Tu sesión terminó",
+      "text": "Por seguridad cerramos tu sesión después de un tiempo sin actividad. Inicia sesión de nuevo para continuar.",
+      "action": "Iniciar sesión"
+    },
+    "403": {
+      "title": "Esta sección no es para tu rol",
+      "text": "Los administradores ven estadísticas y la bitácora, pero no el contenido de los proyectos.",
+      "action": "Ir al panel"
+    },
+    "404": {
+      "title": "No encontramos esta página",
+      "text": "El enlace puede estar mal escrito, o el proyecto ya no existe o no es tuyo.",
+      "action": "Ir a mis proyectos"
+    },
+    "429": {
+      "title": "Demasiadas solicitudes",
+      "text": "Hiciste más de 100 solicitudes en un minuto. Espera un momento y vuelve a intentarlo.",
+      "action": "Reintentar",
+      "wait": "Podrás reintentar en {time}."
+    },
+    "500": {
+      "title": "Algo salió mal de nuestro lado",
+      "text": "No es tu culpa. Ya lo registramos. Si se repite, escríbenos con este código de referencia.",
+      "action": "Reintentar"
+    },
+    "503": {
+      "title": "Servicio no disponible",
+      "text": "Una parte de Hindama no responde en este momento. Tus datos están a salvo; vuelve a intentarlo en unos minutos.",
+      "action": "Reintentar"
+    }
   }
 }

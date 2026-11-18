@@ -316,5 +316,132 @@
         "text": "We will publish any change on this page with its version date."
       }
     }
+  },
+  "Home": {
+    "meta": "Hindama · Assess your API before you publish it",
+    "badge": "For teams that publish REST APIs",
+    "title": "Find your API's flaws before someone else does",
+    "lead": "Hindama tests your API's security from its OpenAPI 3 contract and from who should be able to do what. Every flaw comes with the request that reproduces it and stays with you until you fix it.",
+    "ctaPrimary": "Create account",
+    "ctaSecondary": "See what it tests",
+    "example": {
+      "title": "One user can read another user's orders",
+      "request": "GET /orders/8f21 · User B → 200 OK",
+      "advice": "Recommendation: check that the order belongs to the token's user.",
+      "caption": "Sample finding and how it is tracked across runs."
+    },
+    "cycle": {
+      "detected": "Detected",
+      "resolved": "Resolved",
+      "regressions": "Regressions"
+    },
+    "benefits": {
+      "title": "What you get",
+      "early": {
+        "title": "Early detection",
+        "text": "Test in your test environment before you publish, not after an incident."
+      },
+      "contract": {
+        "title": "Guided by your contract",
+        "text": "Tests come from your OpenAPI 3 and from the access policy you confirm."
+      },
+      "evidence": {
+        "title": "Actionable evidence",
+        "text": "Every finding includes the request, the response, its OWASP and CWE category, and how to fix it."
+      },
+      "followUp": {
+        "title": "Follow-up until closure",
+        "text": "Test again and see what was resolved, what persists and what came back."
+      }
+    },
+    "modules": {
+      "title": "Seven test modules",
+      "subtitle": "Based on the OWASP API Security Top 10 and CWE",
+      "auth": {
+        "name": "Authentication",
+        "text": "Missing, tampered or expired tokens."
+      },
+      "config": {
+        "name": "Configuration",
+        "text": "Security headers, CORS and error messages."
+      },
+      "objects": {
+        "name": "Object access",
+        "text": "A user who reads or changes another user's objects."
+      },
+      "functions": {
+        "name": "Function access",
+        "text": "Regular users who reach administrator functions."
+      },
+      "properties": {
+        "name": "Properties",
+        "text": "Exposed or assignable fields that shouldn't be."
+      },
+      "resources": {
+        "name": "Resource consumption",
+        "text": "Unbounded pagination and sizes."
+      },
+      "sql": {
+        "name": "SQL injection",
+        "text": "Parameters that reach the database unfiltered."
+      }
+    },
+    "steps": {
+      "title": "From flaw to closure",
+      "detect": {
+        "title": "Detect",
+        "text": "Run the modules with the rate limits you define."
+      },
+      "fix": {
+        "title": "Fix",
+        "text": "Use each finding's evidence and recommendation."
+      },
+      "retest": {
+        "title": "Test again",
+        "text": "Repeat the run with the same configuration in one step."
+      },
+      "close": {
+        "title": "Close",
+        "text": "The project is marked as concluded when no open flaws remain."
+      }
+    },
+    "responsible": {
+      "title": "Responsible use",
+      "text": "You may only test your own APIs or APIs you have written authorization from the owner to test. Before running tests, Hindama asks you to prove that you control the domain."
+    }
+  },
+  "Errors": {
+    "reference": "Reference: {id}",
+    "401": {
+      "title": "Your session ended",
+      "text": "For security we end your session after a period of inactivity. Sign in again to continue.",
+      "action": "Sign in"
+    },
+    "403": {
+      "title": "This section isn't for your role",
+      "text": "Administrators see statistics and the audit log, but not the content of projects.",
+      "action": "Go to the dashboard"
+    },
+    "404": {
+      "title": "We couldn't find this page",
+      "text": "The link may be mistyped, or the project no longer exists or isn't yours.",
+      "action": "Go to my projects"
+    },
+    "429": {
+      "title": "Too many requests",
+      "text": "You made more than 100 requests in a minute. Wait a moment and try again.",
+      "action": "Retry",
+      "wait": "You can retry in {time}."
+    },
+    "500": {
+      "title": "Something went wrong on our side",
+      "text": "It's not your fault. We've already logged it. If it keeps happening, write to us with this reference code.",
+      "action": "Retry"
+    },
+    "503": {
+      "title": "Service unavailable",
+      "text": "Part of Hindama isn't responding right now. Your data is safe; try again in a few minutes.",
+      "action": "Retry"
+    }
   }
 }
