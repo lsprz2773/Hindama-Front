@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Dialog } from "radix-ui";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
 import { Icon, type IconName } from "./icon";
@@ -24,6 +24,10 @@ interface ModalProps {
   tone?: ModalTone;
   /** Bloqueante: no se cierra con Esc ni fuera del cuadro y no muestra la X (p. ej. términos nuevos). */
   blocking?: boolean;
+  /** Diálogo de alerta (acciones destructivas): se anuncia como `alertdialog`. */
+  alert?: boolean;
+  /** Elemento que recibe el foco al abrir (por defecto, el primero del diálogo). */
+  initialFocus?: RefObject<HTMLElement | null>;
   /** Mientras envía no se puede cerrar. */
   busy?: boolean;
   /** Error de la acción, dentro del modal (estado «error»). */
@@ -43,6 +47,8 @@ export function Modal({
   icon = "alertCircle",
   tone = "warning",
   blocking = false,
+  alert = false,
+  initialFocus,
   busy = false,
   error,
   children,
@@ -51,13 +57,28 @@ export function Modal({
 }: ModalProps) {
   const t = useTranslations("Modal");
   const locked = blocking || busy;
+  // Al cerrar, el foco vuelve al control que abrió el modal (Radix solo lo hace con Trigger).
+  const opener = useRef<HTMLElement | null>(null);
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => (!locked || next) && onOpenChange(next)}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[90] bg-black/55 backdrop-blur-sm" />
         <Dialog.Content
-          aria-busy={busy || undefined}
+          role={alert ? "alertdialog" : "dialog"}
+          onOpenAutoFocus={(e) => {
+            opener.current = document.activeElement as HTMLElement | null;
+            if (initialFocus?.current) {
+              e.preventDefault();
+              initialFocus.current.focus();
+            }
+          }}
+          onCloseAutoFocus={(e) => {
+            if (opener.current?.isConnected) {
+              e.preventDefault();
+              opener.current.focus();
+            }
+          }}
           onEscapeKeyDown={(e) => locked && e.preventDefault()}
           onPointerDownOutside={(e) => locked && e.preventDefault()}
           onInteractOutside={(e) => locked && e.preventDefault()}
