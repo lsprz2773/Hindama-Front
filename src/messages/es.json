@@ -1,0 +1,15 @@
+{
+  "Meta": {
+    "title": "Hindama",
+    "description": "Evalúa tu API antes de publicarla: pruebas de seguridad guiadas por el contrato OpenAPI y por quién debería poder hacer qué."
+  },
+  "Common": {
+    "appName": "Hindama",
+    "skipToContent": "Saltar al contenido"
+  },
+  "LanguageSelector": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  }
+}
