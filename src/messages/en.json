@@ -2007,5 +2007,182 @@
       "text": "The report is built from a finished run.",
       "action": "New run"
     }
+  },
+  "Stats": {
+    "crumb": "Statistics",
+    "title": "Usage statistics",
+    "subtitle": "Platform usage and the most common failures.",
+    "viewLog": "View audit log",
+    "period": {
+      "label": "Period",
+      "custom": "Custom",
+      "days": "Last {count} days"
+    },
+    "range": "{from} – {to}",
+    "custom": {
+      "from": "From",
+      "to": "To",
+      "invalid": "Enter a valid range: the start date cannot be after the end date or after today."
+    },
+    "empty": {
+      "title": "No data in this period",
+      "text": "The platform had no activity on these dates yet. Try a more recent period."
+    },
+    "kpi": {
+      "users": {
+        "label": "Active users",
+        "note": "{count, plural, one {# new account} other {# new accounts}}"
+      },
+      "projects": {
+        "label": "Projects",
+        "note": "{count} verified"
+      },
+      "runs": {
+        "label": "Runs",
+        "note": "{cancelled} cancelled · {failed} failed"
+      },
+      "resolution": {
+        "label": "From detection to resolution",
+        "note": "Average of resolved findings"
+      },
+      "deletedAccounts": {
+        "label": "Deleted accounts",
+        "note": "Figures do not change when an account is deleted"
+      },
+      "regressions": {
+        "label": "Regressions",
+        "note": "Resolved findings that came back"
+      }
+    },
+    "days": "days",
+    "runsBy": {
+      "day": "Runs per day",
+      "week": "Runs per week"
+    },
+    "unit": {
+      "day": "runs",
+      "week": "runs"
+    },
+    "chart": {
+      "summary": "{label}: {items}.",
+      "tip": "{label}: {value} {unit}"
+    },
+    "hover": "Hover over a point to see its value",
+    "byModule": "Most frequent failures by module",
+    "byModuleList": "Failures by module",
+    "byOwasp": "Most frequent failures by OWASP category",
+    "byOwaspList": "Failures by OWASP category",
+    "owasp": {
+      "API1": "API1 Objects",
+      "API2": "API2 Authentication",
+      "API3": "API3 Properties",
+      "API4": "API4 Resources",
+      "API5": "API5 Functions",
+      "API8": "API8 Configuration"
+    },
+    "bars": {
+      "tip": "{name}: {count} failures"
+    },
+    "privacy": "Aggregated, anonymous data only. Findings are grouped by week and counters by day. No project can be opened from here."
+  },
+  "AuditLog": {
+    "crumb": "Audit log",
+    "title": "Audit log",
+    "subtitle": "Unalterable record of sensitive actions. It never shows credentials.",
+    "viewStats": "View statistics",
+    "filters": {
+      "title": "Audit log filters",
+      "from": "From",
+      "to": "To",
+      "action": "Action type",
+      "allActions": "All actions",
+      "user": "User",
+      "userPlaceholder": "Identifier or email",
+      "host": "Reported host",
+      "clear": "Clear",
+      "invalidRange": "The range is reversed: the start date cannot be after the end date."
+    },
+    "user": {
+      "none": "No matches for that user.",
+      "deletedHint": "No matches. A deleted account no longer has an email: search for it by identifier."
+    },
+    "host": {
+      "help": "It is compared by its fingerprint; the host is never shown.",
+      "matches": "{count, plural, one {# match by fingerprint.} other {# matches by fingerprint.}}",
+      "none": "No matches for that fingerprint."
+    },
+    "count": "{count, plural, =0 {No records} one {# record} other {# records}}",
+    "readOnly": "Read only · kept for 6 months and then deleted",
+    "empty": {
+      "title": "No records match these filters",
+      "text": "Widen the date range or clear the filters to see more.",
+      "invalidTitle": "Fix the date range",
+      "invalidText": "The log is not queried while the start date is after the end date."
+    },
+    "cols": {
+      "date": "Date and time",
+      "user": "User",
+      "action": "Action",
+      "project": "Project",
+      "ip": "Source IP"
+    },
+    "filterByUser": "Filter by this user",
+    "copyId": "Copy the full identifier of {user}",
+    "copied": "Identifier copied",
+    "copyFailed": "Could not copy",
+    "deletedAccount": "Deleted account",
+    "detailOf": "Details of the record from {date}",
+    "actions": {
+      "accountCreated": "Account created",
+      "accountDeleted": "Account deleted",
+      "projectCreated": "Project created",
+      "projectVerified": "Project verified",
+      "projectDeleted": "Project deleted",
+      "identityCreated": "Identity created",
+      "identityDeleted": "Identity deleted",
+      "runLaunched": "Run launched",
+      "runCancelled": "Run cancelled",
+      "riskAccepted": "Risk accepted or false positive",
+      "targetBlocked": "Target blocked"
+    },
+    "detail": {
+      "modules": "Modules",
+      "limits": "Limits",
+      "confirmedRisk": "Confirmed risk",
+      "reason": "Reason",
+      "reportedHost": "Reported host",
+      "requests": "Requests",
+      "method": "Method",
+      "result": "Result",
+      "role": "Role",
+      "dismissReason": "Dismissal reason",
+      "justification": "Justification",
+      "identity": "Identity",
+      "credential": "Credential",
+      "by": "By",
+      "permanentDelete": "Permanent deletion",
+      "verification": "Verification"
+    },
+    "values": {
+      "limits": "5 req/s · 2 concurrent · 2,000 requests · 15 min",
+      "confirmedProperties": "Yes, Properties",
+      "redirect": "Redirect outside the verified host",
+      "fingerprint": "Fingerprint {fp} (HMAC)",
+      "file": "File",
+      "verified": "Verified",
+      "analyst": "Analyst",
+      "accepted": "Risk accepted",
+      "notStored": "Not stored in the log",
+      "notRecorded": "Not recorded",
+      "user": "The user",
+      "pending": "Pending",
+      "byDate": "No later than {date}"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "range": "{from}–{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    }
   }
 }

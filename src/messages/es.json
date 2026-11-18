@@ -2007,5 +2007,182 @@
       "text": "El reporte se genera a partir de una ejecución terminada.",
       "action": "Nueva ejecución"
     }
+  },
+  "Stats": {
+    "crumb": "Estadísticas",
+    "title": "Estadísticas de uso",
+    "subtitle": "Uso de la plataforma y fallas más comunes.",
+    "viewLog": "Ver bitácora",
+    "period": {
+      "label": "Periodo",
+      "custom": "Personalizado",
+      "days": "Últimos {count} días"
+    },
+    "range": "{from} – {to}",
+    "custom": {
+      "from": "Desde",
+      "to": "Hasta",
+      "invalid": "Escribe un rango válido: la fecha inicial no puede ser posterior a la final ni al día de hoy."
+    },
+    "empty": {
+      "title": "Sin datos en este periodo",
+      "text": "La plataforma aún no tenía actividad en estas fechas. Prueba con un periodo más reciente."
+    },
+    "kpi": {
+      "users": {
+        "label": "Usuarios activos",
+        "note": "{count, plural, one {# cuenta nueva} other {# cuentas nuevas}}"
+      },
+      "projects": {
+        "label": "Proyectos",
+        "note": "{count} verificados"
+      },
+      "runs": {
+        "label": "Ejecuciones",
+        "note": "{cancelled} canceladas · {failed} fallidas"
+      },
+      "resolution": {
+        "label": "De la detección a la resolución",
+        "note": "Promedio de hallazgos resueltos"
+      },
+      "deletedAccounts": {
+        "label": "Cuentas eliminadas",
+        "note": "Las cifras no cambian al eliminarse"
+      },
+      "regressions": {
+        "label": "Regresiones",
+        "note": "Hallazgos resueltos que reaparecieron"
+      }
+    },
+    "days": "días",
+    "runsBy": {
+      "day": "Ejecuciones por día",
+      "week": "Ejecuciones por semana"
+    },
+    "unit": {
+      "day": "ejecuciones",
+      "week": "ejecuciones"
+    },
+    "chart": {
+      "summary": "{label}: {items}.",
+      "tip": "{label}: {value} {unit}"
+    },
+    "hover": "Pasa el cursor por un punto para ver el valor",
+    "byModule": "Fallas más frecuentes por módulo",
+    "byModuleList": "Fallas por módulo",
+    "byOwasp": "Fallas más frecuentes por categoría OWASP",
+    "byOwaspList": "Fallas por categoría OWASP",
+    "owasp": {
+      "API1": "API1 Objetos",
+      "API2": "API2 Autenticación",
+      "API3": "API3 Propiedades",
+      "API4": "API4 Recursos",
+      "API5": "API5 Funciones",
+      "API8": "API8 Configuración"
+    },
+    "bars": {
+      "tip": "{name}: {count} fallas"
+    },
+    "privacy": "Solo datos agregados y anónimos. Los hallazgos se agrupan por semana y los contadores por día. Desde aquí no se puede abrir ningún proyecto."
+  },
+  "AuditLog": {
+    "crumb": "Bitácora",
+    "title": "Bitácora de auditoría",
+    "subtitle": "Registro inalterable de acciones sensibles. Nunca muestra credenciales.",
+    "viewStats": "Ver estadísticas",
+    "filters": {
+      "title": "Filtros de la bitácora",
+      "from": "Desde",
+      "to": "Hasta",
+      "action": "Tipo de acción",
+      "allActions": "Todas las acciones",
+      "user": "Usuario",
+      "userPlaceholder": "Identificador o correo",
+      "host": "Host reportado",
+      "clear": "Limpiar",
+      "invalidRange": "El rango está invertido: la fecha inicial no puede ser posterior a la final."
+    },
+    "user": {
+      "none": "Sin coincidencias para ese usuario.",
+      "deletedHint": "Sin coincidencias. Una cuenta eliminada ya no tiene correo: búscala por su identificador."
+    },
+    "host": {
+      "help": "Se compara por su huella; el host nunca se muestra.",
+      "matches": "{count, plural, one {# coincidencia por huella.} other {# coincidencias por huella.}}",
+      "none": "Sin coincidencias para esa huella."
+    },
+    "count": "{count, plural, =0 {Sin registros} one {# registro} other {# registros}}",
+    "readOnly": "Solo lectura · se conservan 6 meses y luego se eliminan",
+    "empty": {
+      "title": "No hay registros con estos filtros",
+      "text": "Amplía el rango de fechas o limpia los filtros para ver más.",
+      "invalidTitle": "Corrige el rango de fechas",
+      "invalidText": "No se consulta la bitácora mientras la fecha inicial sea posterior a la final."
+    },
+    "cols": {
+      "date": "Fecha y hora",
+      "user": "Usuario",
+      "action": "Acción",
+      "project": "Proyecto",
+      "ip": "IP de origen"
+    },
+    "filterByUser": "Filtrar por este usuario",
+    "copyId": "Copiar el identificador completo de {user}",
+    "copied": "Identificador copiado",
+    "copyFailed": "No se pudo copiar",
+    "deletedAccount": "Cuenta eliminada",
+    "detailOf": "Detalle del registro de {date}",
+    "actions": {
+      "accountCreated": "Alta de cuenta",
+      "accountDeleted": "Baja de cuenta",
+      "projectCreated": "Creación de proyecto",
+      "projectVerified": "Verificación de proyecto",
+      "projectDeleted": "Eliminación de proyecto",
+      "identityCreated": "Alta de identidad",
+      "identityDeleted": "Baja de identidad",
+      "runLaunched": "Ejecución lanzada",
+      "runCancelled": "Ejecución cancelada",
+      "riskAccepted": "Riesgo aceptado o falso positivo",
+      "targetBlocked": "Destino bloqueado"
+    },
+    "detail": {
+      "modules": "Módulos",
+      "limits": "Límites",
+      "confirmedRisk": "Confirmó riesgo",
+      "reason": "Motivo",
+      "reportedHost": "Host reportado",
+      "requests": "Peticiones",
+      "method": "Método",
+      "result": "Resultado",
+      "role": "Rol",
+      "dismissReason": "Motivo del descarte",
+      "justification": "Justificación",
+      "identity": "Identidad",
+      "credential": "Credencial",
+      "by": "Por",
+      "permanentDelete": "Borrado definitivo",
+      "verification": "Verificación"
+    },
+    "values": {
+      "limits": "5 req/s · 2 concurrentes · 2,000 peticiones · 15 min",
+      "confirmedProperties": "Sí, Propiedades",
+      "redirect": "Redirección fuera del host verificado",
+      "fingerprint": "Huella {fp} (HMAC)",
+      "file": "Archivo",
+      "verified": "Verificado",
+      "analyst": "Analista",
+      "accepted": "Riesgo aceptado",
+      "notStored": "No se guarda en la bitácora",
+      "notRecorded": "No se registra",
+      "user": "El usuario",
+      "pending": "Pendiente",
+      "byDate": "A más tardar el {date}"
+    },
+    "pagination": {
+      "label": "Paginación",
+      "range": "{from}–{to} de {total}",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    }
   }
 }
