@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageTitle } from "@/i18n/metadata";
 import { SEED_PROJECTS } from "@/features/projects/seed";
 import { RunResultsView } from "@/features/runs/run-results-view";
 import { resolveLocale } from "@/i18n/params";
@@ -9,6 +11,12 @@ export function generateStaticParams() {
       runId: String(i + 1),
     })),
   );
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/projects/[id]/runs/[runId]">): Promise<Metadata> {
+  return pageTitle(params, "runResults");
 }
 
 export default async function Page({ params }: PageProps<"/[locale]/projects/[id]/runs/[runId]">) {
