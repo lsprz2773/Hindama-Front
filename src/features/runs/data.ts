@@ -539,3 +539,62 @@ export const DEFAULT_REPORT: ProjectReport = {
     { code: "SQL", key: "sql", findings: null },
   ],
 };
+
+export type RunState = "queued" | "running" | "cancelling" | "completed" | "cancelled" | "failed";
+
+export interface HistoryRun {
+  number: number;
+  /** Fecha y hora (ISO, UTC). */
+  date: string;
+  kind: "full" | "auth";
+  modules: number;
+  state: RunState;
+  duration: string;
+  requests: number;
+  severities: [number, number, number, number, number];
+  /** Nuevos, persistentes, resueltos y regresiones; `null` si aún no hay comparación. */
+  changes: [number, number, number, number] | null;
+  /** Recursos que la plataforma no pudo eliminar (C-15). */
+  pendingResources?: number;
+}
+
+/** Ejecuciones anteriores del proyecto de ejemplo. TODO(api): vienen del historial del proyecto. */
+export const SAMPLE_HISTORY: HistoryRun[] = [
+  {
+    number: 3,
+    date: "2026-10-28T16:20:00Z",
+    kind: "full",
+    modules: 4,
+    state: "completed",
+    duration: "6:12",
+    requests: 1284,
+    severities: [1, 3, 4, 2, 5],
+    changes: [4, 9, 6, 2],
+  },
+  {
+    number: 2,
+    date: "2026-10-24T12:05:00Z",
+    kind: "full",
+    modules: 3,
+    state: "cancelled",
+    duration: "3:40",
+    requests: 702,
+    severities: [1, 4, 5, 3, 4],
+    changes: [5, 12, 1, 0],
+    pendingResources: 2,
+  },
+  {
+    number: 1,
+    date: "2026-10-21T17:30:00Z",
+    kind: "auth",
+    modules: 1,
+    state: "completed",
+    duration: "1:55",
+    requests: 310,
+    severities: [2, 4, 5, 3, 4],
+    changes: [18, 0, 0, 0],
+  },
+];
+
+/** Hallazgos resueltos en total por proyecto de ejemplo. TODO(api). */
+export const RESOLVED_TOTAL: Record<string, number> = { pedidos: 11, proveedores: 7 };
