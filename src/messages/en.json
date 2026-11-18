@@ -1888,5 +1888,124 @@
         "acceptedRisk": "Risk accepted"
       }
     }
+  },
+  "History": {
+    "title": "History",
+    "repeat": "Repeat last run",
+    "repeatStarted": "Repeating with the same configuration (no. {number})",
+    "viewProgress": "View progress",
+    "following": "Being tracked",
+    "notConcluded": "Not concluded yet",
+    "rule": "The project is marked as concluded when a run leaves no new, persistent or regression findings. If a later run finds any, it reopens.",
+    "concluded": {
+      "badge": "Concluded",
+      "title": "Project concluded",
+      "text": "The last run left no new, persistent or regression findings. If a later run finds any, it reopens."
+    },
+    "openNow": "Open now",
+    "resolvedTotal": "Resolved in total",
+    "chart": {
+      "title": "Open findings at the end of each run",
+      "running": "No. {number} is still running",
+      "summary": "Open findings: {items}.",
+      "item": "run {number}, {count}",
+      "itemRunning": "run {number} in progress, {count} so far",
+      "tip": "Run {number}: {count} open",
+      "label": "no. {number}",
+      "labelRunning": "no. {number} (running)"
+    },
+    "runs": "{count, plural, one {# run} other {# runs}}",
+    "cols": {
+      "run": "Run",
+      "date": "Date and modules",
+      "status": "Status",
+      "duration": "Duration",
+      "requests": "Requests",
+      "severity": "By severity",
+      "changes": "New · persistent · resolved · regressions"
+    },
+    "number": "no. {number}",
+    "kind": {
+      "auth": "Authentication",
+      "full": "Full test · {count, plural, one {# module} other {# modules}}"
+    },
+    "pending": "{count, plural, one {# resource to delete} other {# resources to delete}}",
+    "open": "Open",
+    "report": "Report",
+    "empty": {
+      "title": "There are no runs yet",
+      "text": "When you run the tests, you will see their evolution and every result here.",
+      "action": "New run"
+    }
+  },
+  "Report": {
+    "back": "Back",
+    "typeLabel": "Report type",
+    "variant": {
+      "run": "Run no. {number}",
+      "current": "Current state"
+    },
+    "excel": "Findings in Excel",
+    "print": "Print or save as PDF",
+    "printing": "Preparing the printout…",
+    "exported": "Export ready",
+    "exportedText": "The file was downloaded with all the findings in the report.",
+    "brand": "Hindama · {type}",
+    "type": {
+      "run": "Report of run no. {number}",
+      "current": "Current state report"
+    },
+    "subtitle": {
+      "run": "Run completed on {date}",
+      "current": "State as of {date}, with {count, plural, one {# run} other {# runs}}"
+    },
+    "generated": "Generated",
+    "by": "By",
+    "baseUrl": "Base URL",
+    "summary": {
+      "title": "1. Summary",
+      "bySeverity": "By severity",
+      "byStatus": "By status",
+      "status": {
+        "new": "New",
+        "persistent": "Persistent",
+        "regression": "Regressions",
+        "resolved": "Resolved in this run"
+      },
+      "modules": "Modules run:",
+      "none": "none",
+      "skipped": "{modules} was not run because an administrator identity is missing.",
+      "limits": "Limits: {rps} requests per second, {concurrency} concurrent, {total} requests, {minutes} minutes. {requests} requests were sent in {duration}."
+    },
+    "matrix": {
+      "title": "2. Access matrix (discrepancies)",
+      "operation": "Operation",
+      "identity": "Identity",
+      "expected": "Expected",
+      "observed": "Observed",
+      "deny": "Deny",
+      "allowed": "{code} allowed",
+      "cors": "Open CORS",
+      "global": "Whole API",
+      "note": "The full matrix of {rows} operations × {identities} identities is in the run view."
+    },
+    "pageBreak": "Page break when printing",
+    "findings": {
+      "title": "3. Findings",
+      "none": "There are no open findings",
+      "module": "Module",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "identity": "Identity",
+      "expected": "Expected:",
+      "observed": "Observed:",
+      "fix": "Recommendation:",
+      "more": "{count, plural, one {And # more finding, sorted by severity, on the following pages.} other {And # more findings, sorted by severity, on the following pages.}}"
+    },
+    "empty": {
+      "title": "There is nothing to report yet",
+      "text": "The report is built from a finished run.",
+      "action": "New run"
+    }
   }
 }

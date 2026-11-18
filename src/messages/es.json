@@ -1888,5 +1888,124 @@
         "acceptedRisk": "Riesgo aceptado"
       }
     }
+  },
+  "History": {
+    "title": "Historial",
+    "repeat": "Repetir última ejecución",
+    "repeatStarted": "Repitiendo con la misma configuración (n.º {number})",
+    "viewProgress": "Ver progreso",
+    "following": "En seguimiento",
+    "notConcluded": "Aún no está concluido",
+    "rule": "El proyecto se marca como concluido cuando una ejecución no deja hallazgos nuevos, persistentes ni regresiones. Si una ejecución posterior encuentra alguno, se reabre.",
+    "concluded": {
+      "badge": "Concluido",
+      "title": "Proyecto concluido",
+      "text": "La última ejecución no dejó hallazgos nuevos, persistentes ni regresiones. Si una ejecución posterior encuentra alguno, se reabre."
+    },
+    "openNow": "Abiertos ahora",
+    "resolvedTotal": "Resueltos en total",
+    "chart": {
+      "title": "Hallazgos abiertos al terminar cada ejecución",
+      "running": "La n.º {number} sigue en curso",
+      "summary": "Hallazgos abiertos: {items}.",
+      "item": "ejecución {number}, {count}",
+      "itemRunning": "ejecución {number} en curso, {count} hasta ahora",
+      "tip": "Ejecución {number}: {count, plural, one {# abierto} other {# abiertos}}",
+      "label": "n.º {number}",
+      "labelRunning": "n.º {number} (en curso)"
+    },
+    "runs": "{count, plural, one {# ejecución} other {# ejecuciones}}",
+    "cols": {
+      "run": "Ejecución",
+      "date": "Fecha y módulos",
+      "status": "Estado",
+      "duration": "Duración",
+      "requests": "Peticiones",
+      "severity": "Por severidad",
+      "changes": "Nuevos · persistentes · resueltos · regresiones"
+    },
+    "number": "n.º {number}",
+    "kind": {
+      "auth": "Autenticación",
+      "full": "Prueba completa · {count, plural, one {# módulo} other {# módulos}}"
+    },
+    "pending": "{count, plural, one {# recurso por eliminar} other {# recursos por eliminar}}",
+    "open": "Abrir",
+    "report": "Reporte",
+    "empty": {
+      "title": "Aún no hay ejecuciones",
+      "text": "Cuando ejecutes las pruebas, aquí verás su evolución y cada resultado.",
+      "action": "Nueva ejecución"
+    }
+  },
+  "Report": {
+    "back": "Volver",
+    "typeLabel": "Tipo de reporte",
+    "variant": {
+      "run": "Ejecución n.º {number}",
+      "current": "Estado actual"
+    },
+    "excel": "Hallazgos en Excel",
+    "print": "Imprimir o guardar PDF",
+    "printing": "Preparando la impresión…",
+    "exported": "Exportación lista",
+    "exportedText": "El archivo se descargó con todos los hallazgos del reporte.",
+    "brand": "Hindama · {type}",
+    "type": {
+      "run": "Reporte de la ejecución n.º {number}",
+      "current": "Reporte del estado actual"
+    },
+    "subtitle": {
+      "run": "Ejecución completada el {date}",
+      "current": "Estado al {date}, con {count, plural, one {# ejecución} other {# ejecuciones}}"
+    },
+    "generated": "Generado",
+    "by": "Por",
+    "baseUrl": "URL base",
+    "summary": {
+      "title": "1. Resumen",
+      "bySeverity": "Por severidad",
+      "byStatus": "Por estado",
+      "status": {
+        "new": "Nuevos",
+        "persistent": "Persistentes",
+        "regression": "Regresiones",
+        "resolved": "Resueltos en esta ejecución"
+      },
+      "modules": "Módulos ejecutados:",
+      "none": "ninguno",
+      "skipped": "{modules} no se ejecutó por falta de una identidad administradora.",
+      "limits": "Límites: {rps} peticiones por segundo, {concurrency} concurrentes, {total} peticiones, {minutes} minutos. Se enviaron {requests} peticiones en {duration}."
+    },
+    "matrix": {
+      "title": "2. Matriz de acceso (discrepancias)",
+      "operation": "Operación",
+      "identity": "Identidad",
+      "expected": "Esperado",
+      "observed": "Observado",
+      "deny": "Denegar",
+      "allowed": "{code} permitido",
+      "cors": "CORS abierto",
+      "global": "Toda la API",
+      "note": "La matriz completa de {rows} operaciones × {identities} identidades está en la vista de la ejecución."
+    },
+    "pageBreak": "Salto de página al imprimir",
+    "findings": {
+      "title": "3. Hallazgos",
+      "none": "No hay hallazgos abiertos",
+      "module": "Módulo",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "identity": "Identidad",
+      "expected": "Esperado:",
+      "observed": "Observado:",
+      "fix": "Recomendación:",
+      "more": "{count, plural, one {Y # hallazgo más, ordenado por severidad, en las páginas siguientes.} other {Y # hallazgos más, ordenados por severidad, en las páginas siguientes.}}"
+    },
+    "empty": {
+      "title": "Aún no hay nada que reportar",
+      "text": "El reporte se genera a partir de una ejecución terminada.",
+      "action": "Nueva ejecución"
+    }
   }
 }
