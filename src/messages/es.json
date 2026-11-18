@@ -1390,7 +1390,11 @@
     },
     "errors": {
       "nameRequired": "Escribe el nombre de la identidad.",
-      "fieldRequired": "Este campo es obligatorio."
+      "fieldRequired": "Este campo es obligatorio.",
+      "nameTooLong": "Usa un nombre de hasta 60 caracteres.",
+      "nameTaken": "Ya hay una identidad con ese nombre. Elige otro.",
+      "endpoint": "Escribe una ruta que empiece con / o una URL completa con https://.",
+      "tokenName": "Usa solo letras, números y los símbolos - _ . (sin espacios)."
     }
   },
   "Resources": {
@@ -2205,5 +2209,27 @@
     "text": "Los datos que ves pueden estar desactualizados. En cuanto vuelva la red, se actualizan solos.",
     "back": "Conexión recuperada",
     "backText": "Los datos se actualizaron."
+  },
+  "PageTitles": {
+    "adminStats": "Estadísticas de uso",
+    "auditLog": "Bitácora de auditoría",
+    "dashboard": "Resumen del proyecto",
+    "contract": "Contrato OpenAPI",
+    "versions": "Versiones del contrato",
+    "findings": "Hallazgos",
+    "finding": "Detalle del hallazgo",
+    "history": "Historial",
+    "identities": "Identidades",
+    "identityNew": "Nueva identidad",
+    "identityEdit": "Editar identidad",
+    "policy": "Política de acceso",
+    "resources": "Recursos por identidad",
+    "runCurrent": "Ejecución en curso",
+    "runNew": "Nueva ejecución",
+    "runResults": "Resultados de la ejecución",
+    "matrix": "Matriz de acceso",
+    "report": "Reporte",
+    "settings": "Ajustes del proyecto",
+    "verification": "Verificación de propiedad"
   }
 }

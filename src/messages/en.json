@@ -1390,7 +1390,11 @@
     },
     "errors": {
       "nameRequired": "Enter the identity's name.",
-      "fieldRequired": "This field is required."
+      "fieldRequired": "This field is required.",
+      "nameTooLong": "Use a name of up to 60 characters.",
+      "nameTaken": "An identity with that name already exists. Choose another.",
+      "endpoint": "Enter a path that starts with / or a full URL with https://.",
+      "tokenName": "Use only letters, numbers and the symbols - _ . (no spaces)."
     }
   },
   "Resources": {
@@ -2205,5 +2209,27 @@
     "text": "The data you see may be out of date. As soon as the network is back, it updates by itself.",
     "back": "Connection restored",
     "backText": "The data was refreshed."
+  },
+  "PageTitles": {
+    "adminStats": "Usage statistics",
+    "auditLog": "Audit log",
+    "dashboard": "Project overview",
+    "contract": "OpenAPI contract",
+    "versions": "Contract versions",
+    "findings": "Findings",
+    "finding": "Finding details",
+    "history": "History",
+    "identities": "Identities",
+    "identityNew": "New identity",
+    "identityEdit": "Edit identity",
+    "policy": "Access policy",
+    "resources": "Resources by identity",
+    "runCurrent": "Run in progress",
+    "runNew": "New run",
+    "runResults": "Run results",
+    "matrix": "Access matrix",
+    "report": "Report",
+    "settings": "Project settings",
+    "verification": "Ownership verification"
   }
 }
