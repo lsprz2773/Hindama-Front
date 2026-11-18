@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { BlockedAction } from "@/components/ui/state-view";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -26,9 +27,12 @@ function ConfigureRun({ project }: { project: Project }) {
   const hasAdmin = identities.some((i) => i.role === "admin");
   const base = `/projects/${project.id}`;
 
-  const [selected, setSelected] = useState<ModuleKey[]>(
-    RUN_MODULES.filter((m) => m.defaultOn).map((m) => m.key),
-  );
+  // Desde el botón «Ejecutar» de un módulo del dashboard llega con ese módulo preseleccionado.
+  const preselected = useSearchParams().get("module");
+  const [selected, setSelected] = useState<ModuleKey[]>(() => {
+    const only = RUN_MODULES.find((m) => m.key === preselected && !(m.blockedNoAdmin && !hasAdmin));
+    return only ? [only.key] : RUN_MODULES.filter((m) => m.defaultOn).map((m) => m.key);
+  });
   const [confirmed, setConfirmed] = useState<ModuleKey[]>([]);
   const [limits, setLimits] = useState<Record<string, string>>(
     Object.fromEntries(RUN_LIMITS.map((l) => [l.key, String(l.value)])),
@@ -276,7 +280,9 @@ export function ConfigureRunView({ id }: { id: string }) {
             href={`/projects/${id}/runs/current`}
           />
         ) : (
-          <ConfigureRun key={project.id} project={project} />
+          <Suspense>
+            <ConfigureRun key={project.id} project={project} />
+          </Suspense>
         )
       }
     </ProjectShell>

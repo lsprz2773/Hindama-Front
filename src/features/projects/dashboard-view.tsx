@@ -8,10 +8,11 @@ import { SeverityMeter, SEVERITIES } from "@/components/ui/severity";
 import { BlockedAction, EmptyState } from "@/components/ui/state-view";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useToast } from "@/components/ui/toast";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ApiWarnings } from "@/components/ui/api-warnings";
 import { cn } from "@/lib/cn";
 import { ProjectShell } from "./project-shell";
+import { updateProject } from "./store";
 import { hostOf, type Project } from "./store";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
@@ -21,9 +22,16 @@ function Dashboard({ project }: { project: Project }) {
   const ts = useTranslations("Severity");
   const format = useFormatter();
   const toast = useToast();
+  const router = useRouter();
   const base = `/projects/${project.id}`;
   const report = project.report;
   const open = project.openFindings;
+  function repeat() {
+    updateProject(project.id, { running: 0 });
+    toast.show({ type: "info", title: t("repeat.title"), text: t("repeat.text") });
+    router.push(`${base}/runs/current`);
+  }
+  const unconfirmed = project.policy ? project.policy.total - project.policy.confirmed : 0;
   const insecure = project.baseUrl.startsWith("http:");
 
   const stats = report
@@ -98,31 +106,39 @@ function Dashboard({ project }: { project: Project }) {
             </p>
           </div>
 
-          {project.verified ? (
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink href={`${base}/runs/new`} size="lg">
-                <Icon name="play" size={16} />
-                {t("fullTest")}
-              </ButtonLink>
-              {report ? (
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() =>
-                    toast.show({ type: "info", title: t("repeat.title"), text: t("repeat.text") })
-                  }
-                >
-                  {t("repeat.button")}
-                </Button>
-              ) : null}
-            </div>
-          ) : (
+          {!project.verified ? (
             <BlockedAction
               label={t("fullTest")}
               reason={t("blocked.unverified")}
               linkLabel={t("blocked.goVerify")}
               href={`${base}/verification`}
             />
+          ) : project.contractOps === null ? (
+            <BlockedAction
+              label={t("fullTest")}
+              reason={t("blocked.noContract")}
+              linkLabel={t("blocked.goContract")}
+              href={`${base}/contract`}
+            />
+          ) : project.running !== undefined ? (
+            <BlockedAction
+              label={t("fullTest")}
+              reason={t("blocked.active")}
+              linkLabel={t("blocked.viewRun")}
+              href={`${base}/runs/current`}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink href={`${base}/runs/new`} size="lg">
+                <Icon name="play" size={16} />
+                {t("fullTest")}
+              </ButtonLink>
+              {report ? (
+                <Button variant="secondary" size="lg" onClick={repeat}>
+                  {t("repeat.button")}
+                </Button>
+              ) : null}
+            </div>
           )}
 
           {stats.length > 0 ? (
@@ -228,53 +244,66 @@ function Dashboard({ project }: { project: Project }) {
         </div>
         {project.verified || report ? (
           <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-2.5 p-0">
-            {(report?.modules ?? []).map((m) => (
-              <li
-                key={m.key}
-                className="border-line bg-panel-2 flex items-center gap-3.5 rounded-[20px] border p-4"
-              >
-                <span
-                  aria-hidden="true"
-                  className="bg-progress-bg text-accent font-display inline-flex size-11 flex-none items-center justify-center rounded-[14px] text-[13px] font-semibold"
-                >
-                  {m.code}
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[15px] font-semibold">{t(`modules.names.${m.key}`)}</span>
-                  <span className={cn("text-[13px]", m.blocked ? "text-warning" : "text-muted")}>
-                    {m.blocked ? t("modules.blocked") : t(`modules.notes.${m.key}`)}
-                  </span>
-                </div>
-                <span className="text-muted text-[13px] whitespace-nowrap">
-                  {m.findings === null
-                    ? t("modules.notRun")
-                    : t("modules.findings", { count: m.findings })}
-                </span>
-                {m.blocked ? (
-                  <ButtonLink
-                    href={`${base}/identities`}
-                    variant="ghost"
-                    size="sm"
-                    className="px-2"
-                  >
-                    {t("modules.addIdentity")}
-                  </ButtonLink>
-                ) : project.verified ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() =>
-                      toast.show({
-                        type: "info",
-                        title: t("modules.runTitle", { name: t(`modules.names.${m.key}`) }),
-                      })
+            {(report?.modules ?? []).map((m) => {
+              // Cada bloqueo lleva su motivo y el enlace donde se resuelve (C-13).
+              const block = m.blocked
+                ? {
+                    reason: t("modules.blocked"),
+                    label: t("modules.addIdentity"),
+                    href: `${base}/identities`,
+                  }
+                : m.key === "objects" && project.identities < 2
+                  ? {
+                      reason: t("blocked.identities"),
+                      label: t("blocked.addIdentity"),
+                      href: `${base}/identities/new`,
                     }
+                  : m.key === "functions" && unconfirmed > 0
+                    ? {
+                        reason: t("blocked.policy", { count: project.policy?.total ?? 0 }),
+                        label: t("blocked.reviewPolicy"),
+                        href: `${base}/policy`,
+                      }
+                    : null;
+              return (
+                <li
+                  key={m.key}
+                  className="border-line bg-panel-2 flex items-center gap-3.5 rounded-[20px] border p-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="bg-progress-bg text-accent font-display inline-flex size-11 flex-none items-center justify-center rounded-[14px] text-[13px] font-semibold"
                   >
-                    {t("modules.run")}
-                  </Button>
-                ) : null}
-              </li>
-            ))}
+                    {m.code}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-[15px] font-semibold">{t(`modules.names.${m.key}`)}</span>
+                    <span className={cn("text-[13px]", block ? "text-warning" : "text-muted")}>
+                      {block ? block.reason : t(`modules.notes.${m.key}`)}
+                    </span>
+                  </div>
+                  <span className="text-muted text-[13px] whitespace-nowrap">
+                    {m.findings === null
+                      ? t("modules.notRun")
+                      : t("modules.findings", { count: m.findings })}
+                  </span>
+                  {block ? (
+                    <ButtonLink href={block.href} variant="ghost" size="sm" className="px-2">
+                      {block.label}
+                    </ButtonLink>
+                  ) : project.verified && project.running === undefined ? (
+                    <ButtonLink
+                      href={`${base}/runs/new?module=${m.key}`}
+                      variant="secondary"
+                      size="sm"
+                      aria-label={t("modules.runTitle", { name: t(`modules.names.${m.key}`) })}
+                    >
+                      {t("modules.run")}
+                    </ButtonLink>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <EmptyState title={t("modules.emptyTitle")} text={t("modules.emptyText")} />
