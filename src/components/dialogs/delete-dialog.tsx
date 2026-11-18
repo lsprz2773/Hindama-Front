@@ -15,6 +15,8 @@ export interface DeleteDialogProps {
   confirmText: string;
   /** «Se borra»: qué se elimina junto con el recurso. */
   consequences?: { heading: string; items: string[] };
+  /** «Se conserva»: lo que sobrevive a la baja (p. ej. métricas anónimas). */
+  keeps?: { heading: string; items: string[] };
   confirmLabel: string;
   onConfirm: () => Promise<void>;
   mapError?: (error: unknown) => SubmitError;
@@ -28,6 +30,7 @@ export function DeleteDialog({
   description,
   confirmText,
   consequences,
+  keeps,
   confirmLabel,
   onConfirm,
   mapError,
@@ -72,16 +75,21 @@ export function DeleteDialog({
         />
       }
     >
-      {consequences ? (
-        <div className="border-line bg-panel-2 flex flex-col gap-2 rounded-[20px] border px-[18px] py-4">
-          <b className="text-sm">{consequences.heading}</b>
-          <ul className="text-muted m-0 flex list-disc flex-col gap-1 pl-[18px] text-[13.5px] leading-[1.45]">
-            {consequences.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {[consequences, keeps].map((group) =>
+        group ? (
+          <div
+            key={group.heading}
+            className="border-line bg-panel-2 flex flex-col gap-2 rounded-[20px] border px-[18px] py-4"
+          >
+            <b className="text-sm">{group.heading}</b>
+            <ul className="text-muted m-0 flex list-disc flex-col gap-1 pl-[18px] text-[13.5px] leading-[1.45]">
+              {group.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null,
+      )}
       <div className="flex flex-col gap-2">
         <label htmlFor={inputId} className="text-sm font-semibold">
           {t.rich("typeToConfirm", {
