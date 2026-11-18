@@ -6,6 +6,10 @@ import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import { ApiWarnings } from "@/components/ui/api-warnings";
 import { Banner } from "@/components/ui/banner";
+import { CopyButton } from "@/components/ui/copy-button";
+import { HelpPanel } from "@/components/ui/help-panel";
+import { HttpViewer } from "@/components/ui/http-viewer";
+import { RiskConfirmation } from "@/components/ui/risk-confirmation";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { PendingResources } from "@/components/ui/pending-resources";
@@ -37,6 +41,14 @@ function Section({ id, title, children }: { id: string; title: string; children:
   );
 }
 
+const REQUEST_SAMPLE = [
+  "GET /orders/1042 HTTP/1.1",
+  "Host: api.pedidos-staging.ejemplo.mx",
+  "Authorization: Bearer ••••••••••a9F2",
+  "Accept: application/json",
+].join("\n");
+const RESPONSE_SAMPLE = ["HTTP/1.1 200 OK", "", "x".repeat(11 * 1024)].join("\n");
+
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** Galería de componentes comunes de la fase 0. Solo existe en desarrollo (ver la página). */
@@ -44,6 +56,7 @@ export function Gallery() {
   const toast = useToast();
   const [dialog, setDialog] = useState<"confirm" | "delete" | "risk" | "fail" | null>(null);
   const [lastRisk, setLastRisk] = useState("");
+  const [confirmed, setConfirmed] = useState<string[]>([]);
 
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-5 p-6">
@@ -217,6 +230,41 @@ export function Gallery() {
             },
           ]}
         />
+      </Section>
+
+      <Section id="ds-viewer" title="Visor de petición y respuesta (C-12) y copiar">
+        <div className="grid gap-4 md:grid-cols-2">
+          <HttpViewer title="Petición" note="Credencial enmascarada" content={REQUEST_SAMPLE} />
+          <HttpViewer title="Respuesta · 200 OK" content={RESPONSE_SAMPLE} />
+        </div>
+        <div className="flex gap-3">
+          <CopyButton
+            value="curl https://api.pedidos-staging.ejemplo.mx/orders/1042"
+            label="Copiar como curl"
+          />
+        </div>
+      </Section>
+
+      <Section id="ds-risk" title="Advertencia de módulos de riesgo (C-08) y ayuda (C-10)">
+        <RiskConfirmation
+          summary="Fuerza bruta de identificadores modifica datos y la carga de recursos satura el servidor."
+          modules={[
+            { id: "sql", name: "Inyección SQL", level: "riesgo medio" },
+            { id: "load", name: "Consumo de recursos", level: "carga el servidor" },
+          ]}
+          confirmed={confirmed}
+          onToggle={(id, on) => setConfirmed((c) => (on ? [...c, id] : c.filter((x) => x !== id)))}
+        />
+        <HelpPanel title="¿Qué forma elijo?" icon="lock">
+          <ul>
+            <li>
+              <b>Login automático</b> si los tokens vencen pronto.
+            </li>
+            <li>
+              <b>Token Bearer</b> si tienes un token de larga duración.
+            </li>
+          </ul>
+        </HelpPanel>
       </Section>
 
       <Section id="ds-blocked" title="Acción bloqueada con motivo">
