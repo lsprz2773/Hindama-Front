@@ -66,11 +66,14 @@ test.describe("navegación entre vistas", () => {
     await expect(page).toHaveURL(/\/runs\/3$/);
     await page.getByRole("tab", { name: "Matriz de acceso" }).click();
     await expect(page).toHaveURL(/\/runs\/3\/matrix$/);
-    await page
-      .getByRole("link", { name: /Soporte: 200 · Discrepancia/ })
-      .first()
-      .click();
-    await expect(page).toHaveURL(/\/findings\/f\d+$/);
+    // La primera pulsación puede llegar antes de que la matriz termine de hidratarse.
+    await expect(async () => {
+      await page
+        .getByRole("link", { name: /Soporte: 200 · Discrepancia/ })
+        .first()
+        .click();
+      await expect(page).toHaveURL(/\/findings\/f\d+$/, { timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
     await page.getByRole("link", { name: "Hallazgos", exact: true }).first().click();
     await expect(page).toHaveURL(/\/projects\/pedidos\/findings$/);
   });
