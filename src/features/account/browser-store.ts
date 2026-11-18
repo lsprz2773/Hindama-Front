@@ -43,5 +43,17 @@ export function useFlag(key: string): string | null {
 
 export const TWO_FACTOR_KEY = "hindama.twoFactor";
 export const NOTICE_KEY = "hindama.notice";
+export const TERMS_KEY = "hindama.termsAccepted";
 
 export type HomeNotice = "account_deleted" | "local_sign_out";
+
+const noopSubscribe = () => () => {};
+
+/** `true` solo en el navegador, ya hidratado; sirve para no redirigir con el estado del servidor. */
+export function useIsClient(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
