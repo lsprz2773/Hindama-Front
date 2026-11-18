@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { Banner } from "@/components/ui/banner";
+import { UnsavedChangesGuard } from "@/components/dialogs/unsaved-changes-guard";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { MethodBadge } from "@/components/ui/method-badge";
@@ -382,17 +383,20 @@ export function PolicyView({ id }: { id: string }) {
         </Button>
       }
     >
-      {(project) =>
-        project.contractOps === null ? (
-          <EmptyState
-            title={t("noContract.title")}
-            text={t("noContract.text")}
-            action={{ label: t("noContract.action"), href: `/projects/${id}/contract` }}
-          />
-        ) : (
-          <Policy key={project.id} project={project} policy={policy} />
-        )
-      }
+      {(project) => (
+        <>
+          <UnsavedChangesGuard dirty={policy.dirty} />
+          {project.contractOps === null ? (
+            <EmptyState
+              title={t("noContract.title")}
+              text={t("noContract.text")}
+              action={{ label: t("noContract.action"), href: `/projects/${id}/contract` }}
+            />
+          ) : (
+            <Policy key={project.id} project={project} policy={policy} />
+          )}
+        </>
+      )}
     </ProjectShell>
   );
 }

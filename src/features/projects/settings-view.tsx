@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import { ApiWarnings } from "@/components/ui/api-warnings";
+import { UnsavedChangesGuard } from "@/components/dialogs/unsaved-changes-guard";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { inputClass, TextField } from "@/components/ui/text-field";
@@ -65,6 +66,7 @@ function Settings({ project }: { project: Project }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <UnsavedChangesGuard dirty={dirty && dialog === null} />
       {lostVerification ? <ApiWarnings warnings={[{ code: "project.verification_lost" }]} /> : null}
       {insecure ? <ApiWarnings warnings={[{ code: "url.no_tls" }]} /> : null}
 
