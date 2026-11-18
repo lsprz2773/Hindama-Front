@@ -15,6 +15,7 @@ import { updateProject, type Project } from "@/features/projects/store";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { DEFAULT_REPORT, SEED_FINDINGS } from "./data";
+import { useFindings } from "./findings-store";
 
 const MODULES = [
   { code: "API2", key: "auth", from: 0 },
@@ -38,6 +39,7 @@ function Progress({ project }: { project: Project }) {
   const base = `/projects/${project.id}`;
   const [percent, setPercent] = useState(project.running ?? 0);
   const [cancelling, setCancelling] = useState(false);
+  const { findings: stored } = useFindings(project.id);
   const done = percent >= 100;
   // Se fija al abrir: al terminar, el reporte del proyecto ya incluye esta ejecución.
   const [runNumber] = useState((project.report?.runNumber ?? 0) + 1);
@@ -174,16 +176,26 @@ function Progress({ project }: { project: Project }) {
           {found.length > 0 ? (
             <div className="border-line flex flex-col gap-2 border-t pt-3.5">
               <span className="text-muted text-[13px]">{t("recent")}</span>
-              {found.slice(0, 3).map((f) => (
-                <Link
-                  key={f.id}
-                  href={`${base}/findings/${f.id}`}
-                  className="bg-panel-2 text-fg flex flex-col gap-0.5 rounded-[14px] px-3 py-2.5 no-underline"
-                >
-                  <span className="text-[12.5px] font-bold">{ts(f.severity)}</span>
-                  <span className="text-sm">{f.title}</span>
-                </Link>
-              ))}
+              {found.slice(0, 3).map((f) => {
+                const row =
+                  "bg-panel-2 text-fg flex flex-col gap-0.5 rounded-[14px] px-3 py-2.5 no-underline";
+                const content = (
+                  <>
+                    <span className="text-[12.5px] font-bold">{ts(f.severity)}</span>
+                    <span className="text-sm">{f.title}</span>
+                  </>
+                );
+                // Solo se enlaza si el detalle ya existe en el proyecto (los de ejemplo viven en uno).
+                return stored.some((x) => x.id === f.id) ? (
+                  <Link key={f.id} href={`${base}/findings/${f.id}`} className={row}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={f.id} className={row}>
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted text-sm">{t("noneYet")}</p>
