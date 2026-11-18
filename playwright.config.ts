@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // El servidor de desarrollo compila cada ruta la primera vez que se visita.
+  expect: { timeout: 15_000 },
   reporter: "list",
   use: {
     baseURL: "http://localhost:3000",
