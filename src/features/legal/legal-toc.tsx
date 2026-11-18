@@ -22,18 +22,27 @@ export function LegalToc({
   const [active, setActive] = useState<string>(items[0]?.id ?? "");
 
   useEffect(() => {
-    const sections = items
-      .map((i) => document.getElementById(i.id))
-      .filter((el): el is HTMLElement => el !== null);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length > 0) setActive(visible[0].target.id);
-      },
-      { rootMargin: "-20% 0px -65% 0px" },
-    );
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+    // Sección activa: la última cuyo borde superior ya pasó el 30 % del alto de la ventana;
+    // al llegar al final de la página, la última.
+    function update() {
+      const line = window.innerHeight * 0.3;
+      let current = items[0]?.id ?? "";
+      for (const item of items) {
+        const el = document.getElementById(item.id);
+        if (el && el.getBoundingClientRect().top <= line) current = item.id;
+      }
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom && items.length > 0) current = items[items.length - 1].id;
+      setActive(current);
+    }
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, [items]);
 
   return (
