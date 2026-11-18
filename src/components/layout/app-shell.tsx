@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { OfflineBanner } from "@/components/ui/offline-banner";
 import { Breadcrumb, type Crumb } from "./breadcrumb";
 import { Sidebar, type SidebarProject } from "./sidebar";
 import { UserMenu } from "./user-menu";
@@ -45,6 +46,7 @@ export function AppShell({
             </div>
           </header>
           <main id="main" className="flex flex-col gap-5">
+            <OfflineBanner />
             {children}
           </main>
         </div>
