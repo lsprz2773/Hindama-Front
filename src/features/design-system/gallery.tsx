@@ -11,6 +11,7 @@ import { HelpPanel } from "@/components/ui/help-panel";
 import { HttpViewer } from "@/components/ui/http-viewer";
 import { RiskConfirmation } from "@/components/ui/risk-confirmation";
 import { Button } from "@/components/ui/button";
+import { Modal, ModalActions } from "@/components/ui/modal";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { PendingResources } from "@/components/ui/pending-resources";
 import { SeverityBadge, SEVERITIES } from "@/components/ui/severity";
@@ -54,7 +55,9 @@ const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, 
 /** Galería de componentes comunes de la fase 0. Solo existe en desarrollo (ver la página). */
 export function Gallery() {
   const toast = useToast();
-  const [dialog, setDialog] = useState<"confirm" | "delete" | "risk" | "fail" | null>(null);
+  const [dialog, setDialog] = useState<
+    "confirm" | "delete" | "risk" | "fail" | "success" | "blocking" | null
+  >(null);
   const [lastRisk, setLastRisk] = useState("");
   const [confirmed, setConfirmed] = useState<string[]>([]);
 
@@ -119,6 +122,12 @@ export function Gallery() {
           <Button variant="secondary" onClick={() => setDialog("fail")}>
             Con error
           </Button>
+          <Button variant="secondary" onClick={() => setDialog("success")}>
+            Con éxito
+          </Button>
+          <Button variant="secondary" onClick={() => setDialog("blocking")}>
+            Bloqueante
+          </Button>
         </div>
         {lastRisk ? <p role="status">Decisión guardada: {lastRisk}</p> : null}
         <ConfirmDialog
@@ -144,6 +153,28 @@ export function Gallery() {
           description="Siempre devuelve un error para ver el estado interno del modal."
           confirmLabel="Intentar"
           onConfirm={() => Promise.reject(new Error("boom"))}
+        />
+        <Modal
+          open={dialog === "success"}
+          onOpenChange={(o) => setDialog(o ? "success" : null)}
+          title="Guardado"
+          success={{
+            title: "Cambios guardados",
+            text: "La política de acceso quedó actualizada.",
+            action: "Listo",
+          }}
+        />
+        <Modal
+          open={dialog === "blocking"}
+          onOpenChange={(o) => setDialog(o ? "blocking" : null)}
+          title="Aceptar los términos nuevos"
+          description="Debes aceptarlos para seguir usando Hindama: no se cierra con Esc ni fuera del cuadro."
+          blocking
+          tone="accent"
+          icon="shield"
+          footer={
+            <ModalActions actionLabel="Aceptar y continuar" onAction={() => setDialog(null)} />
+          }
         />
         <DeleteDialog
           open={dialog === "delete"}
@@ -274,6 +305,34 @@ export function Gallery() {
           linkLabel="Ir a verificación"
           href="/projects/demo/verification"
         />
+        <BlockedAction
+          label="Prueba completa"
+          reason="Importa un contrato OpenAPI primero."
+          linkLabel="Importar contrato"
+          href="/projects/demo/contract"
+        />
+        <BlockedAction
+          label="Ejecutar Acceso a objetos"
+          reason="Necesitas al menos 2 identidades con recursos."
+          linkLabel="Agregar identidad"
+          href="/projects/demo/identities/new"
+        />
+        <BlockedAction
+          label="Prueba completa"
+          reason="Ya hay una ejecución en curso en este proyecto."
+          linkLabel="Ver ejecución"
+          href="/projects/demo/runs/current"
+        />
+      </Section>
+
+      <Section id="ds-offline" title="Sin conexión">
+        <Banner tone="warning" icon="refresh" title="Sin conexión. Reconectando…">
+          Los datos que ves pueden estar desactualizados. En cuanto vuelva la red, se actualizan
+          solos.
+        </Banner>
+        <p className="text-muted text-sm">
+          En las pantallas con sesión este aviso aparece solo cuando el navegador pierde la red.
+        </p>
       </Section>
 
       <Section id="ds-lang" title="Selector de idioma (C-18)">
