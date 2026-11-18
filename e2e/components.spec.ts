@@ -94,6 +94,50 @@ test.describe("fase 0 · componentes comunes", () => {
     }
   });
 
+  test("visor: recorta a 10 KB, enmascara y no interpreta el contenido", async ({ page }) => {
+    await page.goto("/design-system");
+    const response = page.getByRole("figure").filter({ hasText: "Respuesta · 200 OK" });
+    await expect(response).toContainText("se recorta a partir de 10 KB");
+    const rendered = await response.locator("pre").innerText();
+    expect(rendered.length).toBeLessThanOrEqual(10 * 1024 + 20);
+    await expect(page.getByRole("figure").filter({ hasText: "Petición" })).toContainText(
+      "Bearer ••••••••••a9F2",
+    );
+  });
+
+  test("copiar: cambia el icono, avisa con un toast y deja el texto en el portapapeles", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/design-system");
+    await page.getByRole("button", { name: "Copiar como curl" }).click();
+    await expect(page.getByRole("button", { name: "Copiado" })).toBeVisible();
+    await expect(page.locator("[aria-atomic=true]").getByText("Copiado")).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("curl https://");
+    // A los 2 s vuelve al texto original.
+    await expect(page.getByRole("button", { name: "Copiar como curl" })).toBeVisible({
+      timeout: 4000,
+    });
+  });
+
+  test("módulos de riesgo: cada uno exige su propia confirmación", async ({ page }) => {
+    await page.goto("/design-system");
+    const panel = page.getByRole("region", { name: /Activaste módulos/ });
+    await expect(panel.getByRole("status")).toContainText("Faltan por confirmar 2 módulos");
+    await panel.getByRole("checkbox", { name: "Confirmar Inyección SQL" }).click();
+    await expect(panel.getByRole("status")).toContainText("Falta confirmar 1 módulo");
+    await panel.getByRole("checkbox", { name: "Confirmar Consumo de recursos" }).click();
+    await expect(panel.getByRole("status")).toHaveCount(0);
+  });
+
+  test("ayuda contextual: siempre visible, con su título", async ({ page }) => {
+    await page.goto("/design-system");
+    await expect(page.getByRole("complementary", { name: "¿Qué forma elijo?" })).toContainText(
+      "Login automático",
+    );
+  });
+
   test("429 bloquea el reintento durante la cuenta regresiva", async ({ page }) => {
     await page.goto("/design-system");
     await expect(page.getByRole("button", { name: /Reintentar en 0:\d\d/ })).toBeDisabled();
