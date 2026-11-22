@@ -20,6 +20,8 @@ interface ErrorPanelProps {
   href?: string;
   /** Con `false` se muestra solo la tarjeta, sin el marco público (p. ej. dentro de un layout autenticado). */
   standalone?: boolean;
+  /** 403 de un analista que abre una pantalla de administración (otro texto y otra salida). */
+  audience?: "analyst";
 }
 
 const DEFAULT_HREF: Record<ErrorCode, string | null> = {
@@ -39,10 +41,12 @@ export function ErrorPanel({
   reference,
   href,
   standalone = true,
+  audience,
 }: ErrorPanelProps) {
   const t = useTranslations("Errors");
   const countdown = useCountdown(code === 429 ? retryAfter : 0);
   const target = href ?? DEFAULT_HREF[code];
+  const key = code === 403 && audience === "analyst" ? "403analyst" : code;
   const waiting = code === 429 && !countdown.done;
 
   const card = (
@@ -66,9 +70,9 @@ export function ErrorPanel({
         id="error-title"
         className="font-display text-[26px] font-medium tracking-[-0.02em] sm:text-[32px]"
       >
-        {t(`${code}.title`)}
+        {t(`${key}.title`)}
       </h1>
-      <p className="text-muted max-w-[56ch] text-[15px] leading-[1.55]">{t(`${code}.text`)}</p>
+      <p className="text-muted max-w-[56ch] text-[15px] leading-[1.55]">{t(`${key}.text`)}</p>
       {reference ? (
         <code className="text-muted font-mono text-[13px]">
           {t("reference", { id: reference })}
@@ -81,10 +85,10 @@ export function ErrorPanel({
       ) : null}
       <div className="mt-1.5 flex flex-wrap gap-2.5">
         {target ? (
-          <ButtonLink href={target}>{t(`${code}.action`)}</ButtonLink>
+          <ButtonLink href={target}>{t(`${key}.action`)}</ButtonLink>
         ) : (
           <Button onClick={onRetry ?? (() => window.location.reload())} disabled={waiting}>
-            {t(`${code}.action`)}
+            {t(`${key}.action`)}
           </Button>
         )}
       </div>

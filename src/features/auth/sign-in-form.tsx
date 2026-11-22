@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { ROLE_KEY, writeFlag } from "@/features/account/browser-store";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -40,7 +41,10 @@ export function SignInForm() {
       const result = await signIn({ email: email.trim(), password });
       if (result.next === "two-factor") router.push("/sign-in/two-factor");
       else if (result.next === "verify-email") router.push("/sign-up/verify");
-      else router.push("/projects");
+      else {
+        writeFlag(ROLE_KEY, "analyst");
+        router.push("/projects");
+      }
     } catch (error) {
       setPending(false);
       if (error instanceof ApiError && error.kind === "unauthorized") {

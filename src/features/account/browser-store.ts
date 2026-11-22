@@ -41,6 +41,8 @@ export function useFlag(key: string): string | null {
   );
 }
 
+/** Rol de la sesión simulada: `analyst` o `admin`. Sin sesión iniciada en esta pestaña no se restringe nada. */
+export const ROLE_KEY = "hindama.role";
 export const TWO_FACTOR_KEY = "hindama.twoFactor";
 export const NOTICE_KEY = "hindama.notice";
 export const TERMS_KEY = "hindama.termsAccepted";
