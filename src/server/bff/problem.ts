@@ -8,7 +8,12 @@ import { randomUUID } from "node:crypto";
 export function problem(
   status: number,
   code: string,
-  init: { requestId?: string; headers?: HeadersInit; detail?: string } = {},
+  init: {
+    requestId?: string;
+    headers?: HeadersInit;
+    detail?: string;
+    errors?: { field: string | null; code: string; message: string }[];
+  } = {},
 ): Response {
   const requestId = init.requestId ?? randomUUID();
   const headers = new Headers(init.headers);
@@ -23,7 +28,7 @@ export function problem(
       detail: init.detail ?? "",
       code,
       request_id: requestId,
-      errors: [],
+      errors: init.errors ?? [],
     }),
     { status, headers },
   );
