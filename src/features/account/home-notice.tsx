@@ -5,15 +5,17 @@ import { useEffect, useRef } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { NOTICE_KEY, useFlag, writeFlag, type HomeNotice as Notice } from "./browser-store";
+import { setHomeNotice, useHomeNotice } from "./notice";
 
 /**
- * Aviso al llegar a la página de inicio tras cerrar sesión solo en este navegador: un toast al llegar y un banner que se queda hasta cerrarlo (catálogo de estados).
+ * Aviso al llegar a la página de inicio tras cerrar sesión solo en este navegador (el BFF borró
+ * la cookie pero Cognito no confirmó la revocación): un toast al llegar y un banner que se queda
+ * hasta cerrarlo (catálogo de estados).
  */
 export function HomeNotice() {
   const t = useTranslations("HomeNotice");
   const toast = useToast();
-  const notice = useFlag(NOTICE_KEY) as Notice | null;
+  const notice = useHomeNotice();
   const announced = useRef<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function HomeNotice() {
       tone="warning"
       title={t(`${notice}.title`)}
       action={
-        <Button variant="ghost" size="sm" onClick={() => writeFlag(NOTICE_KEY, null)}>
+        <Button variant="ghost" size="sm" onClick={() => setHomeNotice(null)}>
           {t("dismiss")}
         </Button>
       }
