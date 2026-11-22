@@ -777,20 +777,17 @@
     "pending": "Pendiente",
     "operations": "{count} op.",
     "unconfirmed": "{count} sin confirmar",
-    "availableAfterVerification": "Disponible tras verificar"
+    "availableAfterVerification": "Disponible tras verificar",
+    "subject": "el proyecto"
   },
   "Projects": {
     "title": "Proyectos",
-    "greeting": "{running, plural, =0 {Hola, {name}. No tienes ejecuciones en curso.} one {Hola, {name}. Tienes una ejecución en curso.} other {Hola, {name}. Tienes # ejecuciones en curso.}}",
     "newProject": "Nuevo proyecto",
     "summary": {
       "projects": "Proyectos",
       "open": "Hallazgos abiertos",
-      "running": "Ejecución en curso",
       "pending": "Pendiente de verificación"
     },
-    "search": "Buscar proyecto",
-    "searchPlaceholder": "Buscar por nombre o URL",
     "orderBy": "Ordenar por",
     "order": {
       "lastRun": "Última ejecución",
@@ -798,15 +795,12 @@
       "createdAt": "Fecha de creación"
     },
     "open": "Abrir",
-    "viewProgress": "Ver progreso",
     "verify": "Verificar propiedad",
     "settings": "Ajustes",
     "delete": "Eliminar",
     "moreActions": "Más acciones para {name}",
-    "runningBadge": "Ejecución en curso · {percent} %",
     "openFindings": "Hallazgos abiertos",
     "lastRun": "Última ejecución",
-    "now": "Ahora",
     "noRuns": "Sin ejecuciones",
     "addAnother": {
       "title": "Agrega otra API",
@@ -824,7 +818,22 @@
       "removed1": "El contrato, sus versiones, identidades y la política de acceso",
       "removed2": "Ejecuciones, hallazgos y reportes",
       "confirm": "Eliminar proyecto",
-      "done": "Proyecto «{name}» eliminado"
+      "done": "Proyecto «{name}» eliminado",
+      "activeRun": "Hay una ejecución en curso",
+      "activeRunText": "Cancélala antes de eliminar el proyecto.",
+      "mismatch": "El nombre no coincide con el del proyecto.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "failed": "No pudimos eliminar el proyecto"
+    },
+    "greetingName": "Hola, {name}.",
+    "subject": "tus proyectos",
+    "loading": "Cargando tus proyectos",
+    "reference": "Referencia: {id}",
+    "pagination": {
+      "label": "Páginas de proyectos",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "status": "Página {page} de {pages}"
     }
   },
   "AcceptTerms": {
@@ -854,7 +863,15 @@
     "recorded": "Guardamos la versión y la fecha y hora de tu aceptación.",
     "cancel": "Cancelar",
     "continue": "Aceptar y continuar",
-    "accepted": "Términos aceptados"
+    "accepted": "Términos aceptados",
+    "subject": "los términos vigentes",
+    "loading": "Cargando los términos",
+    "outdated": "Se publicó una versión nueva de los términos. Revísala y vuelve a aceptarla.",
+    "errorTitle": "No pudimos registrar tu aceptación",
+    "errorText": "Revisa tu conexión e inténtalo de nuevo.",
+    "rateLimited": "Demasiados intentos. Espera un momento.",
+    "reference": "Referencia: {id}",
+    "retry": "Reintentar"
   },
   "NewProject": {
     "stepsLabel": "Pasos",
@@ -921,7 +938,6 @@
     },
     "errors": {
       "nameRequired": "Escribe el nombre del proyecto.",
-      "nameTaken": "Ya tienes un proyecto con ese nombre.",
       "urlRequired": "Escribe la URL base de tu API.",
       "url": {
         "invalid": "Escribe una URL completa, por ejemplo https://api.ejemplo.mx.",
@@ -929,18 +945,23 @@
         "private": "No se aceptan direcciones de redes privadas.",
         "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
         "linkLocal": "No se aceptan direcciones de enlace local.",
-        "metadata": "No se aceptan direcciones de metadatos de la nube."
+        "metadata": "No se aceptan direcciones de metadatos de la nube.",
+        "destination": "La API no acepta esa dirección: apunta a una red privada, local o de metadatos."
       },
       "networkTitle": "No pudimos crear el proyecto",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "nameInvalid": "El nombre admite hasta 100 caracteres y sin caracteres de control.",
+      "descriptionInvalid": "La descripción admite hasta 500 caracteres y sin caracteres de control.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "reference": "Referencia: {id}"
     }
   },
   "Dashboard": {
     "running": {
       "title": "La ejecución sigue en curso",
-      "text": "Las pruebas continúan ({percent} %). Vuelve a su progreso cuando quieras.",
-      "action": "Ver ejecución"
+      "action": "Ver ejecución",
+      "textActive": "Las pruebas continúan. Vuelve a su progreso cuando quieras."
     },
     "unverified": {
       "title": "Falta verificar la propiedad",
@@ -951,16 +972,11 @@
       "none": "Aún sin ejecuciones",
       "open": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
       "noneText": "Configura el proyecto y lanza tu primera prueba completa para ver resultados aquí.",
-      "criticalText": "Uno es crítico y persiste desde la primera ejecución. Corrígelo y vuelve a probar.",
       "cleanText": "La última ejecución no encontró problemas con los módulos elegidos.",
-      "text": "Revisa los hallazgos, corrígelos y vuelve a probar."
+      "text": "Revisa los hallazgos, corrígelos y vuelve a probar.",
+      "criticalOpen": "{count, plural, one {Uno es crítico.} other {# son críticos.}} Corrígelos y vuelve a probar."
     },
     "fullTest": "Prueba completa",
-    "repeat": {
-      "button": "Repetir última ejecución",
-      "title": "Ejecución programada",
-      "text": "Se repetirá con la misma configuración."
-    },
     "blocked": {
       "unverified": "Falta verificar la propiedad del host.",
       "goVerify": "Ir a verificación",
@@ -970,8 +986,10 @@
       "viewRun": "Ver ejecución",
       "identities": "Necesitas al menos 2 identidades con recursos.",
       "addIdentity": "Agregar identidad",
-      "policy": "Confirma la política de acceso de {count, plural, one {# operación} other {# operaciones}}.",
-      "reviewPolicy": "Revisar política"
+      "reviewPolicy": "Revisar política",
+      "resources": "Registra los recursos de cada identidad.",
+      "goResources": "Registrar recursos",
+      "policyPending": "Confirma la política de acceso propuesta."
     },
     "stats": {
       "requests": "Peticiones",
@@ -986,9 +1004,10 @@
     },
     "policy": {
       "title": "Política de acceso",
-      "text": "{confirmed} de {total} operaciones confirmadas. Las {pending} propuestas pendientes no se usan en las pruebas.",
       "empty": "Importa el contrato para que Hindama proponga quién debería poder hacer qué.",
-      "review": "Revisar política"
+      "review": "Revisar política",
+      "pendingText": "Hay propuestas sin confirmar. Las pendientes no se usan en las pruebas.",
+      "confirmedText": "La política de acceso está confirmada."
     },
     "modules": {
       "title": "Módulos de prueba",
@@ -1013,12 +1032,12 @@
       },
       "blocked": "Sin identidad administradora: agrega una",
       "notRun": "No se ejecutó",
-      "findings": "{count, plural, one {# hallazgo} other {# hallazgos}}",
       "run": "Ejecutar",
       "runTitle": "Ejecución de «{name}» solicitada",
       "addIdentity": "Agregar identidad",
       "emptyTitle": "Aún no hay resultados",
-      "emptyText": "Verifica la propiedad y ejecuta tu primera prueba para ver cada módulo aquí."
+      "emptyText": "Verifica la propiedad y ejecuta tu primera prueba para ver cada módulo aquí.",
+      "ran": "Incluido en la última ejecución"
     }
   },
   "ProjectSettings": {
@@ -1046,11 +1065,10 @@
     "delete": {
       "title": "Eliminar proyecto",
       "lead": "Se borrará de forma permanente, en un máximo de 30 días:",
-      "contract": "El contrato y sus {versions} versiones",
-      "identities": "{count, plural, one {# identidad y sus credenciales} other {# identidades y sus credenciales}}",
-      "resources": "{count, plural, one {# recurso y la política de acceso} other {# recursos y la política de acceso}}",
       "runs": "Ejecuciones, {findings} hallazgos y sus reportes",
-      "button": "Eliminar proyecto"
+      "button": "Eliminar proyecto",
+      "contractAll": "El contrato y todas sus versiones",
+      "identitiesAll": "Las identidades, sus credenciales, los recursos y la política de acceso"
     },
     "deleteDialog": {
       "title": "Eliminar el proyecto «{name}»",
@@ -1069,8 +1087,16 @@
         "private": "No se aceptan direcciones de redes privadas.",
         "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
         "linkLocal": "No se aceptan direcciones de enlace local.",
-        "metadata": "No se aceptan direcciones de metadatos de la nube."
-      }
+        "metadata": "No se aceptan direcciones de metadatos de la nube.",
+        "destination": "La API no acepta esa dirección: apunta a una red privada, local o de metadatos."
+      },
+      "nameInvalid": "El nombre admite hasta 100 caracteres y sin caracteres de control.",
+      "descriptionInvalid": "La descripción admite hasta 500 caracteres y sin caracteres de control.",
+      "saveTitle": "No pudimos guardar los cambios",
+      "saveText": "Revisa tu conexión e inténtalo de nuevo.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "reference": "Referencia: {id}",
+      "checkFields": "Revisa los campos marcados."
     }
   },
   "Verification": {

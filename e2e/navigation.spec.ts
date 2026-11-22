@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { PROJECT_ID } from "./support/projects";
 
 /**
  * Recorre la app siguiendo los enlaces internos de cada pantalla y comprueba que ninguno lleve
@@ -24,6 +25,8 @@ test.describe("navegación entre vistas", () => {
 
       await page.goto(path);
       await page.waitForLoadState("domcontentloaded");
+      // Las vistas conectadas pintan sus enlaces cuando responde la API.
+      await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
       if (await page.getByText(NOT_FOUND).count()) broken.push(path);
       visited.push(path);
 
@@ -43,16 +46,16 @@ test.describe("navegación entre vistas", () => {
     expect(broken, `Enlaces rotos: ${broken.join(", ")}`).toEqual([]);
     // Las vistas principales de cada fase se alcanzaron solo siguiendo enlaces.
     for (const expected of [
-      "/projects/pedidos",
-      "/projects/pedidos/settings",
-      "/projects/pedidos/verification",
-      "/projects/pedidos/contract",
-      "/projects/pedidos/identities",
-      "/projects/pedidos/resources",
-      "/projects/pedidos/policy",
-      "/projects/pedidos/history",
-      "/projects/pedidos/findings",
-      "/projects/pedidos/runs/new",
+      `/projects/${PROJECT_ID}`,
+      `/projects/${PROJECT_ID}/settings`,
+      `/projects/${PROJECT_ID}/verification`,
+      `/projects/${PROJECT_ID}/contract`,
+      `/projects/${PROJECT_ID}/identities`,
+      `/projects/${PROJECT_ID}/resources`,
+      `/projects/${PROJECT_ID}/policy`,
+      `/projects/${PROJECT_ID}/history`,
+      `/projects/${PROJECT_ID}/findings`,
+      `/projects/${PROJECT_ID}/runs/new`,
       "/admin/audit-log",
       "/profile",
     ]) {
@@ -60,10 +63,9 @@ test.describe("navegación entre vistas", () => {
     }
   });
 
-  test("las vistas más profundas se alcanzan con clics desde el dashboard", async ({ page }) => {
-    await page.goto("/projects/pedidos");
-    await page.getByRole("link", { name: "Historial" }).first().click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/history$/);
+  test("las vistas más profundas se alcanzan con clics desde el historial", async ({ page }) => {
+    // TODO(api): la matriz y los hallazgos (fases 5 y 6) siguen con el proyecto de ejemplo.
+    await page.goto("/projects/pedidos/history");
     await page.getByRole("link", { name: "Abrir" }).first().click();
     await expect(page).toHaveURL(/\/runs\/3$/);
     await page.getByRole("tab", { name: "Matriz de acceso" }).click();

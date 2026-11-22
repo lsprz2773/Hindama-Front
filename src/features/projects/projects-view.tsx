@@ -2,41 +2,53 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import { AppShell } from "@/components/layout/app-shell";
-import { ButtonLink } from "@/components/ui/button";
+import { ListPageSkeleton } from "@/components/skeletons/page-skeletons";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { EmptyState, NoResultsState } from "@/components/ui/state-view";
+import { QueryState } from "@/components/ui/query-state";
+import { EmptyState } from "@/components/ui/state-view";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { useToast } from "@/components/ui/toast";
-import { SESSION_STUB } from "@/features/account/service";
-import { Link, useRouter } from "@/i18n/navigation";
 import { inputClass } from "@/components/ui/text-field";
+import { useToast } from "@/components/ui/toast";
+import { useMe } from "@/features/account/api";
+import { Link, useRouter } from "@/i18n/navigation";
+import type { ProjectSummary } from "@/lib/api/schemas/projects";
 import { cn } from "@/lib/cn";
-import { deleteProject, useProjects, type Project } from "./store";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { deleteProject, useProjectList, useRefreshProjects, type ProjectSort } from "./api";
 
 type Order = "lastRun" | "name" | "createdAt";
 
-function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => void }) {
+/** Orden de la vista → `sort` del contrato; la API ordena y pagina (RF-12). */
+const SORT: Record<Order, ProjectSort> = {
+  lastRun: "-last_run_at",
+  name: "name",
+  createdAt: "-created_at",
+};
+
+const PAGE_SIZE = 20;
+
+function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete: () => void }) {
   const t = useTranslations("Projects");
   const format = useFormatter();
   const router = useRouter();
   const href = `/projects/${project.id}`;
 
+  const verified = project.verification_status === "verified";
+  // TODO(api): `ProjectSummary` no dice si hay una ejecución en curso, así que la tarjeta no
+  // muestra el progreso ni el acceso directo a la ejecución.
   const action =
-    !project.verified && !project.concluded
+    !verified && !project.concluded
       ? { label: t("verify"), href: `${href}/verification` }
-      : project.running !== undefined
-        ? { label: t("viewProgress"), href: `${href}/runs/current` }
-        : { label: t("open"), href };
+      : { label: t("open"), href };
 
-  const lastRun =
-    project.running !== undefined
-      ? t("now")
-      : project.lastRun
-        ? format.dateTime(new Date(project.lastRun), { dateStyle: "medium", timeZone: "UTC" })
-        : t("noRuns");
+  const lastRun = project.last_run_at
+    ? format.dateTime(new Date(project.last_run_at), { dateStyle: "medium", timeZone: "UTC" })
+    : t("noRuns");
 
   return (
     <li className="border-line bg-panel flex flex-col gap-[18px] rounded-[28px] border p-6 backdrop-blur-lg">
@@ -47,7 +59,7 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => 
               {project.name}
             </Link>
           </h2>
-          <code className="text-muted font-mono text-[13px] break-all">{project.baseUrl}</code>
+          <code className="text-muted font-mono text-[13px] break-all">{project.base_url}</code>
         </div>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger
@@ -88,22 +100,17 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => 
 
       <div className="flex flex-wrap gap-2">
         {project.concluded ? <StatusBadge kind="project" status="concluded" /> : null}
-        {project.verified ? (
+        {verified ? (
           <StatusBadge kind="project" status="verified" />
         ) : (
           <StatusBadge kind="project" status="pendingVerification" />
         )}
-        {project.running !== undefined ? (
-          <span className="bg-accent text-on-accent inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-bold">
-            {t("runningBadge", { percent: project.running })}
-          </span>
-        ) : null}
       </div>
 
       <div className="border-line bg-panel-2 flex flex-wrap items-end justify-between gap-4 rounded-[20px] border px-[18px] py-4">
         <div className="flex flex-col gap-1">
           <span className="font-display text-4xl leading-none font-medium tracking-[-0.03em] tabular-nums">
-            {project.openFindings ?? "—"}
+            {project.open_findings}
           </span>
           <span className="text-muted text-[13px]">{t("openFindings")}</span>
         </div>
@@ -121,123 +128,131 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => 
   );
 }
 
-/** V-13. Lista de proyectos del analista: resumen, búsqueda, orden y tarjetas con acciones. */
+/** V-13. Lista de proyectos del analista (`listProjects`): resumen, orden, páginas y acciones. */
 export function ProjectsView() {
   const t = useTranslations("Projects");
   const toast = useToast();
-  const projects = useProjects();
-  const [query, setQuery] = useState("");
+  const http = useHttpClient();
+  const refresh = useRefreshProjects();
   const [order, setOrder] = useState<Order>("lastRun");
-  const [toDelete, setToDelete] = useState<Project | null>(null);
-
-  const summary = useMemo(
-    () => ({
-      projects: projects.length,
-      open: projects.reduce((sum, p) => sum + (p.openFindings ?? 0), 0),
-      running: projects.filter((p) => p.running !== undefined).length,
-      pending: projects.filter((p) => !p.verified).length,
-    }),
-    [projects],
-  );
-
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = projects.filter(
-      (p) => !q || p.name.toLowerCase().includes(q) || p.baseUrl.toLowerCase().includes(q),
-    );
-    return [...filtered].sort((a, b) => {
-      if (order === "name") return a.name.localeCompare(b.name);
-      if (order === "createdAt") return b.createdAt.localeCompare(a.createdAt);
-      const ra = a.running !== undefined ? "9999" : (a.lastRun ?? "");
-      const rb = b.running !== undefined ? "9999" : (b.lastRun ?? "");
-      return rb.localeCompare(ra);
-    });
-  }, [projects, query, order]);
-
-  if (projects.length === 0) {
-    return (
-      <EmptyState
-        title={t("empty.title")}
-        text={t("empty.text")}
-        action={{ label: t("empty.action"), href: "/projects/new" }}
-      />
-    );
-  }
-
-  const cells = [
-    ["projects", summary.projects],
-    ["open", summary.open],
-    ["running", summary.running],
-    ["pending", summary.pending],
-  ] as const;
+  const [page, setPage] = useState(1);
+  const [toDelete, setToDelete] = useState<ProjectSummary | null>(null);
+  const list = useProjectList({ page, pageSize: PAGE_SIZE, sort: SORT[order] });
 
   return (
     <>
-      <dl className="border-line m-0 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-4 rounded-[28px] border bg-[image:var(--hero)] px-[26px] py-[22px]">
-        {cells.map(([key, value]) => (
-          <div key={key} className="flex flex-col gap-1">
-            <dt className="text-muted order-2 text-[13px]">{t(`summary.${key}`)}</dt>
-            <dd className="font-display order-1 m-0 text-4xl leading-none font-medium tracking-[-0.03em] tabular-nums">
-              {value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <QueryState
+        query={list}
+        subject={t("subject")}
+        skeleton={<ListPageSkeleton label={t("loading")} />}
+      >
+        {(data) => {
+          if (data.total === 0) {
+            return (
+              <EmptyState
+                title={t("empty.title")}
+                text={t("empty.text")}
+                action={{ label: t("empty.action"), href: "/projects/new" }}
+              />
+            );
+          }
+          const pages = Math.max(1, Math.ceil(data.total / data.page_size));
+          // Los totales por estado solo son exactos si la página trae todos los proyectos.
+          // TODO(api): `listProjects` no da totales de hallazgos ni de verificación pendiente.
+          const complete = data.items.length >= data.total;
+          const cells: ["projects" | "open" | "pending", number][] = [["projects", data.total]];
+          if (complete) {
+            cells.push(["open", data.items.reduce((sum, p) => sum + p.open_findings, 0)]);
+            cells.push([
+              "pending",
+              data.items.filter((p) => p.verification_status !== "verified").length,
+            ]);
+          }
+          return (
+            <>
+              <dl className="border-line m-0 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-4 rounded-[28px] border bg-[image:var(--hero)] px-[26px] py-[22px]">
+                {cells.map(([key, value]) => (
+                  <div key={key} className="flex flex-col gap-1">
+                    <dt className="text-muted order-2 text-[13px]">{t(`summary.${key}`)}</dt>
+                    <dd className="font-display order-1 m-0 text-4xl leading-none font-medium tracking-[-0.03em] tabular-nums">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex min-w-[240px] flex-[1_1_280px] items-center">
-          <span className="text-muted absolute left-4 flex">
-            <Icon name="search" size={18} />
-          </span>
-          <label htmlFor="project-search" className="sr-only">
-            {t("search")}
-          </label>
-          <input
-            id="project-search"
-            type="search"
-            placeholder={t("searchPlaceholder")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={cn(inputClass, "bg-panel pl-[46px]")}
-          />
-        </div>
-        <label htmlFor="project-order" className="text-muted text-sm">
-          {t("orderBy")}
-        </label>
-        <select
-          id="project-order"
-          value={order}
-          onChange={(e) => setOrder(e.target.value as Order)}
-          className={cn(inputClass, "bg-panel w-auto pr-9")}
-        >
-          <option value="lastRun">{t("order.lastRun")}</option>
-          <option value="name">{t("order.name")}</option>
-          <option value="createdAt">{t("order.createdAt")}</option>
-        </select>
-      </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <label htmlFor="project-order" className="text-muted text-sm">
+                  {t("orderBy")}
+                </label>
+                <select
+                  id="project-order"
+                  value={order}
+                  onChange={(e) => {
+                    setOrder(e.target.value as Order);
+                    setPage(1);
+                  }}
+                  className={cn(inputClass, "bg-panel w-auto pr-9")}
+                >
+                  <option value="lastRun">{t("order.lastRun")}</option>
+                  <option value="name">{t("order.name")}</option>
+                  <option value="createdAt">{t("order.createdAt")}</option>
+                </select>
+              </div>
 
-      {visible.length === 0 ? (
-        <NoResultsState onClear={() => setQuery("")} />
-      ) : (
-        <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 p-0">
-          {visible.map((project) => (
-            <ProjectCard key={project.id} project={project} onDelete={() => setToDelete(project)} />
-          ))}
-          <li className="border-line-strong flex flex-col justify-center gap-3.5 rounded-[28px] border-2 border-dashed p-7">
-            <span
-              aria-hidden="true"
-              className="bg-progress-bg text-accent inline-flex size-12 items-center justify-center rounded-2xl"
-            >
-              <Icon name="plus" size={24} />
-            </span>
-            <b className="text-[17px]">{t("addAnother.title")}</b>
-            <span className="text-muted text-sm leading-[1.55]">{t("addAnother.text")}</span>
-            <Link href="/projects/new" className="text-link text-[15px] font-bold">
-              {t("newProject")}
-            </Link>
-          </li>
-        </ul>
-      )}
+              <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 p-0">
+                {data.items.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onDelete={() => setToDelete(project)}
+                  />
+                ))}
+                <li className="border-line-strong flex flex-col justify-center gap-3.5 rounded-[28px] border-2 border-dashed p-7">
+                  <span
+                    aria-hidden="true"
+                    className="bg-progress-bg text-accent inline-flex size-12 items-center justify-center rounded-2xl"
+                  >
+                    <Icon name="plus" size={24} />
+                  </span>
+                  <b className="text-[17px]">{t("addAnother.title")}</b>
+                  <span className="text-muted text-sm leading-[1.55]">{t("addAnother.text")}</span>
+                  <Link href="/projects/new" className="text-link text-[15px] font-bold">
+                    {t("newProject")}
+                  </Link>
+                </li>
+              </ul>
+
+              {pages > 1 ? (
+                <nav
+                  aria-label={t("pagination.label")}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={data.page <= 1}
+                    onClick={() => setPage(data.page - 1)}
+                  >
+                    {t("pagination.previous")}
+                  </Button>
+                  <span className="text-muted text-sm" aria-live="polite">
+                    {t("pagination.status", { page: data.page, pages })}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={data.page >= pages}
+                    onClick={() => setPage(data.page + 1)}
+                  >
+                    {t("pagination.next")}
+                  </Button>
+                </nav>
+              ) : null}
+            </>
+          );
+        }}
+      </QueryState>
 
       <DeleteDialog
         open={toDelete !== null}
@@ -250,10 +265,12 @@ export function ProjectsView() {
           items: [t("deleteDialog.removed1"), t("deleteDialog.removed2")],
         }}
         confirmLabel={t("deleteDialog.confirm")}
+        mapError={(error) => deleteErrorMessage(error, t)}
         onConfirm={async () => {
           if (!toDelete) return;
-          await new Promise((resolve) => setTimeout(resolve, 400));
-          deleteProject(toDelete.id);
+          await deleteProject(http, toDelete.id, toDelete.name);
+          refresh.removeProject(toDelete.id);
+          await refresh.projects();
           toast.show({ type: "success", title: t("deleteDialog.done", { name: toDelete.name }) });
         }}
       />
@@ -261,16 +278,40 @@ export function ProjectsView() {
   );
 }
 
+/** Errores de `deleteProject` que la persona puede resolver (CU-06 E2). */
+export function deleteErrorMessage(
+  error: unknown,
+  t: ReturnType<typeof useTranslations<"Projects">>,
+) {
+  if (error instanceof ApiError && error.code === "project.active_run") {
+    return { title: t("deleteDialog.activeRun"), text: t("deleteDialog.activeRunText") };
+  }
+  if (error instanceof ApiError && error.code === "project.confirmation_mismatch") {
+    return { title: t("deleteDialog.mismatch") };
+  }
+  if (error instanceof ApiError && error.status === 429) {
+    return { title: t("deleteDialog.rateLimited") };
+  }
+  return {
+    title: t("deleteDialog.failed"),
+    text:
+      error instanceof ApiError && error.requestId
+        ? t("reference", { id: error.requestId })
+        : undefined,
+  };
+}
+
 /** Pantalla completa de V-13: marco autenticado con el saludo y «Nuevo proyecto». */
 export function ProjectsScreen() {
   const t = useTranslations("Projects");
-  const projects = useProjects();
-  const running = projects.filter((p) => p.running !== undefined).length;
+  const me = useMe();
+  const firstName = me.data?.name.split(/\s+/)[0];
   return (
     <AppShell
       role="analyst"
       title={t("title")}
-      subtitle={t("greeting", { name: SESSION_STUB.name.split(" ")[0], running })}
+      // TODO(api): la API no da cuántas ejecuciones hay en curso; el saludo ya no las cuenta.
+      subtitle={firstName ? t("greetingName", { name: firstName }) : undefined}
       actions={
         <ButtonLink href="/projects/new">
           <Icon name="plus" size={18} strokeWidth={2.4} />

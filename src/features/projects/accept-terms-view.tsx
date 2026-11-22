@@ -5,11 +5,16 @@ import { Checkbox } from "radix-ui";
 import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { useQueryClient } from "@tanstack/react-query";
+import { FormSkeleton } from "@/components/skeletons/page-skeletons";
+import { QueryState } from "@/components/ui/query-state";
 import { useToast } from "@/components/ui/toast";
-import { TERMS_KEY, writeFlag } from "@/features/account/browser-store";
+import { useMe } from "@/features/account/api";
 import { Link, useRouter } from "@/i18n/navigation";
-
-export const TERMS_VERSION = "2026-10-30";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { ME_KEY } from "@/lib/query/provider";
+import { acceptTerms } from "./api";
 
 const RULES: { key: "authorized" | "ownership" | "testEnv" | "logged"; icon: IconName }[] = [
   { key: "authorized", icon: "lock" },
@@ -18,17 +23,58 @@ const RULES: { key: "authorized" | "ownership" | "testEnv" | "logged"; icon: Ico
   { key: "logged", icon: "list" },
 ];
 
-/** V-14. Aceptación de los términos de uso responsable antes del primer proyecto (RF-16, RN-12). */
+/**
+ * V-14. Aceptación de los términos de uso responsable antes del primer proyecto (RF-16, RN-12).
+ * La versión vigente la informa `getMe`; la aceptación se registra con `acceptTerms`.
+ */
 export function AcceptTermsView() {
+  const t = useTranslations("AcceptTerms");
+  const me = useMe();
+  return (
+    <QueryState query={me} subject={t("subject")} skeleton={<FormSkeleton label={t("loading")} />}>
+      {(data) => <AcceptTermsForm version={data.terms.current_version} />}
+    </QueryState>
+  );
+}
+
+function AcceptTermsForm({ version }: { version: string }) {
   const t = useTranslations("AcceptTerms");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
+  const queryClient = useQueryClient();
   const [accepted, setAccepted] = useState(false);
+  const [pending, setPending] = useState(false);
 
-  function accept() {
-    writeFlag(TERMS_KEY, TERMS_VERSION);
-    toast.show({ type: "success", title: t("accepted") });
-    router.push("/projects/new");
+  async function accept() {
+    if (pending || !accepted) return;
+    setPending(true);
+    try {
+      const result = await acceptTerms(http, version);
+      queryClient.setQueryData(ME_KEY, result.data);
+      toast.show({ type: "success", title: t("accepted") });
+      router.push("/projects/new");
+    } catch (e) {
+      setPending(false);
+      if (e instanceof ApiError && e.code === "terms.outdated_version") {
+        // Se publicó otra versión mientras leía: se vuelve a mostrar la vigente.
+        setAccepted(false);
+        await queryClient.invalidateQueries({ queryKey: ME_KEY });
+        toast.show({ type: "warning", title: t("outdated") });
+      } else {
+        toast.show({
+          type: "error",
+          title: t("errorTitle"),
+          text:
+            e instanceof ApiError && e.status === 429
+              ? t("rateLimited")
+              : e instanceof ApiError && e.requestId
+                ? t("reference", { id: e.requestId })
+                : t("errorText"),
+          action: { label: t("retry"), onClick: () => void accept() },
+        });
+      }
+    }
   }
 
   return (
@@ -40,9 +86,7 @@ export function AcceptTermsView() {
         <h2 id="terms-h" className="font-display text-[32px] font-medium tracking-[-0.025em]">
           {t("title")}
         </h2>
-        <p className="text-muted text-base leading-[1.55]">
-          {t("lead", { version: TERMS_VERSION })}
-        </p>
+        <p className="text-muted text-base leading-[1.55]">{t("lead", { version })}</p>
       </div>
 
       <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3 p-0">
@@ -88,7 +132,7 @@ export function AcceptTermsView() {
           <ButtonLink href="/projects" variant="secondary">
             {t("cancel")}
           </ButtonLink>
-          <Button disabled={!accepted} onClick={accept}>
+          <Button disabled={!accepted} loading={pending} onClick={() => void accept()}>
             {t("continue")}
           </Button>
         </div>
