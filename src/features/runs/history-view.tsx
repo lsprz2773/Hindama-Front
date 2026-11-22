@@ -308,9 +308,7 @@ function History({ project }: { project: Project }) {
                       >
                         {t("previous")}
                       </Button>
-                      <span className="text-muted text-[13px]">
-                        {t("page", { page, pages })}
-                      </span>
+                      <span className="text-muted text-[13px]">{t("page", { page, pages })}</span>
                       <Button
                         variant="secondary"
                         size="sm"
