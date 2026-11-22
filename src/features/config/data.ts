@@ -3,7 +3,6 @@
  * TODO(api): se reemplazan por las respuestas de la API; los tipos son el contrato esperado.
  */
 
-export const VERIFICATION_CODE = "hindama-7Q4K-M2XP-9C1L-TR83";
 
 export interface Operation {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

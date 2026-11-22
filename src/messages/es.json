@@ -1142,6 +1142,18 @@
       "notFound": {
         "title": "No pudimos verificar: no encontramos el archivo",
         "how": "comprueba que la dirección abre el archivo en el navegador."
+      },
+      "txtMissing": {
+        "title": "No pudimos verificar: no encontramos el registro TXT",
+        "how": "revisa el nombre y el valor del registro; si lo acabas de crear, espera a que se propague."
+      },
+      "connectionError": {
+        "title": "No pudimos verificar: no logramos conectar con el host",
+        "how": "comprueba que el host responde desde internet y vuelve a intentarlo."
+      },
+      "destinationNotAllowed": {
+        "title": "No pudimos verificar: el host resuelve a una dirección no permitida",
+        "how": "usa un host público; las direcciones internas o privadas se bloquean y quedan en la bitácora."
       }
     },
     "help": {
@@ -1155,7 +1167,11 @@
       "common3": "Registro DNS ausente",
       "common4": "Error de conexión con el host",
       "common5": "El host resuelve a una dirección no permitida: se bloquea y queda en la bitácora"
-    }
+    },
+    "subject": "la verificación",
+    "rateLimited": "Demasiados intentos. Espera un momento y vuelve a verificar.",
+    "failed": "No pudimos verificar en este momento",
+    "reference": "Referencia: {id}"
   },
   "Contract": {
     "crumb": "Contrato",

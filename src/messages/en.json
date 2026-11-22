@@ -1142,6 +1142,18 @@
       "notFound": {
         "title": "We couldn't verify: we couldn't find the file",
         "how": "check that the address opens the file in the browser."
+      },
+      "txtMissing": {
+        "title": "Verification failed: we couldn't find the TXT record",
+        "how": "check the record name and value; if you just created it, wait for it to propagate."
+      },
+      "connectionError": {
+        "title": "Verification failed: we couldn't connect to the host",
+        "how": "make sure the host is reachable from the internet and try again."
+      },
+      "destinationNotAllowed": {
+        "title": "Verification failed: the host resolves to a disallowed address",
+        "how": "use a public host; internal or private addresses are blocked and logged."
       }
     },
     "help": {
@@ -1155,7 +1167,11 @@
       "common3": "Missing DNS record",
       "common4": "Connection error with the host",
       "common5": "The host resolves to a disallowed address: it is blocked and recorded in the log"
-    }
+    },
+    "subject": "the verification",
+    "rateLimited": "Too many attempts. Wait a moment and verify again.",
+    "failed": "We couldn't verify right now",
+    "reference": "Reference: {id}"
   },
   "Contract": {
     "crumb": "Contract",

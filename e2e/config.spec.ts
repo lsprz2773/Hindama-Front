@@ -1,4 +1,27 @@
 import { expect, test } from "./fixtures";
+import { mockBff, problem } from "./support/bff";
+import { project, PROJECT_ID } from "./support/projects";
+
+/** Ejemplo `PendingVerification` del contrato. */
+const PENDING_VERIFICATION = {
+  status: "pending",
+  host: "api.tienda-ejemplo.com",
+  code: "hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6",
+  method: null,
+  verified_at: null,
+  file: {
+    url: "https://api.tienda-ejemplo.com/.well-known/hindama-verificacion.txt",
+    content: "hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6",
+  },
+  dns: {
+    name: "_hindama-verificacion.api.tienda-ejemplo.com",
+    type: "TXT",
+    value: "hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6",
+  },
+};
+
+/** El proyecto del ejemplo, aún sin verificar. */
+const newPending = () => project({ verification_status: "pending", verified_at: null });
 
 const YAML = {
   name: "pedidos-v2.4.yaml",
@@ -7,47 +30,108 @@ const YAML = {
 };
 
 test.describe("V-18 verificación de propiedad", () => {
-  test("muestra el código, los dos métodos y los pasos", async ({ page }) => {
-    await page.goto("/projects/pagos/verification");
+  const VERIFY = `**/api/projects/${PROJECT_ID}/verification`;
+  // Ejemplo `PendingVerification` del contrato.
+  const CODE = "hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6";
+
+  test("muestra el código, los dos métodos y los pasos que da getVerification", async ({
+    page,
+  }) => {
+    await page.goto(`/projects/${PROJECT_ID}/verification`);
     await expect(
       page.getByRole("heading", { name: "Verifica que la API es tuya", level: 1 }),
     ).toBeVisible();
-    await expect(page.getByText("hindama-7Q4K-M2XP-9C1L-TR83").first()).toBeVisible();
-    await expect(page.getByText("/.well-known/hindama-verificacion.txt")).toBeVisible();
+    await expect(page.getByText(CODE).first()).toBeVisible();
+    await expect(
+      page.getByText("https://api.tienda-ejemplo.com/.well-known/hindama-verificacion.txt"),
+    ).toBeVisible();
 
     await page.getByRole("tab", { name: "Registro DNS TXT" }).click();
-    await expect(
-      page.getByText("_hindama-verificacion.api.pagos-staging.ejemplo.mx"),
-    ).toBeVisible();
+    await expect(page.getByText("_hindama-verificacion.api.tienda-ejemplo.com")).toBeVisible();
     await expect(page.getByText("La propagación puede tardar")).toBeVisible();
   });
 
-  test("el primer intento falla con el motivo y el segundo verifica el proyecto", async ({
+  test("un 422 muestra el motivo y lo encontrado; al verificar se actualiza el proyecto", async ({
     page,
   }) => {
-    await page.goto("/projects/pagos/verification");
+    await mockBff(page, `**/api/projects/${PROJECT_ID}`, { body: newPending() }, "GET");
+    const calls = await mockBff(
+      page,
+      VERIFY,
+      {
+        status: 422,
+        body: {
+          ...problem(422, "verification.content_mismatch"),
+          found: "HTTP 200: <script>alert(1)</script>",
+        },
+      },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/verification`);
     await expect(page.getByText("Pendiente de verificación").first()).toBeVisible();
     await page.getByRole("button", { name: "Verificar", exact: true }).click();
     await expect(page.getByText("el contenido del archivo es distinto")).toBeVisible();
     await expect(page.getByText("Esperábamos")).toBeVisible();
-    await expect(page.getByText("Encontramos")).toBeVisible();
+    // Lo encontrado es texto del host: se muestra escapado, nunca como HTML.
+    await expect(page.getByText("HTTP 200: <script>alert(1)</script>")).toBeVisible();
+    expect(calls[0].postDataJSON()).toEqual({ method: "file" });
 
+    await page.unrouteAll();
+    await mockBff(
+      page,
+      VERIFY,
+      { body: { ...PENDING_VERIFICATION, status: "verified", method: "dns" } },
+      "POST",
+    );
+    await page.getByRole("tab", { name: "Registro DNS TXT" }).click();
     await page.getByRole("button", { name: "Verificar", exact: true }).click();
-    await expect(
-      page.getByText("Comprobamos que controlas api.pagos-staging.ejemplo.mx"),
-    ).toBeVisible();
-    const nav = page.getByRole("navigation", { name: "Navegación principal" });
-    await expect(nav.getByText("Hecho")).toBeVisible();
-    await expect(nav.getByText("Disponible tras verificar")).toHaveCount(0);
+    await expect(page.getByText("Propiedad verificada").first()).toBeVisible();
+    await expect(page.getByText("Comprobamos que controlas api.tienda-ejemplo.com")).toBeVisible();
+  });
+
+  for (const [code, text] of [
+    ["verification.file_not_found", "no encontramos el archivo"],
+    ["verification.txt_missing", "no encontramos el registro TXT"],
+    ["verification.connection_error", "no logramos conectar con el host"],
+    ["verification.destination_not_allowed", "dirección no permitida"],
+  ]) {
+    test(`${code} explica cómo corregirlo`, async ({ page }) => {
+      await mockBff(page, VERIFY, { status: 422, body: problem(422, code) }, "POST");
+      await page.goto(`/projects/${PROJECT_ID}/verification`);
+      await page.getByRole("button", { name: "Verificar", exact: true }).click();
+      await expect(page.getByText(text).first()).toBeVisible();
+    });
+  }
+
+  test("429 y 500 se avisan sin perder la vista", async ({ page }) => {
+    await mockBff(
+      page,
+      VERIFY,
+      { status: 429, body: problem(429, "rate_limit.exceeded"), headers: { "Retry-After": "5" } },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/verification`);
+    await page.getByRole("button", { name: "Verificar", exact: true }).click();
+    await expect(page.getByText("Demasiados intentos.")).toBeVisible();
+    await page.unrouteAll();
+    await mockBff(page, VERIFY, { status: 500, body: problem(500, "internal.error") }, "POST");
+    await page.getByRole("button", { name: "Verificar", exact: true }).click();
+    await expect(page.getByText("Referencia: req-e2e-500")).toBeVisible();
+  });
+
+  test("si no se puede cargar la verificación muestra el error con su referencia", async ({
+    page,
+  }) => {
+    await mockBff(page, VERIFY, { status: 503, body: problem(503, "service.unavailable") }, "GET");
+    await page.goto(`/projects/${PROJECT_ID}/verification`);
+    await expect(page.getByText("req-e2e-503")).toBeVisible();
   });
 
   test("copiar el código avisa y deja el texto en el portapapeles", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/projects/pagos/verification");
+    await page.goto(`/projects/${PROJECT_ID}/verification`);
     await page.getByRole("button", { name: "Copiar código" }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      "hindama-7Q4K-M2XP-9C1L-TR83",
-    );
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(CODE);
   });
 });
 

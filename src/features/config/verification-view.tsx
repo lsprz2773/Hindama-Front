@@ -10,12 +10,26 @@ import { Icon } from "@/components/ui/icon";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
+import { DetailSkeleton } from "@/components/skeletons/page-skeletons";
+import { QueryState } from "@/components/ui/query-state";
+import type { Project } from "@/lib/api/schemas/projects";
+import type { Verification as VerificationData } from "@/lib/api/schemas/verification";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
 import { ProjectShell } from "@/features/projects/project-shell";
-import { hostOf, updateProject, type Project } from "@/features/projects/store";
-import { VERIFICATION_CODE } from "./data";
+import { useAfterVerification, useVerification, verifyOwnership } from "./api";
 
 type Method = "file" | "dns";
-type Failure = "mismatch" | "notFound" | null;
+
+/** Motivo de un 422 de `verifyOwnership` (RF-21) → clave de textos. */
+const FAILURES = {
+  "verification.content_mismatch": "mismatch",
+  "verification.file_not_found": "notFound",
+  "verification.txt_missing": "txtMissing",
+  "verification.connection_error": "connectionError",
+  "verification.destination_not_allowed": "destinationNotAllowed",
+} as const;
+type Failure = { key: (typeof FAILURES)[keyof typeof FAILURES]; found?: string };
 
 function CodeLine({ value, what }: { value: string; what: string }) {
   return (
@@ -31,53 +45,71 @@ function CodeLine({ value, what }: { value: string; what: string }) {
   );
 }
 
-function Verification({ project }: { project: Project }) {
+function Verification({
+  project,
+  verification,
+}: {
+  project: Project;
+  verification: VerificationData;
+}) {
   const t = useTranslations("Verification");
   const toast = useToast();
-  const [method, setMethod] = useState<Method>("file");
+  const http = useHttpClient();
+  const afterVerification = useAfterVerification(project.id);
+  const [method, setMethod] = useState<Method>(verification.method ?? "file");
   const [pending, setPending] = useState(false);
-  const [failure, setFailure] = useState<Failure>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
   const [attempts, setAttempts] = useState(0);
-  const host = hostOf(project.baseUrl);
-  const fileUrl = `${project.baseUrl.startsWith("http:") ? "http" : "https"}://${host}/.well-known/hindama-verificacion.txt`;
+  const verified = verification.status === "verified";
+  const host = verification.host;
+  const code = verification.code;
 
   async function verify() {
     if (pending) return;
     setPending(true);
     setFailure(null);
-    await new Promise((resolve) => setTimeout(resolve, 900)); // TODO(api): hasta 20 s
-    setPending(false);
-    setAttempts((n) => n + 1);
-    // Simulación: el primer intento con archivo no coincide; después se verifica.
-    if (attempts === 0 && method === "file") {
-      setFailure("mismatch");
-      return;
+    try {
+      const result = await verifyOwnership(http, project.id, { method });
+      afterVerification(result);
+      toast.show({ type: "success", title: t("success") });
+    } catch (error) {
+      const key =
+        error instanceof ApiError && error.code
+          ? FAILURES[error.code as keyof typeof FAILURES]
+          : undefined;
+      if (key) setFailure({ key, found: (error as ApiError).found });
+      else
+        toast.show({
+          type: "error",
+          title: error instanceof ApiError && error.status === 429 ? t("rateLimited") : t("failed"),
+          text:
+            error instanceof ApiError && error.requestId
+              ? t("reference", { id: error.requestId })
+              : undefined,
+        });
+    } finally {
+      setPending(false);
+      setAttempts((n) => n + 1);
     }
-    updateProject(project.id, { verified: true });
-    toast.show({ type: "success", title: t("success") });
   }
 
   const steps =
     method === "dns"
       ? [
-          {
-            text: t("dns.step1"),
-            value: `_hindama-verificacion.${host}`,
-            what: t("dns.hostLabel"),
-          },
-          { text: t("dns.step2"), value: VERIFICATION_CODE, what: t("dns.valueLabel") },
+          { text: t("dns.step1"), value: verification.dns.name, what: t("dns.hostLabel") },
+          { text: t("dns.step2"), value: verification.dns.value, what: t("dns.valueLabel") },
           { text: t("dns.step3") },
         ]
       : [
           { text: t("file.step1") },
-          { text: t("file.step2"), value: fileUrl, what: t("file.urlLabel") },
+          { text: t("file.step2"), value: verification.file.url, what: t("file.urlLabel") },
           { text: t("file.step3") },
         ];
 
   return (
     <div className="flex flex-wrap items-start gap-5">
       <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
-        {project.verified ? (
+        {verified ? (
           <Banner tone="success" title={t("verifiedTitle")}>
             {t("verifiedText", { host })}
           </Banner>
@@ -89,7 +121,7 @@ function Verification({ project }: { project: Project }) {
         >
           <StatusBadge
             kind="project"
-            status={project.verified ? "verified" : "pendingVerification"}
+            status={verified ? "verified" : "pendingVerification"}
             className="self-start"
           />
           <h2 id="ver-code" className="text-base font-semibold">
@@ -97,9 +129,9 @@ function Verification({ project }: { project: Project }) {
           </h2>
           <div className="flex flex-wrap items-center gap-4">
             <code className="font-mono text-[26px] font-medium tracking-[0.02em] break-all sm:text-[30px]">
-              {VERIFICATION_CODE}
+              {code}
             </code>
-            <CopyButton value={VERIFICATION_CODE} label={t("copyCode")} />
+            <CopyButton value={code} label={t("copyCode")} />
           </div>
           <p className="text-muted max-w-[62ch] text-sm leading-[1.55]">
             {t.rich("codeText", {
@@ -184,24 +216,31 @@ function Verification({ project }: { project: Project }) {
             <div className="flex items-center gap-3">
               <Icon name="alert" size={22} className="text-warning" />
               <h2 id="ver-result" className="text-lg font-semibold">
-                {t(`failure.${failure}.title`)}
+                {t(`failure.${failure.key}.title`)}
               </h2>
             </div>
-            {failure === "mismatch" ? (
+            {failure.key === "mismatch" || failure.found ? (
               <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
-                <div className="border-line bg-panel-2 flex flex-col gap-1.5 rounded-[20px] border px-4 py-3.5">
-                  <span className="text-muted text-[13px]">{t("failure.expected")}</span>
-                  <code className="font-mono text-sm break-all">{VERIFICATION_CODE}</code>
-                </div>
-                <div className="border-line bg-panel-2 flex flex-col gap-1.5 rounded-[20px] border px-4 py-3.5">
-                  <span className="text-muted text-[13px]">{t("failure.found")}</span>
-                  <code className="font-mono text-sm break-all whitespace-pre-wrap">{`${VERIFICATION_CODE}\\n`}</code>
-                </div>
+                {failure.key === "mismatch" ? (
+                  <div className="border-line bg-panel-2 flex flex-col gap-1.5 rounded-[20px] border px-4 py-3.5">
+                    <span className="text-muted text-[13px]">{t("failure.expected")}</span>
+                    <code className="font-mono text-sm break-all">{code}</code>
+                  </div>
+                ) : null}
+                {failure.found ? (
+                  <div className="border-line bg-panel-2 flex flex-col gap-1.5 rounded-[20px] border px-4 py-3.5">
+                    <span className="text-muted text-[13px]">{t("failure.found")}</span>
+                    {/* Texto no confiable del host: React lo escapa. */}
+                    <code className="font-mono text-sm break-all whitespace-pre-wrap">
+                      {failure.found}
+                    </code>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             <p className="text-sm leading-[1.55]">
               <b>{t("failure.howTitle")}</b>{" "}
-              <span className="text-muted">{t(`failure.${failure}.how`)}</span>
+              <span className="text-muted">{t(`failure.${failure.key}.how`)}</span>
             </p>
           </section>
         ) : null}
@@ -232,8 +271,21 @@ function Verification({ project }: { project: Project }) {
 export function VerificationView({ id }: { id: string }) {
   const t = useTranslations("Verification");
   return (
-    <ProjectShell id={id} section={t("crumb")} title={t("title")}>
-      {(project) => <Verification key={project.id} project={project} />}
-    </ProjectShell>
+    <ProjectShell
+      id={id}
+      section={t("crumb")}
+      title={t("title")}
+      render={(project) => <VerificationLoader project={project} />}
+    />
+  );
+}
+
+function VerificationLoader({ project }: { project: Project }) {
+  const t = useTranslations("Verification");
+  const query = useVerification(project.id);
+  return (
+    <QueryState query={query} subject={t("subject")} skeleton={<DetailSkeleton />}>
+      {(verification) => <Verification project={project} verification={verification} />}
+    </QueryState>
   );
 }
