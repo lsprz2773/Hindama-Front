@@ -155,9 +155,11 @@ export function useRunStream(id: string, runId: string | null, initial: Run | un
   const client = useQueryClient();
   const [stream, setStream] = useState<RunStream>({ state: "connecting" });
   const active = initial ? initial.status === "queued" || initial.status === "running" : false;
+  // Tras `end` no se vuelve a abrir, aunque la ejecución que se vuelve a pedir siga en curso.
+  const ended = stream.state === "ended";
 
   useEffect(() => {
-    if (!runId || !active) return;
+    if (!runId || !active || ended) return;
     const source = new EventSource(`/api${runPath(id, runId)}/progress`);
     let current: Run | null = null;
     const put = (run: Run, state: "open" | "ended") => {
@@ -181,7 +183,12 @@ export function useRunStream(id: string, runId: string | null, initial: Run | un
       source.close();
       if (run) put(run, "ended");
       void client.invalidateQueries({ queryKey: projectKey(id), exact: true });
-      void client.invalidateQueries({ queryKey: runsKey(id) });
+      // `end` ya trae la ejecución final: se refresca el resto, no su detalle.
+      const detail = [...runsKey(id), "detail", runId];
+      void client.invalidateQueries({
+        queryKey: runsKey(id),
+        predicate: (query) => JSON.stringify(query.queryKey) !== JSON.stringify(detail),
+      });
       void client.invalidateQueries({ queryKey: findingsKey(id) });
     });
     source.onerror = () => {
@@ -189,7 +196,7 @@ export function useRunStream(id: string, runId: string | null, initial: Run | un
       if (source.readyState === EventSource.CLOSED) setStream({ state: "error" });
     };
     return () => source.close();
-  }, [client, id, runId, active]);
+  }, [client, id, runId, active, ended]);
 
   return stream;
 }

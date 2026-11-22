@@ -776,7 +776,6 @@
     "done": "Hecho",
     "pending": "Pendiente",
     "operations": "{count} op.",
-    "unconfirmed": "{count} sin confirmar",
     "availableAfterVerification": "Disponible tras verificar",
     "subject": "el proyecto"
   },
@@ -2036,7 +2035,6 @@
   "History": {
     "title": "Historial",
     "repeat": "Repetir última ejecución",
-    "repeatStarted": "Repitiendo con la misma configuración (n.º {number})",
     "viewProgress": "Ver progreso",
     "following": "En seguimiento",
     "notConcluded": "Aún no está concluido",
@@ -2049,12 +2047,12 @@
     "openNow": "Abiertos ahora",
     "resolvedTotal": "Resueltos en total",
     "chart": {
-      "title": "Hallazgos abiertos al terminar cada ejecución",
+      "title": "Hallazgos detectados en cada ejecución",
       "running": "La n.º {number} sigue en curso",
-      "summary": "Hallazgos abiertos: {items}.",
+      "summary": "Hallazgos detectados: {items}.",
       "item": "ejecución {number}, {count}",
       "itemRunning": "ejecución {number} en curso, {count} hasta ahora",
-      "tip": "Ejecución {number}: {count, plural, one {# abierto} other {# abiertos}}",
+      "tip": "Ejecución {number}: {count, plural, one {# hallazgo} other {# hallazgos}}",
       "label": "n.º {number}",
       "labelRunning": "n.º {number} (en curso)"
     },
@@ -2065,22 +2063,27 @@
       "status": "Estado",
       "duration": "Duración",
       "requests": "Peticiones",
-      "severity": "Por severidad",
-      "changes": "Nuevos · persistentes · resueltos · regresiones"
+      "severity": "Por severidad"
     },
     "number": "n.º {number}",
-    "kind": {
-      "auth": "Autenticación",
-      "full": "Prueba completa · {count, plural, one {# módulo} other {# módulos}}"
-    },
-    "pending": "{count, plural, one {# recurso por eliminar} other {# recursos por eliminar}}",
+    "kind": "{count, plural, one {# módulo} other {# módulos}}",
     "open": "Abrir",
     "report": "Reporte",
     "empty": {
       "title": "Aún no hay ejecuciones",
       "text": "Cuando ejecutes las pruebas, aquí verás su evolución y cada resultado.",
       "action": "Nueva ejecución"
-    }
+    },
+    "subject": "el historial",
+    "filter": "Estado",
+    "allStatuses": "Todos los estados",
+    "none": "Ninguna ejecución tiene ese estado.",
+    "viewProgressOf": "Ver el progreso de la ejecución n.º {number}",
+    "openOf": "Abrir la ejecución n.º {number}",
+    "reportOf": "Reporte de la ejecución n.º {number}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Report": {
     "back": "Volver",
@@ -2089,11 +2092,8 @@
       "run": "Ejecución n.º {number}",
       "current": "Estado actual"
     },
-    "excel": "Hallazgos en Excel",
     "print": "Imprimir o guardar PDF",
     "printing": "Preparando la impresión…",
-    "exported": "Exportación lista",
-    "exportedText": "El archivo se descargó con todos los hallazgos del reporte.",
     "brand": "Hindama · {type}",
     "type": {
       "run": "Reporte de la ejecución n.º {number}",
@@ -2101,7 +2101,8 @@
     },
     "subtitle": {
       "run": "Ejecución completada el {date}",
-      "current": "Estado al {date}, con {count, plural, one {# ejecución} other {# ejecuciones}}"
+      "current": "Estado al {date}, con {count, plural, one {# ejecución} other {# ejecuciones}}",
+      "ended": "Ejecución terminada el {date}, sin completarse"
     },
     "generated": "Generado",
     "by": "Por",
@@ -2110,16 +2111,13 @@
       "title": "1. Resumen",
       "bySeverity": "Por severidad",
       "byStatus": "Por estado",
-      "status": {
-        "new": "Nuevos",
-        "persistent": "Persistentes",
-        "regression": "Regresiones",
-        "resolved": "Resueltos en esta ejecución"
-      },
       "modules": "Módulos ejecutados:",
       "none": "ninguno",
-      "skipped": "{modules} no se ejecutó por falta de una identidad administradora.",
-      "limits": "Límites: {rps} peticiones por segundo, {concurrency} concurrentes, {total} peticiones, {minutes} minutos. Se enviaron {requests} peticiones en {duration}."
+      "limits": "Límites: {rps} peticiones por segundo, {concurrency} concurrentes, {total} peticiones, {minutes} minutos. Se enviaron {requests} peticiones en {duration}.",
+      "resolved": "Resueltos en total",
+      "onlyLatest": "El estado de los hallazgos solo se muestra para la última ejecución.",
+      "concluded": "El proyecto está concluido: la última ejecución no dejó hallazgos nuevos, persistentes ni regresiones.",
+      "open": "Hallazgos abiertos en el proyecto, de todas sus ejecuciones."
     },
     "matrix": {
       "title": "2. Matriz de acceso (discrepancias)",
@@ -2127,11 +2125,11 @@
       "identity": "Identidad",
       "expected": "Esperado",
       "observed": "Observado",
-      "deny": "Denegar",
-      "allowed": "{code} permitido",
-      "cors": "CORS abierto",
       "global": "Toda la API",
-      "note": "La matriz completa de {rows} operaciones × {identities} identidades está en la vista de la ejecución."
+      "note": "La matriz completa está en la vista de la ejecución.",
+      "subject": "las discrepancias",
+      "none": "No hubo discrepancias en esta ejecución",
+      "partial": "Se muestran {shown} de {total} discrepancias. La matriz completa está en la vista de la ejecución."
     },
     "pageBreak": "Salto de página al imprimir",
     "findings": {
@@ -2141,51 +2139,17 @@
       "owasp": "OWASP",
       "cwe": "CWE",
       "identity": "Identidad",
-      "expected": "Esperado:",
-      "observed": "Observado:",
-      "fix": "Recomendación:",
-      "more": "{count, plural, one {Y # hallazgo más, ordenado por severidad, en las páginas siguientes.} other {Y # hallazgos más, ordenados por severidad, en las páginas siguientes.}}"
+      "more": "{count, plural, one {Y # hallazgo más, en la vista de hallazgos.} other {Y # hallazgos más, en la vista de hallazgos.}}",
+      "subject": "los hallazgos",
+      "noneRun": "Esta ejecución no detectó hallazgos",
+      "operation": "Operación",
+      "runs": "Detectado",
+      "runRange": "De la n.º {first} a la n.º {last}"
     },
-    "empty": {
-      "title": "Aún no hay nada que reportar",
-      "text": "El reporte se genera a partir de una ejecución terminada.",
-      "action": "Nueva ejecución"
-    },
-    "sample": {
-      "statusName": {
-        "new": "Nuevo",
-        "persistent": "Persistente",
-        "regression": "Regresión",
-        "resolved": "Resuelto",
-        "acceptedRisk": "Riesgo aceptado"
-      },
-      "expected": {
-        "text": {
-          "owner": "403 o 404: el recurso pertenece a otro usuario",
-          "admin": "403: la operación es solo para administradores",
-          "authenticated": "401: se requiere una credencial válida y vigente",
-          "public": "Cualquier identidad puede consultarla",
-          "global": "La respuesta no debe exponer el comportamiento o el valor inseguro"
-        }
-      },
-      "observed": {
-        "text": {
-          "owner": "La API devolvió el recurso completo",
-          "admin": "La API ejecutó la operación sin ser administrador",
-          "authenticated": "La API respondió sin validar la credencial como se esperaba",
-          "public": "La API respondió",
-          "global": "La respuesta incluye el comportamiento descrito en el hallazgo"
-        }
-      },
-      "fix": {
-        "API1": "Antes de devolver un recurso, comprueba en el servidor que pertenezca al usuario del token. Compara el identificador del propietario con el del usuario autenticado y responde 404 cuando no coincida, para no revelar que existe.",
-        "API2": "Valida la firma, la vigencia y el destinatario del token en cada petición. Rechaza con 401 las credenciales vencidas o revocadas y no aceptes tokens sin expiración.",
-        "API3": "Define una lista de campos permitidos por operación y descarta el resto. Nunca asignes directamente el cuerpo de la petición al modelo: campos como el estado o el rol solo los cambia el servidor.",
-        "API4": "Limita el tamaño de página, el número de peticiones por identidad y la duración de cada una. Responde 429 con Retry-After cuando se alcance el límite.",
-        "API5": "Verifica el rol en el servidor para cada función administrativa, no solo en la interfaz. Niega por omisión y concede el acceso explícitamente.",
-        "API8": "Revisa la configuración del servidor: agrega las cabeceras de seguridad, restringe CORS a orígenes conocidos y devuelve errores genéricos sin trazas ni versiones.",
-        "API9": "Mantén un inventario de las operaciones y versiones expuestas. Deshabilita los métodos y las rutas que no estén documentados."
-      }
+    "active": {
+      "title": "La ejecución sigue en curso",
+      "text": "El reporte se genera cuando la ejecución termina.",
+      "action": "Ver progreso"
     }
   },
   "Stats": {

@@ -23,14 +23,14 @@ const PROJECT_ROUTES = [
   `${API_PROJECT}/identities/0192e3a0-6666-7000-8000-000000000002`,
   `${API_PROJECT}/resources`,
   `${API_PROJECT}/policy`,
-  "/projects/pedidos/history",
+  `${API_PROJECT}/history`,
   `${API_PROJECT}/findings`,
   `${API_PROJECT}/findings/0192e3a0-8888-7000-8000-000000000001`,
   `${API_PROJECT}/runs/new`,
   `${API_PROJECT}/runs/current`,
   `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003`,
   `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003/matrix`,
-  "/projects/pedidos/runs/3/report",
+  `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003/report`,
 ];
 
 const OTHER_ROUTES = [
@@ -50,7 +50,9 @@ function watchConsole(page: Page, ignore: RegExp = /^$/) {
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
     const text = message.text();
-    if (!ignore.test(text)) errors.push(text.replace(/\s+/g, " ").slice(0, 300));
+    // La URL de un recurso que falló dice cuál fue (el texto de Chrome no la trae).
+    const where = text.startsWith("Failed to load resource") ? ` (${message.location().url})` : "";
+    if (!ignore.test(text)) errors.push(`${text.replace(/\s+/g, " ").slice(0, 300)}${where}`);
   });
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message.slice(0, 300)}`));
   return errors;

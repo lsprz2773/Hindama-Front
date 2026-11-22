@@ -776,7 +776,6 @@
     "done": "Done",
     "pending": "Pending",
     "operations": "{count} ops.",
-    "unconfirmed": "{count} unconfirmed",
     "availableAfterVerification": "Available after verification",
     "subject": "the project"
   },
@@ -2036,7 +2035,6 @@
   "History": {
     "title": "History",
     "repeat": "Repeat last run",
-    "repeatStarted": "Repeating with the same configuration (no. {number})",
     "viewProgress": "View progress",
     "following": "Being tracked",
     "notConcluded": "Not concluded yet",
@@ -2049,12 +2047,12 @@
     "openNow": "Open now",
     "resolvedTotal": "Resolved in total",
     "chart": {
-      "title": "Open findings at the end of each run",
+      "title": "Findings detected in each run",
       "running": "No. {number} is still running",
-      "summary": "Open findings: {items}.",
+      "summary": "Findings detected: {items}.",
       "item": "run {number}, {count}",
       "itemRunning": "run {number} in progress, {count} so far",
-      "tip": "Run {number}: {count} open",
+      "tip": "Run {number}: {count, plural, one {# finding} other {# findings}}",
       "label": "no. {number}",
       "labelRunning": "no. {number} (running)"
     },
@@ -2065,22 +2063,27 @@
       "status": "Status",
       "duration": "Duration",
       "requests": "Requests",
-      "severity": "By severity",
-      "changes": "New · persistent · resolved · regressions"
+      "severity": "By severity"
     },
     "number": "no. {number}",
-    "kind": {
-      "auth": "Authentication",
-      "full": "Full test · {count, plural, one {# module} other {# modules}}"
-    },
-    "pending": "{count, plural, one {# resource to delete} other {# resources to delete}}",
+    "kind": "{count, plural, one {# module} other {# modules}}",
     "open": "Open",
     "report": "Report",
     "empty": {
       "title": "There are no runs yet",
       "text": "When you run the tests, you will see their evolution and every result here.",
       "action": "New run"
-    }
+    },
+    "subject": "the history",
+    "filter": "Status",
+    "allStatuses": "All statuses",
+    "none": "No run has that status.",
+    "viewProgressOf": "View the progress of run no. {number}",
+    "openOf": "Open run no. {number}",
+    "reportOf": "Report of run no. {number}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Report": {
     "back": "Back",
@@ -2089,11 +2092,8 @@
       "run": "Run no. {number}",
       "current": "Current state"
     },
-    "excel": "Findings in Excel",
     "print": "Print or save as PDF",
     "printing": "Preparing the printout…",
-    "exported": "Export ready",
-    "exportedText": "The file was downloaded with all the findings in the report.",
     "brand": "Hindama · {type}",
     "type": {
       "run": "Report of run no. {number}",
@@ -2101,7 +2101,8 @@
     },
     "subtitle": {
       "run": "Run completed on {date}",
-      "current": "State as of {date}, with {count, plural, one {# run} other {# runs}}"
+      "current": "State as of {date}, with {count, plural, one {# run} other {# runs}}",
+      "ended": "Run ended on {date} without completing"
     },
     "generated": "Generated",
     "by": "By",
@@ -2110,16 +2111,13 @@
       "title": "1. Summary",
       "bySeverity": "By severity",
       "byStatus": "By status",
-      "status": {
-        "new": "New",
-        "persistent": "Persistent",
-        "regression": "Regressions",
-        "resolved": "Resolved in this run"
-      },
       "modules": "Modules run:",
       "none": "none",
-      "skipped": "{modules} was not run because an administrator identity is missing.",
-      "limits": "Limits: {rps} requests per second, {concurrency} concurrent, {total} requests, {minutes} minutes. {requests} requests were sent in {duration}."
+      "limits": "Limits: {rps} requests per second, {concurrency} concurrent, {total} requests, {minutes} minutes. {requests} requests were sent in {duration}.",
+      "resolved": "Resolved in total",
+      "onlyLatest": "The status of findings is only shown for the latest run.",
+      "concluded": "The project is concluded: the last run left no new, persistent or regression findings.",
+      "open": "Open findings in the project, across all its runs."
     },
     "matrix": {
       "title": "2. Access matrix (discrepancies)",
@@ -2127,11 +2125,11 @@
       "identity": "Identity",
       "expected": "Expected",
       "observed": "Observed",
-      "deny": "Deny",
-      "allowed": "{code} allowed",
-      "cors": "Open CORS",
       "global": "Whole API",
-      "note": "The full matrix of {rows} operations × {identities} identities is in the run view."
+      "note": "The full matrix is in the run view.",
+      "subject": "the discrepancies",
+      "none": "There were no discrepancies in this run",
+      "partial": "Showing {shown} of {total} discrepancies. The full matrix is in the run view."
     },
     "pageBreak": "Page break when printing",
     "findings": {
@@ -2141,51 +2139,17 @@
       "owasp": "OWASP",
       "cwe": "CWE",
       "identity": "Identity",
-      "expected": "Expected:",
-      "observed": "Observed:",
-      "fix": "Recommendation:",
-      "more": "{count, plural, one {And # more finding, sorted by severity, on the following pages.} other {And # more findings, sorted by severity, on the following pages.}}"
+      "more": "{count, plural, one {And # more finding, in the findings view.} other {And # more findings, in the findings view.}}",
+      "subject": "the findings",
+      "noneRun": "This run detected no findings",
+      "operation": "Operation",
+      "runs": "Detected",
+      "runRange": "From no. {first} to no. {last}"
     },
-    "empty": {
-      "title": "There is nothing to report yet",
-      "text": "The report is built from a finished run.",
-      "action": "New run"
-    },
-    "sample": {
-      "statusName": {
-        "new": "New",
-        "persistent": "Persistent",
-        "regression": "Regression",
-        "resolved": "Resolved",
-        "acceptedRisk": "Accepted risk"
-      },
-      "expected": {
-        "text": {
-          "owner": "403 or 404: the resource belongs to another user",
-          "admin": "403: the operation is for administrators only",
-          "authenticated": "401: a valid, current credential is required",
-          "public": "Any identity can read it",
-          "global": "The response must not expose the insecure behavior or value"
-        }
-      },
-      "observed": {
-        "text": {
-          "owner": "The API returned the whole resource",
-          "admin": "The API ran the operation without being an administrator",
-          "authenticated": "The API answered without validating the credential as expected",
-          "public": "The API answered",
-          "global": "The response includes the behavior described in the finding"
-        }
-      },
-      "fix": {
-        "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
-        "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
-        "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
-        "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
-        "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
-        "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
-        "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
-      }
+    "active": {
+      "title": "The run is still in progress",
+      "text": "The report is generated when the run ends.",
+      "action": "View progress"
     }
   },
   "Stats": {

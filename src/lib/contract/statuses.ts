@@ -1,6 +1,11 @@
 import type { Severity } from "@/components/ui/severity";
-import type { FindingStatus, RunState } from "@/features/runs/data";
 import { createEnumAdapter } from "./adapter";
+
+/** Estado de un hallazgo en la insignia C-05 (`Status.finding`). */
+export type FindingStatus = "new" | "persistent" | "regression" | "resolved" | "acceptedRisk";
+
+/** Estado de una ejecución en la insignia C-05 (`Status.run`). */
+export type RunState = "queued" | "running" | "completed" | "cancelled" | "failed";
 
 /** `FindingStatus` del contrato 0.6.0. */
 export type ApiFindingStatus = "new" | "persistent" | "resolved" | "regression" | "accepted_risk";
