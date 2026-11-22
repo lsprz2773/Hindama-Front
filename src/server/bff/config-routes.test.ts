@@ -148,3 +148,240 @@ describe("verificación (V-18)", () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 });
+
+const CONTRACT = {
+  id: "0192e3a0-3333-7000-8000-000000000003",
+  number: 3,
+  source: "file",
+  openapi_version: "3.1.0",
+  operation_count: 18,
+  imported_at: "2026-11-04T10:00:00Z",
+  source_url: null,
+  file_name: "pedidos.yaml",
+  format: "yaml",
+  api_title: "Pedidos",
+  sha256: "ab".repeat(32),
+  is_current: true,
+  warnings: [],
+  changes: null,
+};
+
+function formRequest(form: FormData, headers: Record<string, string> = {}) {
+  return new Request(`${ORIGIN}/api/projects/${PID}/contracts`, {
+    method: "POST",
+    body: form,
+    headers: {
+      cookie: sessionCookie(session()),
+      origin: ORIGIN,
+      "x-csrf-token": "csrf-token",
+      ...headers,
+    },
+  });
+}
+
+function yamlFile(name = "pedidos.yaml", size = 40, type = "application/x-yaml") {
+  return new File(["o".repeat(size)], name, { type });
+}
+
+describe("importContract (V-19)", () => {
+  it("reenvía un formulario nuevo con solo el archivo validado", async () => {
+    const apiFetch = api(Response.json(CONTRACT, { status: 201 }));
+    const form = new FormData();
+    form.set("file", yamlFile());
+    const response = await handleApiRoute(
+      SPECS.importContract,
+      formRequest(form),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(201);
+    const sent = apiFetch.mock.calls[0][1].body as FormData;
+    expect(sent).toBeInstanceOf(FormData);
+    expect([...sent.keys()]).toEqual(["file"]);
+    expect((sent.get("file") as File).name).toBe("pedidos.yaml");
+  });
+
+  it("acepta una URL pública", async () => {
+    const apiFetch = api(Response.json(CONTRACT, { status: 201 }));
+    const form = new FormData();
+    form.set("url", " https://docs.tienda.mx/openapi.json ");
+    const response = await handleApiRoute(
+      SPECS.importContract,
+      formRequest(form),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(201);
+    expect((apiFetch.mock.calls[0][1].body as FormData).get("url")).toBe(
+      "https://docs.tienda.mx/openapi.json",
+    );
+  });
+
+  it.each([
+    ["sin archivo ni URL", () => new FormData(), "contract.source_required"],
+    [
+      "archivo y URL a la vez",
+      () => {
+        const f = new FormData();
+        f.set("file", yamlFile());
+        f.set("url", "https://a.mx/openapi.json");
+        return f;
+      },
+      "contract.source_required",
+    ],
+    [
+      "un campo extra",
+      () => {
+        const f = new FormData();
+        f.set("url", "https://a.mx/openapi.json");
+        f.set("project_id", "otro");
+        return f;
+      },
+      "validation.format",
+    ],
+    [
+      "un tipo de archivo no permitido",
+      () => {
+        const f = new FormData();
+        f.set("file", yamlFile("shell.php", 40, "application/x-php"));
+        return f;
+      },
+      "contract.invalid_type",
+    ],
+    [
+      "un archivo vacío",
+      () => {
+        const f = new FormData();
+        f.set("file", yamlFile("vacio.json", 0, "application/json"));
+        return f;
+      },
+      "validation.required",
+    ],
+    [
+      "una URL con otro esquema",
+      () => {
+        const f = new FormData();
+        f.set("url", "file:///etc/passwd");
+        return f;
+      },
+      "url.scheme_not_allowed",
+    ],
+    [
+      "una URL con credenciales",
+      () => {
+        const f = new FormData();
+        f.set("url", "https://user:pw@a.mx/openapi.json");
+        return f;
+      },
+      "url.invalid_format",
+    ],
+  ])("rechaza %s sin llamar a la API", async (_label, build, code) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.importContract,
+      formRequest(build()),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect((await response.json()).errors[0].code).toBe(code);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un documento de más de 5 MB con 413", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const form = new FormData();
+    form.set("file", yamlFile("grande.yaml", 5 * 1024 * 1024 + 70 * 1024));
+    const response = await handleApiRoute(
+      SPECS.importContract,
+      formRequest(form),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(413);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un cuerpo JSON en lugar del formulario", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.importContract,
+      request("POST", `/api/projects/${PID}/contracts`, { body: { url: "https://a.mx" } }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(400);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("contratos y operaciones", () => {
+  it("getContract exige UUID en las dos partes de la ruta", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.getContract,
+      request("GET", `/api/projects/${PID}/contracts/3`),
+      { projectId: PID, contractId: "3" },
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(404);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("listOperations solo reenvía los filtros del contrato", async () => {
+    const apiFetch = api(Response.json({ items: [], total: 0, page: 1, page_size: 500 }));
+    await handleApiRoute(
+      SPECS.listOperations,
+      request("GET", `/api/projects/${PID}/operations?page_size=500&include_retired=true`),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(String(apiFetch.mock.calls[0][0])).toBe(
+      `http://api.internal:8000/projects/${PID}/operations?page_size=500&include_retired=true`,
+    );
+    const rejected = await handleApiRoute(
+      SPECS.listOperations,
+      request("GET", `/api/projects/${PID}/operations?method=CONNECT`),
+      params,
+      deps({ apiFetch: vi.fn<FetchLike>() }),
+    );
+    expect(rejected.status).toBe(422);
+  });
+
+  it.each([
+    ["sin cambios", {}],
+    ["una plantilla desconocida", { policy: "root" }],
+    ["un campo de propietario con control", { owner_field: "id\u0007" }],
+    [
+      "demasiados parámetros",
+      { resource_parameters: Array(21).fill({ name: "a", resource_type: "b" }) },
+    ],
+    ["campos extra", { policy: "public", confirmed_at: "2026-01-01T00:00:00Z" }],
+  ])("updateOperation rechaza %s", async (_label, body) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.updateOperation,
+      request("PATCH", `/api/projects/${PID}/operations/${PID}`, { body }),
+      { projectId: PID, operationId: PID },
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["ids repetidos", { operation_ids: [PID, PID], policy: "public" }],
+    ["un id que no es UUID", { operation_ids: ["1 OR 1=1"], policy: "public" }],
+    ["sin operaciones", { operation_ids: [], policy: "public" }],
+  ])("applyPolicy rechaza %s", async (_label, body) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.applyPolicy,
+      request("POST", `/api/projects/${PID}/policy`, { body }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+});

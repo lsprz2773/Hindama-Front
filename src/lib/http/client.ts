@@ -175,7 +175,9 @@ export function createHttpClient(options: HttpClientOptions) {
       "Accept-Language": options.getLocale(),
       ...headers,
     };
-    if (body !== undefined) finalHeaders["Content-Type"] = "application/json";
+    // Un `FormData` (importContract) lleva su propio `Content-Type` con el separador.
+    const multipart = typeof FormData !== "undefined" && body instanceof FormData;
+    if (body !== undefined && !multipart) finalHeaders["Content-Type"] = "application/json";
     if (method !== "GET") {
       const token = await options.getCsrfToken?.();
       if (token) finalHeaders[CSRF_HEADER] = token;
@@ -187,7 +189,7 @@ export function createHttpClient(options: HttpClientOptions) {
       response = await doFetch(buildUrl(baseUrl, path, query), {
         method,
         headers: finalHeaders,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
         credentials: "same-origin",
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });

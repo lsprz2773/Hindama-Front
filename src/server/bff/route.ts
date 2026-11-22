@@ -33,6 +33,11 @@ export interface ApiRouteSpec {
   /** Esquema de la respuesta correcta (contrato). */
   response?: z.ZodType;
   maxBodyBytes?: number;
+  /**
+   * Cuerpo `multipart/form-data` (solo `importContract`): valida el formulario recibido y
+   * devuelve el que se reenvía, o los errores por campo.
+   */
+  multipart?: (form: FormData) => FormData | Record<string, string[]>;
 }
 
 type Params = Record<string, string | string[] | undefined>;
@@ -63,21 +68,18 @@ export function toSearch(query: Record<string, unknown>): string {
 }
 
 function validationProblem(error: z.ZodError): Response {
-  const errors = Object.entries(fieldErrors(error)).flatMap(([field, codes]) =>
-    codes.map((code) => ({ field: field === "_" ? null : field, code, message: "" })),
-  );
-  return problem(422, "validation.failed", { errors });
+  return fieldsProblem(fieldErrors(error));
 }
 
-/** Lee un cuerpo JSON sin pasar del máximo, aunque `Content-Length` mienta. */
-export async function readJsonBody(
+/** Lee el cuerpo sin pasar del máximo, aunque `Content-Length` mienta. */
+async function readLimitedBody(
   request: Request,
   maxBytes: number,
-): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
+  type: RegExp,
+): Promise<{ ok: true; value: Buffer } | { ok: false; response: Response }> {
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > maxBytes) return { ok: false, response: problem(413, "request.too_large") };
-  const type = request.headers.get("content-type") ?? "";
-  if (!/^application\/json(\s*;|$)/i.test(type)) {
+  if (!type.test(request.headers.get("content-type") ?? "")) {
     return { ok: false, response: problem(400, "request.malformed") };
   }
   const reader = request.body?.getReader();
@@ -94,12 +96,47 @@ export async function readJsonBody(
     }
     chunks.push(value);
   }
+  return { ok: true, value: Buffer.concat(chunks) };
+}
+
+/** Lee un cuerpo JSON sin pasar del máximo, aunque `Content-Length` mienta. */
+export async function readJsonBody(
+  request: Request,
+  maxBytes: number,
+): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
+  const read = await readLimitedBody(request, maxBytes, /^application\/json(\s*;|$)/i);
+  if (!read.ok) return read;
   try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks));
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(read.value);
     return { ok: true, value: JSON.parse(text) };
   } catch {
     return { ok: false, response: problem(400, "request.malformed") };
   }
+}
+
+/** Lee un formulario `multipart/form-data` sin pasar del máximo. */
+async function readFormBody(
+  request: Request,
+  maxBytes: number,
+): Promise<{ ok: true; value: FormData } | { ok: false; response: Response }> {
+  const type = request.headers.get("content-type") ?? "";
+  const read = await readLimitedBody(request, maxBytes, /^multipart\/form-data\s*;\s*boundary=/i);
+  if (!read.ok) return read;
+  try {
+    const form = await new Response(new Uint8Array(read.value), {
+      headers: { "content-type": type },
+    }).formData();
+    return { ok: true, value: form };
+  } catch {
+    return { ok: false, response: problem(400, "request.malformed") };
+  }
+}
+
+function fieldsProblem(fields: Record<string, string[]>): Response {
+  const errors = Object.entries(fields).flatMap(([field, codes]) =>
+    codes.map((code) => ({ field: field === "_" ? null : field, code, message: "" })),
+  );
+  return problem(422, "validation.failed", { errors });
 }
 
 /** Resuelve la ruta hacia la API con los parámetros de la URL ya validados. */
@@ -125,6 +162,14 @@ export function prepareWith(spec: ApiRouteSpec) {
     const parsedQuery = query.safeParse(readQuery(url));
     if (!parsedQuery.success) return validationProblem(parsedQuery.error);
 
+    if (spec.multipart) {
+      const read = await readFormBody(request, spec.maxBodyBytes ?? MAX_JSON_BODY_BYTES);
+      if (!read.ok) return read.response;
+      const form = spec.multipart(read.value);
+      if (!(form instanceof FormData)) return fieldsProblem(form);
+      // Sin `contentType`: `fetch` pone el separador del formulario nuevo.
+      return { body: form, search: toSearch(parsedQuery.data) };
+    }
     if (!spec.body) {
       return { search: toSearch(parsedQuery.data) };
     }

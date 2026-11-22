@@ -8,6 +8,18 @@ import {
   projectUpdateSchema,
 } from "@/lib/api/schemas/projects";
 import { verificationRequestSchema, verificationSchema } from "@/lib/api/schemas/verification";
+import {
+  contractPageSchema,
+  contractVersionSchema,
+  listContractsQuerySchema,
+  listOperationsQuerySchema,
+  operationPageSchema,
+  operationSchema,
+  operationUpdateSchema,
+  policyBulkResultSchema,
+  policyBulkUpdateSchema,
+} from "@/lib/api/schemas/contracts";
+import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
 import type { ApiRouteSpec } from "./route";
 
 /**
@@ -29,5 +41,35 @@ export const SPECS = {
     path: [...project, "verification"],
     body: verificationRequestSchema,
     response: verificationSchema,
+  },
+  listContracts: {
+    path: [...project, "contracts"],
+    query: listContractsQuerySchema,
+    response: contractPageSchema,
+  },
+  importContract: {
+    path: [...project, "contracts"],
+    multipart: validateContractImport,
+    maxBodyBytes: CONTRACT_FORM_MAX_BYTES,
+    response: contractVersionSchema,
+  },
+  getContract: {
+    path: [...project, "contracts", { param: "contractId" }],
+    response: contractVersionSchema,
+  },
+  listOperations: {
+    path: [...project, "operations"],
+    query: listOperationsQuerySchema,
+    response: operationPageSchema,
+  },
+  updateOperation: {
+    path: [...project, "operations", { param: "operationId" }],
+    body: operationUpdateSchema,
+    response: operationSchema,
+  },
+  applyPolicy: {
+    path: [...project, "policy"],
+    body: policyBulkUpdateSchema,
+    response: policyBulkResultSchema,
   },
 } satisfies Record<string, ApiRouteSpec>;
