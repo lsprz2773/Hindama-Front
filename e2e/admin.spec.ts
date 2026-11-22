@@ -188,3 +188,54 @@ test.describe("V-34 bitácora de auditoría", () => {
     );
   });
 });
+
+test.describe("estados de carga, error y permiso del panel", () => {
+  test("estadísticas: muestra el esqueleto y luego los datos", async ({ page }) => {
+    await page.goto("/admin");
+    await page.getByRole("radio", { name: "Últimos 7 días" }).click();
+    await expect(page.getByLabel("Cargando estadísticas")).toBeVisible();
+    await expect(page.getByLabel("Cargando estadísticas")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+  });
+
+  test("estadísticas: si la consulta falla ofrece reintentar", async ({ page }) => {
+    await page.addInitScript(() => sessionStorage.setItem("hindama.simulate.error", "1"));
+    await page.goto("/admin");
+    await expect(page.getByText("No pudimos cargar las estadísticas")).toBeVisible();
+    await expect(page.getByText(/Referencia/)).toBeVisible();
+    await page.evaluate(() => sessionStorage.removeItem("hindama.simulate.error"));
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+  });
+
+  test("bitácora: carga con esqueleto, falla con reintento y se recupera", async ({ page }) => {
+    await page.goto("/admin/audit-log");
+    await expect(page.getByRole("heading", { name: "34 registros" })).toBeVisible();
+    await page.evaluate(() => sessionStorage.setItem("hindama.simulate.error", "1"));
+    await page.getByLabel("Tipo de acción").selectOption("accountDeleted");
+    await expect(page.getByText("No pudimos cargar la bitácora")).toBeVisible();
+    await page.evaluate(() => sessionStorage.removeItem("hindama.simulate.error"));
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByRole("heading", { name: "3 registros" })).toBeVisible();
+  });
+
+  test("un analista con sesión no entra al panel de administración", async ({ page }) => {
+    await page.addInitScript(() => sessionStorage.setItem("hindama.role", "analyst"));
+    for (const path of ["/admin", "/admin/audit-log"]) {
+      await page.goto(path);
+      await expect(page.getByText("Esta sección no es para tu rol")).toBeVisible();
+      await expect(page.getByRole("link", { name: "Ir a mis proyectos" })).toBeVisible();
+    }
+  });
+
+  test("iniciar sesión como analista y luego abrir /admin da 403", async ({ page }) => {
+    await page.goto("/sign-in");
+    await page.getByLabel("Correo electrónico").fill("luis@ejemplo.mx");
+    await page.getByLabel("Contraseña", { exact: true }).fill("Clave-Segura-2026");
+    await page.getByRole("button", { name: "Iniciar sesión" }).first().click();
+    await expect(page).toHaveURL(/\/(projects|sign-in\/two-factor)$/);
+    if (page.url().endsWith("two-factor")) return;
+    await page.goto("/admin");
+    await expect(page.getByText("Esta sección no es para tu rol")).toBeVisible();
+  });
+});
