@@ -17,10 +17,27 @@ import { DashboardSkeleton } from "@/components/skeletons/page-skeletons";
 import { QueryState } from "@/components/ui/query-state";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX } from "./data";
+import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX, SAMPLE_RUN, type RunSummary } from "./data";
 import { isOpen, useFindings } from "./findings-store";
 import { historyRows } from "./history-view";
-import { runSummaryFor } from "./run-results-view";
+
+/** Datos de la ejecución `n` de un proyecto. TODO(api): V-32 (fase 6) y la matriz aún sin conectar; vienen de `getRun`. */
+export function runSummaryFor(project: Project, runId: string): RunSummary | null {
+  const report = project.report;
+  const n = Number(runId);
+  if (!report || !Number.isInteger(n) || n < 1 || n > report.runNumber) return null;
+  if (project.id === "pedidos") return { ...SAMPLE_RUN, number: n };
+  return {
+    number: n,
+    date: report.date,
+    requests: report.requests,
+    minutes: report.minutes,
+    modulesRun: report.modulesRun,
+    blocked: 0,
+    comparison: { new: 0, persistent: 0, resolved: 0, regression: 0 },
+    severities: report.severities,
+  };
+}
 
 type Variant = "run" | "current";
 const SEV_BG = ["bg-sev-1", "bg-sev-2", "bg-sev-3", "bg-sev-4", "bg-sev-5"];

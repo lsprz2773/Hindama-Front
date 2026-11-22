@@ -1783,33 +1783,27 @@
   "RunResults": {
     "title": "Ejecución n.º {number}",
     "crumbHistory": "Historial",
-    "none": {
-      "title": "Aún no hay ejecuciones",
-      "text": "Cuando termines tu primera ejecución, sus resultados aparecerán aquí.",
-      "action": "Nueva ejecución"
-    },
     "report": "Generar reporte",
-    "export": "Exportar a Excel",
-    "exported": "Exportación lista",
-    "exportedText": "El archivo se descargó con los hallazgos de la ejecución.",
     "retest": "Volver a probar",
-    "retestBusy": "Ya hay una ejecución en curso",
-    "retestStarted": "Repitiendo la ejecución n.º {number}",
-    "completed": "Completada · {date}",
     "data": "Datos de la ejecución",
     "end": {
-      "normal": "Fin: normal"
+      "normal": "Fin: normal",
+      "limit_reached": "Fin: se alcanzó un límite",
+      "cancelled_by_user": "Fin: cancelada por el usuario",
+      "verification_invalid": "Fin: la verificación del host dejó de ser válida",
+      "heartbeat_expired": "Fin: el motor dejó de responder",
+      "lost_in_queue": "Fin: se perdió en la cola",
+      "error": "Fin: error interno"
     },
-    "contract": "Contrato {version}",
-    "repeat": "Repetición de la ejecución n.º {number}",
+    "contract": "Contrato n.º {number}",
+    "repeat": "Repite una ejecución anterior",
     "headline": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
-    "headlineText": "{new, plural, one {# es nuevo} other {# son nuevos}} y {regressions, plural, one {# es una regresión} other {# son regresiones}} de algo que ya estaba resuelto.",
     "viewFindings": "Ver hallazgos",
     "stats": {
       "requests": "Peticiones",
       "minutes": "Minutos de duración",
       "modules": "Módulos ejecutados",
-      "blocked": "Peticiones bloqueadas"
+      "cells": "Comprobaciones evaluadas"
     },
     "comparison": {
       "title": "Frente a la ejecución n.º {number}",
@@ -1817,29 +1811,49 @@
       "firstText": "No hay una ejecución anterior con la que comparar.",
       "new": "Nuevos",
       "persistent": "Persistentes",
-      "resolved": "Resueltos",
       "regression": "Regresiones",
-      "note": "Un hallazgo es regresión cuando reaparece tras haberse marcado como resuelto."
+      "note": "Un hallazgo es regresión cuando reaparece tras haberse marcado como resuelto.",
+      "onlyLatest": "La comparación usa el estado actual de los hallazgos, así que solo se muestra en la última ejecución del proyecto."
     },
     "bySeverity": "Por severidad",
     "modules": "Módulos",
     "limits": "Límites: {rps} req/s · {concurrency} concurrentes · {total} peticiones · {minutes} min",
-    "moduleBlocked": "No se ejecutó: falta identidad administradora",
     "moduleNotSelected": "No seleccionado",
-    "moduleFindings": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
-    "incomplete": "incompleto",
     "notices": {
       "title": "Avisos",
-      "expired": {
-        "title": "{name} tenía la credencial vencida",
-        "text": "Se omitieron {count} pruebas de Acceso a objetos. Los resultados de ese módulo están incompletos."
+      "partial": {
+        "completed": {
+          "title": "Resultado parcial",
+          "text": "La ejecución se detuvo al alcanzar un límite y algunas comprobaciones no se evaluaron."
+        },
+        "cancelled": {
+          "title": "Ejecución cancelada",
+          "text": "Los resultados son parciales: solo incluyen lo que se evaluó antes de detenerla."
+        },
+        "failed": {
+          "title": "La ejecución no terminó",
+          "text": "Los resultados son parciales: solo incluyen lo que se evaluó antes de la falla."
+        }
       },
-      "skipped": {
-        "title": "{module} no se ejecutó",
-        "text": "Falta una identidad con rol de administrador."
+      "pending": {
+        "title": "{count, plural, one {# recurso de prueba no se pudo borrar} other {# recursos de prueba no se pudieron borrar}}",
+        "text": "Hindama lo intentó 3 veces. Bórralos a mano en tu API."
       }
     },
-    "top": "Más graves"
+    "top": "Más graves",
+    "titleLoading": "Resultados de la ejecución",
+    "subject": "la ejecución",
+    "status": {
+      "completed": "Completada · {date}",
+      "cancelled": "Cancelada · {date}",
+      "failed": "No terminó · {date}"
+    },
+    "moduleRun": "Ejecutado",
+    "active": {
+      "title": "La ejecución n.º {number} sigue en curso",
+      "text": "Sus resultados aparecerán aquí cuando termine.",
+      "action": "Ver el avance"
+    }
   },
   "Matrix": {
     "title": "Matriz de acceso",

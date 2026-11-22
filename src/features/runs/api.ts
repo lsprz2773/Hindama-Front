@@ -227,12 +227,14 @@ export interface FindingFilters {
   severity?: Severity[];
   status?: FindingStatus[];
   runId?: string;
+  /** `false` deja la consulta sin pedir (p. ej. mientras no aplica). */
+  enabled?: boolean;
 }
 
 /** `listFindings` (V-27, V-29, V-31): por severidad y luego la detección más reciente. */
 export function useFindings(
   id: string,
-  { page = 1, pageSize = 20, module, severity, status, runId }: FindingFilters,
+  { page = 1, pageSize = 20, module, severity, status, runId, enabled = true }: FindingFilters,
 ) {
   const http = useHttpClient();
   return useQuery({
@@ -244,6 +246,7 @@ export function useFindings(
           signal,
         })
       ).data,
+    enabled,
     placeholderData: keepPreviousData,
     retry: false,
   });

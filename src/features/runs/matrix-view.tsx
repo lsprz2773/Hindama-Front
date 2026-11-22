@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { MATRIX_IDENTITIES, SAMPLE_MATRIX, type CellKind } from "./data";
 import { RunTabs } from "./run-tabs";
-import { runSummaryFor } from "./run-results-view";
+import { runSummaryFor } from "./report-view";
 
 const MARK: Record<CellKind, string> = {
   allow: "✓",
@@ -108,7 +108,7 @@ function Matrix({ base, run }: { base: string; run: number }) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <RunTabs base={base} run={run} active="matrix" findings={15} />
+        <RunTabs base={base} run={String(run)} active="matrix" findings={15} />
         <Switch checked={onlyDiscrepancies} onChange={() => setOnlyDiscrepancies((v) => !v)}>
           {t("onlyDiscrepancies")}
         </Switch>

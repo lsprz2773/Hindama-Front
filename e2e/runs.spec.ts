@@ -1,5 +1,6 @@
 import { expect, test } from "./fixtures";
 import { mockBff, problem } from "./support/bff";
+import { finding } from "./support/findings";
 import { project, PROJECT_ID } from "./support/projects";
 import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "./support/runs";
 
@@ -344,63 +345,125 @@ test.describe("V-26 ejecución en curso", () => {
 });
 
 test.describe("V-27 resultados", () => {
-  test("resume la ejecución con la comparación, la severidad y los avisos", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3");
+  const RUN = `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`;
+  const latest = (page: Parameters<typeof mockBff>[0]) =>
+    mockBff(
+      page,
+      PROJECT,
+      {
+        body: project({ last_run: runningSummary({ status: "completed", end_reason: "normal" }) }),
+      },
+      "GET",
+    );
+  /** `listFindings` por estado: solo se lee `total` en la comparación. */
+  const findingsByStatus = (page: Parameters<typeof mockBff>[0]) =>
+    page.route(new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`), async (route) => {
+      const url = new URL(route.request().url());
+      const status = url.searchParams.getAll("status");
+      const totals: Record<string, number> = { new: 1, persistent: 4, regression: 0 };
+      const total = status.length === 1 ? (totals[status[0]] ?? 0) : 2;
+      await route.fulfill({
+        json: { items: total > 0 ? [finding()] : [], total, page: 1, page_size: 3 },
+      });
+    });
+
+  test("resume la ejecución terminada con la comparación y la severidad", async ({ page }) => {
+    await latest(page);
+    await findingsByStatus(page);
+    await mockBff(page, RUN, { body: completedRun() }, "GET");
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
     await expect(page.getByRole("heading", { name: "Ejecución n.º 3", level: 1 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "15 hallazgos" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2 hallazgos" })).toBeVisible();
+    await expect(page.getByText(/^Completada · /)).toBeVisible();
     await expect(page.getByText("Fin: normal")).toBeVisible();
-    await expect(page.getByText("Contrato v2.4.0")).toBeVisible();
-    await expect(page.getByText("Repetición de la ejecución n.º 2")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Frente a la ejecución n.º 2" })).toBeVisible();
-    await expect(page.getByText("Cliente B tenía la credencial vencida")).toBeVisible();
-    await expect(page.getByText("Acceso a funciones no se ejecutó")).toBeVisible();
+    await expect(page.getByText("Contrato n.º 2")).toBeVisible();
+    await expect(page.getByText("38 / 120")).toBeVisible();
+    await expect(page.getByText("3 / 7")).toBeVisible();
+
+    const comparison = page.getByRole("region", { name: "Frente a la ejecución n.º 2" });
+    await expect(comparison.getByRole("listitem").filter({ hasText: "Nuevos" })).toContainText("1");
     await expect(
-      page.getByRole("heading", { name: /recursos quedaron sin eliminar/i }),
+      comparison.getByRole("listitem").filter({ hasText: "Persistentes" }),
+    ).toContainText("4");
+
+    const modules = page.getByRole("region", { name: "Módulos" });
+    await expect(modules.getByRole("listitem").filter({ hasText: "Inyección SQL" })).toContainText(
+      "Ejecutado",
+    );
+    await expect(modules.getByRole("listitem").filter({ hasText: "Autenticación" })).toContainText(
+      "No seleccionado",
+    );
+
+    await expect(
+      page.getByRole("link", { name: /Acceso a un objeto de otra identidad/ }),
+    ).toHaveAttribute("href", new RegExp(`${BASE}/findings/0192e3a0-8888-7000-8000-000000000001$`));
+    await expect(page.getByRole("link", { name: "Ver hallazgos" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/findings\\?run=${RUN_ID}$`),
+    );
+    await expect(page.getByRole("heading", { name: "Avisos" })).toHaveCount(0);
+  });
+
+  test("un resultado parcial y los recursos sin borrar se avisan", async ({ page }) => {
+    await latest(page);
+    await mockBff(
+      page,
+      RUN,
+      {
+        body: {
+          ...completedRun(),
+          end_reason: "limit_reached",
+          created_resources: { pending: 0, deleted: 2, failed: 2 },
+        },
+      },
+      "GET",
+    );
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
+    await expect(page.getByText("Fin: se alcanzó un límite")).toBeVisible();
+    await expect(page.getByText("Resultado parcial")).toBeVisible();
+    await expect(page.getByText("2 recursos de prueba no se pudieron borrar")).toBeVisible();
+  });
+
+  test("una ejecución que no es la última no muestra la comparación", async ({ page }) => {
+    await mockBff(page, RUN, { body: completedRun() }, "GET");
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
+    await expect(
+      page.getByText(/solo se muestra en la última ejecución del proyecto/),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Más graves" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "Resumen" })).toHaveAttribute(
-      "aria-selected",
-      "true",
+  });
+
+  test("volver a probar pide confirmar los módulos de riesgo", async ({ page }) => {
+    await latest(page);
+    await mockBff(page, RUN, { body: completedRun() }, "GET");
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    const calls = await mockBff(
+      page,
+      `${RUN}/rerun`,
+      { status: 202, body: runningRun({ status: "queued", number: 4 }) },
+      "POST",
+    );
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
+    await page.getByRole("button", { name: "Volver a probar" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Confirmar y repetir" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
+    expect(calls[0].postDataJSON()).toEqual({ confirm_risk: true });
+  });
+
+  test("una ejecución en curso lleva a su avance", async ({ page }) => {
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
+    await expect(page.getByText("La ejecución n.º 3 sigue en curso")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver el avance" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/runs/current$`),
     );
   });
 
-  test("las pestañas llevan a la matriz y a los hallazgos", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3");
-    await page.getByRole("tab", { name: "Matriz de acceso" }).click();
-    await expect(page).toHaveURL(/\/runs\/3\/matrix$/);
-    await page.getByRole("tab", { name: /Hallazgos \(15\)/ }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/findings$/);
-  });
-
-  test("exportar a Excel avisa con un toast", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3");
-    await page.getByRole("button", { name: "Exportar a Excel" }).click();
-    await expect(page.getByText("Exportación lista")).toBeVisible();
-  });
-
-  test("volver a probar inicia una ejecución y abre el progreso", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3");
-    await page.getByRole("button", { name: "Volver a probar" }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/runs\/current$/);
-  });
-
-  test("una ejecución inexistente responde 404 y un proyecto sin ejecuciones lo explica", async ({
-    page,
-  }) => {
-    await page.goto("/projects/pedidos/runs/99");
-    await expect(page.getByRole("heading", { name: /no existe|no encontr/i })).toBeVisible();
-    await page.goto("/projects/pagos/runs/1");
-    await expect(page.getByText("Aún no hay ejecuciones")).toBeVisible();
-  });
-
-  test("una ejecución terminada en la sesión se puede consultar", async ({ page }) => {
-    await page.goto("/projects/inventario/runs/current");
-    await expect(page.getByRole("link", { name: "Ver resultados" })).toBeVisible({
-      timeout: 45_000,
-    });
-    await page.getByRole("link", { name: "Ver resultados" }).click();
-    await expect(page.getByRole("heading", { name: "Ejecución n.º 1", level: 1 })).toBeVisible();
-    await expect(page.getByText("Primera ejecución")).toBeVisible();
+  test("una ejecución inexistente o con id inválido muestra 404", async ({ page }) => {
+    await mockBff(page, RUN, { status: 404, body: problem(404, "resource.not_found") }, "GET");
+    await page.goto(`${BASE}/runs/${RUN_ID}`);
+    await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
+    await page.goto(`${BASE}/runs/3`);
+    await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
   });
 });
 
