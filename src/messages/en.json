@@ -777,20 +777,17 @@
     "pending": "Pending",
     "operations": "{count} ops.",
     "unconfirmed": "{count} unconfirmed",
-    "availableAfterVerification": "Available after verification"
+    "availableAfterVerification": "Available after verification",
+    "subject": "the project"
   },
   "Projects": {
     "title": "Projects",
-    "greeting": "{running, plural, =0 {Hi, {name}. You have no runs in progress.} one {Hi, {name}. You have one run in progress.} other {Hi, {name}. You have # runs in progress.}}",
     "newProject": "New project",
     "summary": {
       "projects": "Projects",
       "open": "Open findings",
-      "running": "Run in progress",
       "pending": "Pending verification"
     },
-    "search": "Search project",
-    "searchPlaceholder": "Search by name or URL",
     "orderBy": "Sort by",
     "order": {
       "lastRun": "Last run",
@@ -798,15 +795,12 @@
       "createdAt": "Creation date"
     },
     "open": "Open",
-    "viewProgress": "View progress",
     "verify": "Verify ownership",
     "settings": "Settings",
     "delete": "Delete",
     "moreActions": "More actions for {name}",
-    "runningBadge": "Run in progress · {percent}%",
     "openFindings": "Open findings",
     "lastRun": "Last run",
-    "now": "Now",
     "noRuns": "No runs",
     "addAnother": {
       "title": "Add another API",
@@ -824,7 +818,22 @@
       "removed1": "The contract, its versions, identities and the access policy",
       "removed2": "Runs, findings and reports",
       "confirm": "Delete project",
-      "done": "Project “{name}” deleted"
+      "done": "Project “{name}” deleted",
+      "activeRun": "A run is in progress",
+      "activeRunText": "Cancel it before deleting the project.",
+      "mismatch": "The name doesn't match the project's name.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "failed": "We couldn't delete the project"
+    },
+    "greetingName": "Hi, {name}.",
+    "subject": "your projects",
+    "loading": "Loading your projects",
+    "reference": "Reference: {id}",
+    "pagination": {
+      "label": "Project pages",
+      "previous": "Previous",
+      "next": "Next",
+      "status": "Page {page} of {pages}"
     }
   },
   "AcceptTerms": {
@@ -854,7 +863,15 @@
     "recorded": "We record the version and the date and time of your acceptance.",
     "cancel": "Cancel",
     "continue": "Accept and continue",
-    "accepted": "Terms accepted"
+    "accepted": "Terms accepted",
+    "subject": "the current terms",
+    "loading": "Loading the terms",
+    "outdated": "A new version of the terms was published. Review it and accept it again.",
+    "errorTitle": "We couldn't record your acceptance",
+    "errorText": "Check your connection and try again.",
+    "rateLimited": "Too many attempts. Wait a moment.",
+    "reference": "Reference: {id}",
+    "retry": "Retry"
   },
   "NewProject": {
     "stepsLabel": "Steps",
@@ -921,7 +938,6 @@
     },
     "errors": {
       "nameRequired": "Enter the project name.",
-      "nameTaken": "You already have a project with that name.",
       "urlRequired": "Enter your API's base URL.",
       "url": {
         "invalid": "Enter a full URL, for example https://api.example.com.",
@@ -929,18 +945,23 @@
         "private": "Private-network addresses aren't accepted.",
         "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
         "linkLocal": "Link-local addresses aren't accepted.",
-        "metadata": "Cloud metadata addresses aren't accepted."
+        "metadata": "Cloud metadata addresses aren't accepted.",
+        "destination": "The API doesn't accept that address: it points to a private, local or metadata network."
       },
       "networkTitle": "We couldn't create the project",
       "networkText": "Check your connection and try again.",
-      "retry": "Retry"
+      "retry": "Retry",
+      "nameInvalid": "The name allows up to 100 characters and no control characters.",
+      "descriptionInvalid": "The description allows up to 500 characters and no control characters.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "reference": "Reference: {id}"
     }
   },
   "Dashboard": {
     "running": {
       "title": "The run is still in progress",
-      "text": "The tests continue ({percent}%). Come back to its progress whenever you like.",
-      "action": "View run"
+      "action": "View run",
+      "textActive": "The tests keep running. Go back to its progress whenever you want."
     },
     "unverified": {
       "title": "Ownership still needs verification",
@@ -951,16 +972,11 @@
       "none": "No runs yet",
       "open": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
       "noneText": "Set up the project and launch your first full test to see results here.",
-      "criticalText": "One is critical and has persisted since the first run. Fix it and test again.",
       "cleanText": "The last run found no problems with the chosen modules.",
-      "text": "Review the findings, fix them and test again."
+      "text": "Review the findings, fix them and test again.",
+      "criticalOpen": "{count, plural, one {One is critical.} other {# are critical.}} Fix them and test again."
     },
     "fullTest": "Full test",
-    "repeat": {
-      "button": "Repeat last run",
-      "title": "Run scheduled",
-      "text": "It will repeat with the same configuration."
-    },
     "blocked": {
       "unverified": "The host's ownership still needs verification.",
       "goVerify": "Go to verification",
@@ -970,8 +986,10 @@
       "viewRun": "View run",
       "identities": "You need at least 2 identities with resources.",
       "addIdentity": "Add identity",
-      "policy": "Confirm the access policy of {count, plural, one {# operation} other {# operations}}.",
-      "reviewPolicy": "Review policy"
+      "reviewPolicy": "Review policy",
+      "resources": "Register each identity's resources.",
+      "goResources": "Register resources",
+      "policyPending": "Confirm the proposed access policy."
     },
     "stats": {
       "requests": "Requests",
@@ -986,9 +1004,10 @@
     },
     "policy": {
       "title": "Access policy",
-      "text": "{confirmed} of {total} operations confirmed. The {pending} pending proposals aren't used in the tests.",
       "empty": "Import the contract so Hindama can propose who should be able to do what.",
-      "review": "Review policy"
+      "review": "Review policy",
+      "pendingText": "Some proposals are unconfirmed. Pending ones aren't used in tests.",
+      "confirmedText": "The access policy is confirmed."
     },
     "modules": {
       "title": "Test modules",
@@ -1013,12 +1032,12 @@
       },
       "blocked": "No administrator identity: add one",
       "notRun": "Not run",
-      "findings": "{count, plural, one {# finding} other {# findings}}",
       "run": "Run",
       "runTitle": "Run of “{name}” requested",
       "addIdentity": "Add identity",
       "emptyTitle": "No results yet",
-      "emptyText": "Verify ownership and run your first test to see each module here."
+      "emptyText": "Verify ownership and run your first test to see each module here.",
+      "ran": "Included in the last run"
     }
   },
   "ProjectSettings": {
@@ -1046,11 +1065,10 @@
     "delete": {
       "title": "Delete project",
       "lead": "It will be permanently deleted, within 30 days at most:",
-      "contract": "The contract and its {versions} versions",
-      "identities": "{count, plural, one {# identity and its credentials} other {# identities and their credentials}}",
-      "resources": "{count, plural, one {# resource and the access policy} other {# resources and the access policy}}",
       "runs": "Runs, {findings} findings and their reports",
-      "button": "Delete project"
+      "button": "Delete project",
+      "contractAll": "The contract and all its versions",
+      "identitiesAll": "The identities, their credentials, the resources and the access policy"
     },
     "deleteDialog": {
       "title": "Delete the project “{name}”",
@@ -1069,8 +1087,16 @@
         "private": "Private-network addresses aren't accepted.",
         "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
         "linkLocal": "Link-local addresses aren't accepted.",
-        "metadata": "Cloud metadata addresses aren't accepted."
-      }
+        "metadata": "Cloud metadata addresses aren't accepted.",
+        "destination": "The API doesn't accept that address: it points to a private, local or metadata network."
+      },
+      "nameInvalid": "The name allows up to 100 characters and no control characters.",
+      "descriptionInvalid": "The description allows up to 500 characters and no control characters.",
+      "saveTitle": "We couldn't save the changes",
+      "saveText": "Check your connection and try again.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "reference": "Reference: {id}",
+      "checkFields": "Check the highlighted fields."
     }
   },
   "Verification": {
