@@ -467,37 +467,90 @@ test.describe("V-27 resultados", () => {
   });
 });
 
-test.describe("V-28 matriz de acceso", () => {
-  test("muestra las operaciones por identidad con la leyenda", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/matrix");
+test.describe("V-28 matriz", () => {
+  const RESULTS = new RegExp(`/api/projects/${PROJECT_ID}/runs/${RUN_ID}/results`);
+  const MATRIX = `${BASE}/runs/${RUN_ID}/matrix`;
+  /** Una celda del ejemplo `ResultPage`. */
+  const RESULT = {
+    module: "object_access",
+    operation: {
+      id: "0192e3a0-5555-7000-8000-000000000003",
+      method: "GET",
+      path: "/orders/{orderId}",
+    },
+    identity: { id: "0192e3a0-6666-7000-8000-000000000004", name: "Cliente B", deleted: false },
+    expected: "denied",
+    observed: "200 allowed",
+    verdict: "fail",
+    evaluated_at: "2026-11-17T09:10:21Z",
+  };
+
+  test("cruza cada operación con cada identidad y marca las discrepancias", async ({ page }) => {
+    await page.goto(MATRIX);
     await expect(page.getByRole("heading", { name: "Matriz de acceso", level: 1 })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /10 operaciones · 4 identidades · 4 discrepancias/ }),
+      page.getByRole("heading", { name: "1 fila · 2 identidades · 1 discrepancia" }),
     ).toBeVisible();
-    await expect(page.getByText("Discrepancia: abre el hallazgo")).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: /Cliente A/ })).toBeVisible();
-    await expect(page.getByText("Credencial vencida").first()).toBeVisible();
-  });
-
-  test("«Solo discrepancias» deja únicamente las filas con discrepancia", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/matrix");
-    const toggle = page.getByRole("switch", { name: "Solo discrepancias" });
-    await expect(toggle).toHaveAttribute("aria-checked", "false");
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("columnheader", { name: "Cliente B" })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /4 operaciones · 4 identidades · 4 discrepancias/ }),
+      page.getByRole("group", {
+        name: "Cliente B: Discrepancia, 200 permitido, esperado: denegado",
+      }),
     ).toBeVisible();
-    await expect(page.getByText("/health")).toHaveCount(0);
+    await expect(
+      page.getByRole("group", {
+        name: "Cliente A: Correcto, 200 solo sus datos, esperado: solo sus datos",
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("rowheader", { name: /\/orders\/\{orderId\}/ })).toContainText(
+      "Acceso a objetos",
+    );
   });
 
-  test("una discrepancia abre su hallazgo", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/matrix");
-    await page
-      .getByRole("link", { name: /Soporte: 200 · Discrepancia/ })
-      .first()
-      .click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/findings\/f0\d$/);
+  test("los filtros de discrepancias y de módulo se piden a la API", async ({ page }) => {
+    await page.goto(MATRIX);
+    await expect(page.getByRole("heading", { name: /1 discrepancia/ })).toBeVisible();
+
+    const fails = page.waitForRequest(
+      (r) => RESULTS.test(r.url()) && r.url().includes("verdict=fail"),
+    );
+    await page.getByRole("switch", { name: "Solo discrepancias" }).click();
+    expect(new URL((await fails).url()).searchParams.get("page_size")).toBe("500");
+
+    const byModule = page.waitForRequest(
+      (r) => RESULTS.test(r.url()) && r.url().includes("module=sql_injection"),
+    );
+    await page.getByLabel("Módulo").selectOption({ label: "Inyección SQL" });
+    await byModule;
+  });
+
+  test("sin discrepancias lo dice en positivo", async ({ page }) => {
+    await page.route(RESULTS, (route) =>
+      route.fulfill({ json: { items: [], total: 0, page: 1, page_size: 500 } }),
+    );
+    await page.goto(MATRIX);
+    await expect(page.getByText("Esta ejecución no tiene resultados")).toBeVisible();
+    await page.getByRole("switch", { name: "Solo discrepancias" }).click();
+    await expect(page.getByText("No hay discrepancias")).toBeVisible();
+  });
+
+  test("pagina de 500 en 500", async ({ page }) => {
+    let last = "";
+    await page.route(RESULTS, async (route) => {
+      last = route.request().url();
+      const current = Number(new URL(last).searchParams.get("page") ?? "1");
+      await route.fulfill({ json: { items: [RESULT], total: 600, page: current, page_size: 500 } });
+    });
+    await page.goto(MATRIX);
+    await expect(page.getByText("Página 1 de 2")).toBeVisible();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+    await expect(page.getByText("Página 2 de 2")).toBeVisible();
+    expect(new URL(last).searchParams.get("page")).toBe("2");
+  });
+
+  test("un id de ejecución inválido muestra 404", async ({ page }) => {
+    await page.goto(`${BASE}/runs/3/matrix`);
+    await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
   });
 });
 

@@ -1857,54 +1857,47 @@
   },
   "Matrix": {
     "title": "Matriz de acceso",
+    "subject": "la matriz",
     "onlyDiscrepancies": "Solo discrepancias",
+    "module": "Módulo",
+    "allModules": "Todos los módulos",
     "legend": {
       "title": "Leyenda",
-      "allow": "Permitido, como se esperaba",
-      "deny": "Denegado, como se esperaba",
-      "discrepancy": "Discrepancia: abre el hallazgo",
-      "error": "Error: la prueba no pudo completarse",
-      "skipped": "Omitido o no aplica, con su motivo"
+      "pass": "Correcto: respondió lo esperado",
+      "fail": "Discrepancia: no respondió lo esperado",
+      "error": "Error: no se pudo evaluar",
+      "skipped": "Omitido: credencial vencida o requisito faltante"
     },
-    "summary": "{rows, plural, one {# operación} other {# operaciones}} · {identities} identidades · {discrepancies, plural, one {# discrepancia} other {# discrepancias}}",
+    "summary": "{rows, plural, one {# fila} other {# filas}} · {identities, plural, one {# identidad} other {# identidades}} · {discrepancies, plural, one {# discrepancia} other {# discrepancias}}",
     "none": {
       "title": "No hay discrepancias",
       "text": "Todas las identidades recibieron la respuesta esperada."
     },
     "empty": {
-      "title": "Esta ejecución no tiene matriz",
-      "text": "La matriz se genera cuando se prueba el módulo de acceso a objetos con al menos dos identidades."
+      "title": "Esta ejecución no tiene resultados",
+      "text": "La matriz se llena cuando la ejecución evalúa sus comprobaciones."
     },
     "caption": "Respuesta de cada operación para cada identidad",
-    "operation": "Operación y política",
-    "roles": {
-      "unauthenticated": "Sin autenticar",
-      "owner": "Usuario · dueño",
-      "user": "Usuario",
-      "other": "Otro"
+    "operation": "Operación y módulo",
+    "global": "Toda la API",
+    "identityDeleted": "{name} (eliminada)",
+    "notEvaluated": "Sin evaluar",
+    "verdict": {
+      "pass": "Correcto",
+      "fail": "Discrepancia",
+      "error": "Error",
+      "skipped": "Omitido"
     },
-    "global": "Toda la API · CORS y cabeceras",
-    "ownedBy": "de {name}",
-    "templates": {
-      "authenticated": "Cualquier autenticado",
-      "ownerOrAdmin": "Propietario o administrador",
-      "owner": "Solo propietario",
-      "admin": "Solo administrador",
-      "public": "Pública",
-      "global": "Comprobación global"
+    "expected": "Esperado: {value}",
+    "codes": {
+      "allowed": "permitido",
+      "denied": "denegado",
+      "own_data_only": "solo sus datos",
+      "no_sql_error": "sin error SQL"
     },
-    "expected": {
-      "allow": "Esperado: permitir",
-      "deny": "Esperado: denegar"
-    },
-    "discrepancy": "Discrepancia",
-    "error": "Error",
-    "notApplicable": "No aplica",
-    "usesAnonymous": "Usa la identidad anónima",
-    "notTested": "No probado",
-    "expiredCredential": "Credencial vencida",
-    "cors": "CORS abierto",
-    "timeout": "Tiempo agotado"
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Findings": {
     "globalOperation": "Toda la API",

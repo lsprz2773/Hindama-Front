@@ -1857,54 +1857,47 @@
   },
   "Matrix": {
     "title": "Access matrix",
-    "onlyDiscrepancies": "Only discrepancies",
+    "subject": "the matrix",
+    "onlyDiscrepancies": "Discrepancies only",
+    "module": "Module",
+    "allModules": "All modules",
     "legend": {
       "title": "Legend",
-      "allow": "Allowed, as expected",
-      "deny": "Denied, as expected",
-      "discrepancy": "Discrepancy: opens the finding",
-      "error": "Error: the test could not finish",
-      "skipped": "Skipped or not applicable, with its reason"
+      "pass": "Pass: responded as expected",
+      "fail": "Discrepancy: did not respond as expected",
+      "error": "Error: could not be evaluated",
+      "skipped": "Skipped: expired credential or missing requirement"
     },
-    "summary": "{rows, plural, one {# operation} other {# operations}} · {identities} identities · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
+    "summary": "{rows, plural, one {# row} other {# rows}} · {identities, plural, one {# identity} other {# identities}} · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
     "none": {
-      "title": "There are no discrepancies",
+      "title": "No discrepancies",
       "text": "Every identity got the expected response."
     },
     "empty": {
-      "title": "This run has no matrix",
-      "text": "The matrix is built when the object access module is tested with at least two identities."
+      "title": "This run has no results",
+      "text": "The matrix fills in as the run evaluates its checks."
     },
     "caption": "Response of each operation for each identity",
-    "operation": "Operation and policy",
-    "roles": {
-      "unauthenticated": "Unauthenticated",
-      "owner": "User · owner",
-      "user": "User",
-      "other": "Other"
+    "operation": "Operation and module",
+    "global": "Whole API",
+    "identityDeleted": "{name} (deleted)",
+    "notEvaluated": "Not evaluated",
+    "verdict": {
+      "pass": "Pass",
+      "fail": "Discrepancy",
+      "error": "Error",
+      "skipped": "Skipped"
     },
-    "global": "Whole API · CORS and headers",
-    "ownedBy": "of {name}",
-    "templates": {
-      "authenticated": "Any authenticated user",
-      "ownerOrAdmin": "Owner or administrator",
-      "owner": "Owner only",
-      "admin": "Administrator only",
-      "public": "Public",
-      "global": "Global check"
+    "expected": "Expected: {value}",
+    "codes": {
+      "allowed": "allowed",
+      "denied": "denied",
+      "own_data_only": "own data only",
+      "no_sql_error": "no SQL error"
     },
-    "expected": {
-      "allow": "Expected: allow",
-      "deny": "Expected: deny"
-    },
-    "discrepancy": "Discrepancy",
-    "error": "Error",
-    "notApplicable": "Not applicable",
-    "usesAnonymous": "Uses the anonymous identity",
-    "notTested": "Not tested",
-    "expiredCredential": "Expired credential",
-    "cors": "Open CORS",
-    "timeout": "Timed out"
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Findings": {
     "globalOperation": "Entire API",
