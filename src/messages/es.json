@@ -1331,7 +1331,8 @@
       "admin": "Administrador",
       "user": "Usuario",
       "other": "Otro",
-      "otherNamed": "Otro: {name}"
+      "anonymous": "Sin autenticar",
+      "named": "{role}: {name}"
     },
     "auth": {
       "none": "No envía credenciales",
@@ -1342,10 +1343,9 @@
     },
     "status": {
       "active": "Activa",
-      "expiredCredential": "Credencial vencida · 401",
+      "expiredCredential": "Credencial vencida",
       "untested": "Sin probar"
     },
-    "testedAgo": "probada hace {time}",
     "noResources": "0 · sin recursos",
     "alwaysExists": "Siempre existe",
     "edit": "Editar",
@@ -1353,7 +1353,13 @@
       "button": "Probar",
       "okTitle": "{name}: la credencial funciona",
       "failedTitle": "{name}: la credencial falló",
-      "failedText": "La API respondió 401 Unauthorized. Reemplázala y vuelve a probar."
+      "okText": "La API respondió {code} en {path}.",
+      "failure": {
+        "rejected": "La API respondió {code}. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
     },
     "delete": {
       "label": "Eliminar {name}",
@@ -1361,11 +1367,21 @@
       "text": "Esta acción no se puede deshacer.",
       "heading": "Qué pasa",
       "item1": "Se borran su credencial y sus recursos.",
-      "item2": "Sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada».",
+      "item2": "Sus hallazgos se conservan.",
       "confirm": "Eliminar identidad",
       "done": "Identidad «{name}» eliminada"
     },
-    "deleteNote": "Al eliminar una identidad, sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada»."
+    "deleteNote": "Al eliminar una identidad se borran su credencial y sus recursos; sus hallazgos se conservan.",
+    "subject": "las identidades",
+    "tested": "probada {time}",
+    "errors": {
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos completar la acción.",
+      "reference": "Referencia: {id}"
+    }
   },
   "IdentityForm": {
     "newCrumb": "Nueva",
@@ -1377,8 +1393,8 @@
       "admin": "Administrador",
       "user": "Usuario",
       "other": "Otro",
-      "otherName": "Nombre del rol",
-      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política."
+      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política.",
+      "labelName": "Nombre del rol en tu API (opcional)"
     },
     "auth": {
       "label": "Forma de autenticación",
@@ -1400,37 +1416,36 @@
       }
     },
     "fields": {
-      "user": "Usuario",
       "password": "Contraseña",
-      "endpoint": "Endpoint de login",
       "token": "Token",
       "cookieName": "Nombre de la cookie",
-      "cookieValue": "Valor",
       "headerName": "Nombre de la cabecera",
-      "headerValue": "Valor"
+      "username": "Usuario",
+      "value": "Valor",
+      "credential": "Credencial",
+      "loginOperation": "Operación de login",
+      "chooseOperation": "Elige la operación de login"
     },
     "endsIn": "Termina en ••••{last4}",
     "replace": "Reemplazar",
     "loginNote": "Durante la ejecución obtenemos y renovamos el token automáticamente.",
     "test": {
       "title": "Probar credencial",
-      "operation": "Operación protegida",
       "run": "Probar ahora",
       "testing": "Probando…",
-      "ok": "La API respondió 200 OK.",
-      "okText": "La credencial funciona.",
-      "failed": "La API respondió 401 Unauthorized.",
-      "failedText": "El token parece vencido. Reemplázalo y vuelve a probar. Nunca mostramos la credencial en los resultados."
+      "okText": "La credencial funciona con {method} {path}.",
+      "savedOnly": "Prueba la credencial guardada con una operación GET protegida que elige el sistema.",
+      "answered": "La API respondió {code}.",
+      "failure": {
+        "rejected": "La operación no respondió 2xx. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
     },
     "cancel": "Cancelar",
     "save": "Guardar identidad",
     "saved": "Identidad «{name}» guardada",
-    "failedDialog": {
-      "title": "La prueba de la credencial falló",
-      "text": "La última prueba respondió 401. Si la guardas así, los módulos que usen esta identidad omitirán sus operaciones.",
-      "confirm": "Guardar de todos modos",
-      "cancel": "Volver a editar"
-    },
     "help": {
       "encryptedTitle": "Tus credenciales están cifradas",
       "encryptedText": "Las guardamos con AES-256-GCM. Después de guardarlas solo verás los últimos 4 caracteres, y en evidencias y reportes aparecen enmascaradas.",
@@ -1443,11 +1458,19 @@
     "errors": {
       "nameRequired": "Escribe el nombre de la identidad.",
       "fieldRequired": "Este campo es obligatorio.",
-      "nameTooLong": "Usa un nombre de hasta 60 caracteres.",
       "nameTaken": "Ya hay una identidad con ese nombre. Elige otro.",
-      "endpoint": "Escribe una ruta que empiece con / o una URL completa con https://.",
-      "tokenName": "Usa solo letras, números y los símbolos - _ . (sin espacios)."
-    }
+      "length": "El texto es demasiado largo.",
+      "format": "El valor tiene caracteres no permitidos.",
+      "fieldNameReserved": "Esa cabecera la controla la plataforma; usa otra.",
+      "loginOperation": "Elige la operación de login.",
+      "limitReached": "Ya hay 20 identidades en este proyecto, contando la anónima.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos guardar la identidad.",
+      "reference": "No pudimos guardar la identidad. Referencia: {id}",
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar."
+    },
+    "editCrumb": "Editar"
   },
   "Resources": {
     "crumb": "Recursos",

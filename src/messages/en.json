@@ -1331,7 +1331,8 @@
       "admin": "Administrator",
       "user": "User",
       "other": "Other",
-      "otherNamed": "Other: {name}"
+      "anonymous": "Unauthenticated",
+      "named": "{role}: {name}"
     },
     "auth": {
       "none": "Sends no credentials",
@@ -1342,10 +1343,9 @@
     },
     "status": {
       "active": "Active",
-      "expiredCredential": "Credential expired · 401",
+      "expiredCredential": "Credential expired",
       "untested": "Not tested"
     },
-    "testedAgo": "tested {time} ago",
     "noResources": "0 · no resources",
     "alwaysExists": "Always exists",
     "edit": "Edit",
@@ -1353,7 +1353,13 @@
       "button": "Test",
       "okTitle": "{name}: the credential works",
       "failedTitle": "{name}: the credential failed",
-      "failedText": "The API responded 401 Unauthorized. Replace it and test again."
+      "okText": "The API answered {code} on {path}.",
+      "failure": {
+        "rejected": "The API answered {code}. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
     },
     "delete": {
       "label": "Delete {name}",
@@ -1361,11 +1367,21 @@
       "text": "This action can't be undone.",
       "heading": "What happens",
       "item1": "Its credential and resources are deleted.",
-      "item2": "Its open findings move to “Resolved” with the reason “identity deleted”.",
+      "item2": "Its findings are kept.",
       "confirm": "Delete identity",
       "done": "Identity “{name}” deleted"
     },
-    "deleteNote": "When you delete an identity, its open findings move to “Resolved” with the reason “identity deleted”."
+    "deleteNote": "Deleting an identity removes its credential and its resources; its findings are kept.",
+    "subject": "the identities",
+    "tested": "tested {time}",
+    "errors": {
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't complete the action.",
+      "reference": "Reference: {id}"
+    }
   },
   "IdentityForm": {
     "newCrumb": "New",
@@ -1377,8 +1393,8 @@
       "admin": "Administrator",
       "user": "User",
       "other": "Other",
-      "otherName": "Role name",
-      "hint": "The role this account has in your API. It is used to compare against the policy."
+      "hint": "The role this account has in your API. It is used to compare against the policy.",
+      "labelName": "Role name in your API (optional)"
     },
     "auth": {
       "label": "Authentication method",
@@ -1400,37 +1416,36 @@
       }
     },
     "fields": {
-      "user": "Username",
       "password": "Password",
-      "endpoint": "Login endpoint",
       "token": "Token",
       "cookieName": "Cookie name",
-      "cookieValue": "Value",
       "headerName": "Header name",
-      "headerValue": "Value"
+      "username": "Username",
+      "value": "Value",
+      "credential": "Credential",
+      "loginOperation": "Login operation",
+      "chooseOperation": "Choose the login operation"
     },
     "endsIn": "Ends in ••••{last4}",
     "replace": "Replace",
     "loginNote": "During the run we obtain and renew the token automatically.",
     "test": {
       "title": "Test credential",
-      "operation": "Protected operation",
       "run": "Test now",
       "testing": "Testing…",
-      "ok": "The API responded 200 OK.",
-      "okText": "The credential works.",
-      "failed": "The API responded 401 Unauthorized.",
-      "failedText": "The token seems expired. Replace it and test again. We never show the credential in results."
+      "okText": "The credential works with {method} {path}.",
+      "savedOnly": "Test the saved credential against a protected GET operation chosen by the system.",
+      "answered": "The API answered {code}.",
+      "failure": {
+        "rejected": "The operation didn't answer 2xx. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
     },
     "cancel": "Cancel",
     "save": "Save identity",
     "saved": "Identity “{name}” saved",
-    "failedDialog": {
-      "title": "The credential test failed",
-      "text": "The last test responded 401. If you save it like this, modules that use this identity will skip their operations.",
-      "confirm": "Save anyway",
-      "cancel": "Back to editing"
-    },
     "help": {
       "encryptedTitle": "Your credentials are encrypted",
       "encryptedText": "We store them with AES-256-GCM. After saving you'll only see the last 4 characters, and in evidence and reports they appear masked.",
@@ -1443,11 +1458,19 @@
     "errors": {
       "nameRequired": "Enter the identity's name.",
       "fieldRequired": "This field is required.",
-      "nameTooLong": "Use a name of up to 60 characters.",
       "nameTaken": "An identity with that name already exists. Choose another.",
-      "endpoint": "Enter a path that starts with / or a full URL with https://.",
-      "tokenName": "Use only letters, numbers and the symbols - _ . (no spaces)."
-    }
+      "length": "The text is too long.",
+      "format": "The value has characters that aren't allowed.",
+      "fieldNameReserved": "The platform controls that header; use another one.",
+      "loginOperation": "Choose the login operation.",
+      "limitReached": "This project already has 20 identities, counting the anonymous one.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't save the identity.",
+      "reference": "We couldn't save the identity. Reference: {id}",
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with."
+    },
+    "editCrumb": "Edit"
   },
   "Resources": {
     "crumb": "Resources",

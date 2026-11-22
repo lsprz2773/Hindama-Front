@@ -16,6 +16,17 @@ import {
   type OperationUpdate,
   type PolicyBulkUpdate,
 } from "@/lib/api/schemas/contracts";
+import {
+  identityCreateSchema,
+  identityPageSchema,
+  identitySchema,
+  identityTestSchema,
+  identityUpdateSchema,
+  type Identity,
+  type IdentityCreate,
+  type IdentityTest,
+  type IdentityUpdate,
+} from "@/lib/api/schemas/identities";
 import type { Schemas } from "@/lib/api/types";
 import {
   verificationRequestSchema,
@@ -207,6 +218,76 @@ export function useAfterPolicy(id: string) {
   const client = useQueryClient();
   return () => {
     void client.invalidateQueries({ queryKey: operationsKey(id) });
+    void client.invalidateQueries({ queryKey: projectKey(id), exact: true });
+  };
+}
+
+export const identitiesKey = (id: string) => [...projectKey(id), "identities"] as const;
+
+/** El contrato admite hasta 20 identidades por proyecto, contando la anónima: caben en una página. */
+export const IDENTITY_PAGE_SIZE = 20;
+
+/** `listIdentities` (V-21, V-22, V-23): la anónima primero, luego por fecha de creación. */
+export function useIdentities(id: string) {
+  const http = useHttpClient();
+  return useQuery({
+    queryKey: identitiesKey(id),
+    queryFn: async ({ signal }) =>
+      (
+        await http.read(`${projectPath(id)}/identities`, identityPageSchema, {
+          query: { page_size: IDENTITY_PAGE_SIZE },
+          signal,
+        })
+      ).data,
+    retry: false,
+  });
+}
+
+function identityPath(id: string, identityId: string) {
+  return `${projectPath(id)}/identities/${encodeURIComponent(identityId)}`;
+}
+
+/** `createIdentity` (V-22). La credencial se envía una vez y no se guarda en el navegador. */
+export async function createIdentity(http: HttpClient, id: string, input: IdentityCreate) {
+  const body = identityCreateSchema.parse(input);
+  return (
+    await http.post<Identity>(`${projectPath(id)}/identities`, { body, schema: identitySchema })
+  ).data;
+}
+
+/** `updateIdentity` (V-22): solo los campos que cambian; una credencial nueva reemplaza la anterior. */
+export async function updateIdentity(
+  http: HttpClient,
+  id: string,
+  identityId: string,
+  input: IdentityUpdate,
+) {
+  const body = identityUpdateSchema.parse(input);
+  return (
+    await http.patch<Identity>(identityPath(id, identityId), { body, schema: identitySchema })
+  ).data;
+}
+
+/** `deleteIdentity` (V-21). */
+export async function deleteIdentity(http: HttpClient, id: string, identityId: string) {
+  await http.delete(identityPath(id, identityId));
+}
+
+/** `testIdentity` (V-21, V-22): responde 200 aunque la credencial falle (`succeeded`). */
+export async function testIdentity(http: HttpClient, id: string, identityId: string) {
+  return (
+    await http.post<IdentityTest>(`${identityPath(id, identityId)}/test`, {
+      body: {},
+      schema: identityTestSchema,
+    })
+  ).data;
+}
+
+/** Tras cambiar identidades: la lista y el proyecto (requisitos de los módulos). */
+export function useAfterIdentities(id: string) {
+  const client = useQueryClient();
+  return () => {
+    void client.invalidateQueries({ queryKey: identitiesKey(id) });
     void client.invalidateQueries({ queryKey: projectKey(id), exact: true });
   };
 }
