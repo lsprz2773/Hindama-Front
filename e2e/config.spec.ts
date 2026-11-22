@@ -77,7 +77,7 @@ test.describe("V-19 y V-20 contrato y versiones", () => {
     await expect(page.getByText("Contrato importado")).toBeVisible();
     await expect(page.getByRole("heading", { name: "3 avisos de esta versión" })).toBeVisible();
     await expect(page.getByText("Un elemento del contrato no se pudo interpretar")).toBeVisible();
-    await expect(page.getByText("#/paths/~1orders~1{orderId}/get/parameters/2")).toBeVisible();
+    await expect(page.getByText("/paths/~1orders~1{orderId}/get/parameters/2")).toBeVisible();
     await expect(page.getByRole("heading", { name: "42 operaciones" })).toBeVisible();
 
     await page.getByRole("button", { name: "DELETE", exact: true }).click();

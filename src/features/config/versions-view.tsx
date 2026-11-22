@@ -93,7 +93,7 @@ function Versions({ id }: { id: string }) {
             warnings={[
               {
                 code: "contract.unparsed_element",
-                message: "#/paths/~1orders~1{orderId}/get/parameters/2",
+                location: "/paths/~1orders~1{orderId}/get/parameters/2",
               },
             ]}
           />
