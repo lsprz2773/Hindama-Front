@@ -1,5 +1,22 @@
-import type { AuthForm, Identity, IdentityRole } from "@/features/config/data";
 import { createEnumAdapter } from "./adapter";
+
+/** Identidad con la forma de la interfaz (C-05 y el adaptador). */
+export type AuthForm = "login" | "bearer" | "cookie" | "header";
+export type IdentityRole = "admin" | "user" | "other";
+
+export interface Identity {
+  id: string;
+  name: string;
+  role: IdentityRole;
+  roleNote?: string;
+  auth: AuthForm | "none";
+  /** Últimos 4 caracteres de la credencial; nunca el valor completo. */
+  last4: string | null;
+  status: "active" | "expiredCredential" | "untested";
+  testedAgo?: string;
+  resources: number;
+  fixed?: boolean;
+}
 
 /** `AuthType` del contrato 0.6.0; `none` solo lo tiene la identidad anónima. */
 export type ApiAuthType = "none" | "login" | "bearer" | "cookie" | "header";

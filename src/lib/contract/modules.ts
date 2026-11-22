@@ -1,5 +1,14 @@
-import type { ModuleKey } from "@/features/runs/data";
 import { createEnumAdapter } from "./adapter";
+
+/** Clave de un módulo en los textos de la interfaz (`Dashboard.modules.names`). */
+export type ModuleKey =
+  | "auth"
+  | "config"
+  | "objects"
+  | "functions"
+  | "properties"
+  | "resources"
+  | "sql";
 
 /** `Module` del contrato 0.6.0 (glosario de identificadores, «Módulo»). */
 export type ApiModule =

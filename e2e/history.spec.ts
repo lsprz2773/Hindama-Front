@@ -1,7 +1,7 @@
 import { expect, test } from "./fixtures";
 import { mockBff, problem } from "./support/bff";
 import { project, PROJECT_ID } from "./support/projects";
-import { mockProgress, runningRun, runningSummary } from "./support/runs";
+import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "./support/runs";
 
 const PROJECT = `**/api/projects/${PROJECT_ID}`;
 const RUNS = new RegExp(`/api/projects/${PROJECT_ID}/runs(\\?.*)?$`);
@@ -167,32 +167,123 @@ test.describe("V-31 historial del proyecto", () => {
   });
 });
 
-test.describe("V-32 reporte imprimible", () => {
-  test("incluye resumen, matriz de discrepancias y hallazgos con evidencia enmascarada", async ({
+const REPORT = `${BASE}/runs/${RUN_ID}/report`;
+const RUN = `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`;
+const FAIL = {
+  module: "object_access",
+  operation: {
+    id: "0192e3a0-5555-7000-8000-000000000003",
+    method: "GET",
+    path: "/orders/{orderId}",
+  },
+  identity: { id: "0192e3a0-6666-7000-8000-000000000004", name: "Cliente B", deleted: false },
+  expected: "denied",
+  observed: "200 allowed",
+  verdict: "fail",
+  evaluated_at: "2026-11-17T09:10:21Z",
+};
+
+/** La ejecución del reporte ya terminada (el simulador la devuelve en curso). */
+async function finished(page: import("@playwright/test").Page, latest = false) {
+  await mockBff(page, RUN, { body: completedRun() }, "GET");
+  const results = await mockBff(
     page,
-  }) => {
-    await page.goto("/projects/pedidos/runs/3/report");
-    await expect(page.getByRole("heading", { name: "API de Pedidos", level: 1 })).toBeVisible();
+    `${RUN}/results**`,
+    { body: { items: [FAIL], total: 1, page: 1, page_size: 500 } },
+    "GET",
+  );
+  if (latest)
+    await mockBff(page, PROJECT, { body: project({ last_run: completed(3, RUN_ID) }) }, "GET");
+  return results;
+}
+
+test.describe("V-32 reporte imprimible", () => {
+  test("resume la ejecución con sus discrepancias y hallazgos de la API", async ({ page }) => {
+    const results = await finished(page);
+    await page.goto(REPORT);
+    await expect(page.getByRole("heading", { name: "API de pedidos", level: 1 })).toBeVisible();
+    await expect(page.getByText("Reporte de la ejecución n.º 3")).toBeVisible();
+    await expect(page.getByText(/^Ejecución completada el/)).toBeVisible();
+    await expect(page.getByText("api.tienda-ejemplo.com")).toBeVisible();
     await expect(page.getByRole("heading", { name: "1. Resumen" })).toBeVisible();
+    const severity = page.getByRole("table", { name: "Por severidad" });
+    await expect(severity.getByRole("row", { name: "Alta 2" })).toBeVisible();
+    // `Run.limits` y `progress.requests_sent`.
+    await expect(page.getByText(/Límites: 5 peticiones por segundo, 2 concurrentes/)).toBeVisible();
+    await expect(page.getByText(/Se enviaron 42 peticiones en 4:35/)).toBeVisible();
+
     await expect(page.getByRole("heading", { name: /2\. Matriz de acceso/ })).toBeVisible();
+    await expect(page.getByRole("cell", { name: /GET \/orders\/\{orderId\}/ })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Cliente B" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "! 200 permitido" })).toBeVisible();
+    expect(new URL(results[0].url()).searchParams.getAll("verdict")).toEqual(["fail"]);
+
     await expect(page.getByRole("heading", { name: "3. Hallazgos" })).toBeVisible();
-    await expect(page.getByRole("table", { name: "Por severidad" })).toBeVisible();
-    await expect(page.getByText("Authorization: Bearer ••••••••••a9F2")).toBeVisible();
-    await expect(page.getByText(/Y 7 hallazgos más/)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "3.1 Acceso a un objeto de otra identidad" }),
+    ).toBeVisible();
+    await expect(page.getByText("De la n.º 2 a la n.º 3").first()).toBeVisible();
   });
 
-  test("la variante «Estado actual» cambia el título y el subtítulo", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/report");
+  test("los hallazgos de la variante de ejecución se piden con su `run_id`", async ({ page }) => {
+    await finished(page);
+    const urls: string[] = [];
+    await page.route(new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`), async (route) => {
+      urls.push(route.request().url());
+      await route.fallback();
+    });
+    await page.goto(REPORT);
+    await expect(page.getByRole("heading", { name: "3. Hallazgos" })).toBeVisible();
+    await expect.poll(() => urls.some((u) => u.includes(`run_id=${RUN_ID}`))).toBe(true);
+    // No es la última ejecución del proyecto: su estado actual no es su resultado.
+    await expect(
+      page.getByText("El estado de los hallazgos solo se muestra para la última ejecución."),
+    ).toBeVisible();
+  });
+
+  test("en la última ejecución cuenta los hallazgos por estado", async ({ page }) => {
+    await finished(page, true);
+    await page.goto(REPORT);
+    const status = page.getByRole("table", { name: "Por estado" });
+    await expect(status.getByRole("row", { name: /^Nuevo/ })).toBeVisible();
+    await expect(status.getByRole("row", { name: /^Persistente/ })).toBeVisible();
+    await expect(status.getByRole("row", { name: /^Regresión/ })).toBeVisible();
+  });
+
+  test("la variante «Estado actual» usa los abiertos del proyecto", async ({ page }) => {
+    await finished(page);
+    const urls: string[] = [];
+    await page.route(new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`), async (route) => {
+      urls.push(route.request().url());
+      await route.fallback();
+    });
+    await page.goto(REPORT);
     await expect(page.getByRole("radio", { name: "Ejecución n.º 3" })).toBeChecked();
-    await expect(page.getByText("Reporte de la ejecución n.º 3")).toBeVisible();
     await page.getByRole("radio", { name: "Estado actual" }).click();
     await expect(page.getByRole("radio", { name: "Estado actual" })).toBeChecked();
     await expect(page.getByText("Reporte del estado actual")).toBeVisible();
-    await expect(page.getByText(/con 3 ejecuciones/)).toBeVisible();
+    await expect(page.getByText(/con 1 ejecución$/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /2\. Matriz de acceso/ })).toHaveCount(0);
+    // `open_findings_by_severity` del proyecto.
+    await expect(
+      page.getByRole("table", { name: "Por severidad" }).getByRole("row", { name: "Crítica 1" }),
+    ).toBeVisible();
+    await expect(page.getByRole("table", { name: "Por estado" })).toContainText(
+      "Resueltos en total",
+    );
+    await expect
+      .poll(() =>
+        urls.some(
+          (u) =>
+            !u.includes("run_id") && u.includes("status=new&status=persistent&status=regression"),
+        ),
+      )
+      .toBe(true);
   });
 
-  test("imprimir abre el diálogo del navegador y exportar avisa", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/report");
+  test("imprimir abre el diálogo del navegador y no ofrece exportar a Excel", async ({ page }) => {
+    await finished(page);
+    await page.goto(REPORT);
     await page.evaluate(() => {
       (window as unknown as { __printed: number }).__printed = 0;
       window.print = () => {
@@ -204,13 +295,13 @@ test.describe("V-32 reporte imprimible", () => {
     await expect
       .poll(() => page.evaluate(() => (window as unknown as { __printed: number }).__printed))
       .toBe(1);
-
-    await page.getByRole("button", { name: "Hallazgos en Excel" }).click();
-    await expect(page.getByText("Exportación lista")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Hallazgos en Excel" })).toHaveCount(0);
   });
 
   test("al imprimir se ocultan los controles y la hoja queda blanca", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/report");
+    await finished(page);
+    await page.goto(REPORT);
+    await expect(page.getByRole("heading", { name: "1. Resumen" })).toBeVisible();
     await page.emulateMedia({ media: "print", colorScheme: "dark" });
     await expect(page.getByRole("button", { name: "Imprimir o guardar PDF" })).toBeHidden();
     await expect(page.getByRole("link", { name: "Volver" })).toBeHidden();
@@ -223,17 +314,26 @@ test.describe("V-32 reporte imprimible", () => {
   });
 
   test("volver regresa a los resultados de la ejecución", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3/report");
+    await finished(page);
+    await page.goto(REPORT);
     await page.getByRole("link", { name: "Volver" }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/runs\/3$/);
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/${RUN_ID}$`));
   });
 
-  test("una ejecución inexistente responde 404 y un proyecto sin ejecuciones lo explica", async ({
-    page,
-  }) => {
-    await page.goto("/projects/pedidos/runs/99/report");
+  test("una ejecución en curso aún no tiene reporte", async ({ page }) => {
+    await page.goto(REPORT);
+    await expect(page.getByText("La ejecución sigue en curso")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver progreso" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/runs/current$`),
+    );
+  });
+
+  test("un id que no es UUID o una ejecución inexistente responden 404", async ({ page }) => {
+    await page.goto(`${BASE}/runs/3/report`);
     await expect(page.getByText("No encontramos esta página")).toBeVisible();
-    await page.goto("/projects/pagos/runs/1/report");
-    await expect(page.getByText("Aún no hay nada que reportar")).toBeVisible();
+    await mockBff(page, RUN, { status: 404, body: problem(404, "resource.not_found") }, "GET");
+    await page.goto(REPORT);
+    await expect(page.getByText("No encontramos esta página")).toBeVisible();
   });
 });

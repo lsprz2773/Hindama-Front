@@ -30,7 +30,7 @@ const PROJECT_ROUTES = [
   `${API_PROJECT}/runs/current`,
   `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003`,
   `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003/matrix`,
-  "/projects/pedidos/runs/3/report",
+  `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003/report`,
 ];
 
 const OTHER_ROUTES = [
