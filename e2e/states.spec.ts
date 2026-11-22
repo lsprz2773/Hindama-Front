@@ -139,9 +139,9 @@ test.describe("salir con cambios sin guardar", () => {
   test("la política pide confirmar al abandonar con cambios y deja seguir editando", async ({
     page,
   }) => {
-    await page.goto("/projects/pedidos/policy");
-    await page.getByRole("combobox").first().selectOption({ index: 1 });
-    await expect(page.getByRole("button", { name: "Guardar" })).toBeEnabled();
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    await page.getByLabel("Plantilla de GET /orders", { exact: true }).selectOption("public");
+    await expect(page.getByRole("button", { name: "Guardar política" })).toBeEnabled();
 
     await page
       .getByRole("navigation", { name: "Navegación principal" })
@@ -157,7 +157,7 @@ test.describe("salir con cambios sin guardar", () => {
       .getByRole("link", { name: "Resumen" })
       .click();
     await page.getByRole("dialog").getByRole("button", { name: "Salir sin guardar" }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos$/);
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}$`));
   });
 
   test("sin cambios se navega sin preguntar", async ({ page }) => {

@@ -881,13 +881,13 @@ for (const scheme of ["dark", "light"] as const) {
   test.describe(`fase 4 · paleta en modo ${scheme}`, () => {
     test.use({ colorScheme: scheme });
     for (const path of [
-      "/projects/pagos/verification",
-      "/projects/pedidos/contract",
-      "/projects/pedidos/contract/versions",
-      "/projects/pedidos/identities",
-      "/projects/pedidos/identities/cliente-a",
-      "/projects/pedidos/resources",
-      "/projects/pedidos/policy",
+      `/projects/${PROJECT_ID}/verification`,
+      `/projects/${PROJECT_ID}/contract`,
+      `/projects/${PROJECT_ID}/contract/versions`,
+      `/projects/${PROJECT_ID}/identities`,
+      `/projects/${PROJECT_ID}/identities/0192e3a0-6666-7000-8000-000000000002`,
+      `/projects/${PROJECT_ID}/resources`,
+      `/projects/${PROJECT_ID}/policy`,
     ]) {
       test(`${path}: tema correcto y sin desbordamiento`, async ({ page }) => {
         await page.goto(path);
