@@ -8,8 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import { NOTICE_KEY, useFlag, writeFlag, type HomeNotice as Notice } from "./browser-store";
 
 /**
- * Aviso al llegar a la página de inicio tras eliminar la cuenta o cerrar sesión solo en este
- * navegador: un toast al llegar y un banner que se queda hasta cerrarlo (catálogo de estados).
+ * Aviso al llegar a la página de inicio tras cerrar sesión solo en este navegador: un toast al llegar y un banner que se queda hasta cerrarlo (catálogo de estados).
  */
 export function HomeNotice() {
   const t = useTranslations("HomeNotice");
@@ -21,17 +20,17 @@ export function HomeNotice() {
     if (!notice || announced.current === notice) return;
     announced.current = notice;
     toast.show({
-      type: notice === "account_deleted" ? "success" : "warning",
+      type: "warning",
       title: t(`${notice}.title`),
-      duration: notice === "account_deleted" ? 8000 : 0,
+      duration: 0,
     });
   }, [notice, toast, t]);
 
-  if (notice !== "account_deleted" && notice !== "local_sign_out") return null;
+  if (notice !== "local_sign_out") return null;
 
   return (
     <Banner
-      tone={notice === "account_deleted" ? "success" : "warning"}
+      tone="warning"
       title={t(`${notice}.title`)}
       action={
         <Button variant="ghost" size="sm" onClick={() => writeFlag(NOTICE_KEY, null)}>

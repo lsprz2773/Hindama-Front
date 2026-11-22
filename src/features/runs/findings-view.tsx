@@ -270,8 +270,12 @@ function FindingsList({
                       {f.title}
                     </Link>
                     <span className="flex flex-wrap items-center gap-2">
-                      <MethodBadge method={f.method} className="min-w-14 py-[3px] text-[12px]" />
-                      <code className="text-muted font-mono text-[12.5px] break-all">{f.path}</code>
+                      {f.method ? (
+                        <MethodBadge method={f.method} className="min-w-14 py-[3px] text-[12px]" />
+                      ) : null}
+                      <code className="text-muted font-mono text-[12.5px] break-all">
+                        {f.method ? f.path : t("globalOperation")}
+                      </code>
                     </span>
                   </span>
                   <span className="text-sm">{tm(`names.${f.module}`)}</span>

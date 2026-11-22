@@ -79,8 +79,7 @@ function FindingDetail({ project, finding }: { project: Project; finding: Findin
             [
               t("fields.operation"),
               <span key="o" className="font-mono text-[14px] break-all">
-                {finding.method === "API" ? "" : `${finding.method} `}
-                {finding.path}
+                {finding.method ? `${finding.method} ${finding.path}` : t("globalOperation")}
               </span>,
             ],
             [t("fields.identity"), finding.identity],

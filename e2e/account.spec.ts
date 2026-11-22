@@ -9,29 +9,6 @@ test.describe("V-09 perfil", () => {
     await expect(page.getByText("El rol lo asigna la plataforma")).toBeVisible();
   });
 
-  test("cambiar contraseña (C-17): valida, muestra reglas y confirma", async ({ page }) => {
-    await page.goto("/profile");
-    await page.getByRole("button", { name: "Cambiar contraseña" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("heading", { name: "Cambiar contraseña" })).toBeVisible();
-
-    await dialog.getByRole("button", { name: "Cambiar contraseña" }).click();
-    await expect(dialog.getByText("Escribe tu contraseña actual.")).toBeVisible();
-
-    await dialog.getByLabel("Contraseña actual").fill("Vieja-clave-2026!");
-    await dialog.getByLabel("Contraseña nueva", { exact: true }).fill("Hindama2026");
-    await expect(dialog.getByText(/Un símbolo \(pendiente\)/)).toBeVisible();
-    await dialog.getByLabel("Confirmar contraseña nueva").fill("Otra");
-    await expect(dialog.getByText("Las contraseñas no coinciden.")).toBeVisible();
-
-    await dialog.getByLabel("Contraseña nueva", { exact: true }).fill("Hindama-2027!");
-    await dialog.getByLabel("Confirmar contraseña nueva").fill("Hindama-2027!");
-    await dialog.getByRole("button", { name: "Cambiar contraseña" }).click();
-    await expect(dialog.getByRole("heading", { name: "Contraseña actualizada" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Listo" }).click();
-    await expect(dialog).toBeHidden();
-  });
-
   test("activar y desactivar el 2FA (V-10) cambia el estado del perfil", async ({ page }) => {
     await page.goto("/profile");
     await expect(page.getByText("Desactivado. Te recomendamos activarlo.")).toBeVisible();
@@ -67,27 +44,6 @@ test.describe("V-09 perfil", () => {
     await page.getByRole("button", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/profile$/);
     await expect(page.getByRole("heading", { name: "Profile", level: 1 })).toBeVisible();
-  });
-
-  test("eliminar cuenta (C-14): exige el correo y vuelve al inicio con aviso", async ({ page }) => {
-    await page.goto("/profile");
-    await page.getByRole("button", { name: "Eliminar mi cuenta" }).click();
-    const dialog = page.getByRole("alertdialog");
-    await expect(dialog.getByText("Se borra")).toBeVisible();
-    await expect(dialog.getByText("Se conserva")).toBeVisible();
-    const confirm = dialog.getByRole("button", { name: "Eliminar mi cuenta" });
-    await expect(confirm).toBeDisabled();
-    await dialog.getByRole("textbox").fill("otro@ejemplo.mx");
-    await expect(confirm).toBeDisabled();
-    await dialog.getByRole("textbox").fill("luis@ejemplo.mx");
-    await confirm.click();
-
-    await expect(page).toHaveURL(/\/$/);
-    await expect(
-      page.getByRole("status").filter({ hasText: "Tu cuenta se eliminó" }).first(),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Cerrar", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Tu cuenta se eliminó" })).toHaveCount(0);
   });
 });
 

@@ -38,7 +38,7 @@ function Progress({ project }: { project: Project }) {
   const toast = useToast();
   const base = `/projects/${project.id}`;
   const [percent, setPercent] = useState(project.running ?? 0);
-  const [cancelling, setCancelling] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const { findings: stored } = useFindings(project.id);
   const done = percent >= 100;
   // Se fija al abrir: al terminar, el reporte del proyecto ya incluye esta ejecución.
@@ -146,7 +146,7 @@ function Progress({ project }: { project: Project }) {
             <Button
               variant="secondary"
               className="text-danger border-danger self-start bg-transparent"
-              onClick={() => setCancelling(true)}
+              onClick={() => setConfirmCancel(true)}
             >
               <Icon name="stop" size={16} />
               {t("cancel")}
@@ -287,8 +287,8 @@ function Progress({ project }: { project: Project }) {
       </div>
 
       <ConfirmDialog
-        open={cancelling}
-        onOpenChange={setCancelling}
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
         title={t("cancelDialog.title", { number: runNumber })}
         description={t("cancelDialog.text", { count: found.length })}
         confirmLabel={t("cancelDialog.confirm")}
