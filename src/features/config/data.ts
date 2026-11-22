@@ -63,48 +63,6 @@ export const SEED_IDENTITIES: Identity[] = [
   },
 ];
 
-export interface ResourceParam {
-  path: string;
-  param: string;
-  kind: "order" | "user" | "address" | "none";
-  on: boolean;
-}
-
-export const SEED_PARAMS: ResourceParam[] = [
-  { path: "/orders/{orderId}", param: "orderId", kind: "order", on: true },
-  { path: "/orders/{orderId}/invoice", param: "orderId", kind: "order", on: true },
-  { path: "/users/{userId}/addresses/{addressId}", param: "userId", kind: "user", on: true },
-  { path: "/users/{userId}/addresses/{addressId}", param: "addressId", kind: "address", on: true },
-  { path: "/products/{sku}", param: "sku", kind: "none", on: false },
-  { path: "/admin/orders/{orderId}/status", param: "orderId", kind: "order", on: true },
-];
-
-export interface ResourceRow {
-  id: string;
-  kind: "order" | "user" | "address";
-  value: string;
-  origin: "discovered" | "manual";
-  confirmed: boolean;
-}
-
-export const SEED_RESOURCES: Record<string, ResourceRow[]> = {
-  "cliente-a": [
-    { id: "a1", kind: "order", value: "8f21c0de", origin: "discovered", confirmed: true },
-    { id: "a2", kind: "order", value: "93ad1f02", origin: "discovered", confirmed: true },
-    { id: "a3", kind: "order", value: "c4e8770a", origin: "discovered", confirmed: false },
-    { id: "a4", kind: "user", value: "usr_1042", origin: "discovered", confirmed: true },
-    { id: "a5", kind: "address", value: "adr_77", origin: "manual", confirmed: true },
-  ],
-  "cliente-b": [
-    { id: "b1", kind: "order", value: "1b7e44a0", origin: "discovered", confirmed: true },
-    { id: "b2", kind: "order", value: "5c02e9b1", origin: "discovered", confirmed: true },
-    { id: "b3", kind: "order", value: "aa31d2f7", origin: "discovered", confirmed: false },
-    { id: "b4", kind: "user", value: "usr_1043", origin: "discovered", confirmed: true },
-    { id: "b5", kind: "address", value: "adr_81", origin: "manual", confirmed: true },
-  ],
-  soporte: [],
-};
-
 export type PolicyTemplate = "public" | "authenticated" | "owner" | "ownerOrAdmin" | "admin";
 
 export interface PolicyRow {

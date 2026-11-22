@@ -1476,12 +1476,6 @@
     "crumb": "Recursos",
     "title": "Recursos por identidad",
     "lead": "Indica qué objetos de tu API pertenecen a cada identidad. Así Acceso a objetos puede comprobar si una identidad alcanza los de otra.",
-    "kinds": {
-      "order": "Pedido",
-      "user": "Usuario",
-      "address": "Dirección",
-      "none": "No es de un usuario"
-    },
     "origin": {
       "discovered": "Descubierto",
       "manual": "Agregado a mano"
@@ -1493,18 +1487,24 @@
     "confirm": "Confirmar",
     "params": {
       "title": "1. Identificadores de recursos",
-      "lead": "Parámetros de ruta que detectamos en el contrato. Desmarca los que no identifican un objeto con dueño.",
+      "lead": "Parámetros de ruta del contrato vigente. Marca los que identifican un objeto con dueño y escribe su tipo.",
       "empty": "Importa un contrato para detectar los identificadores.",
-      "isId": "{param} es identificador"
+      "isId": "{param} es identificador",
+      "none": "El contrato vigente no tiene operaciones con parámetros de ruta.",
+      "subject": "las operaciones",
+      "type": "Tipo de recurso de {param}",
+      "typePlaceholder": "pedido",
+      "save": "Guardar",
+      "discard": "Descartar",
+      "saved": "Identificadores de {path} guardados",
+      "partial": "Se muestran {shown} de {total} operaciones."
     },
     "discover": {
       "title": "2. Descubrir recursos",
       "text": "Llamamos como cada identidad solo a las operaciones GET de listado, como <code>GET /orders</code>, y proponemos lo que encontremos.",
       "button": "Descubrir recursos",
-      "running": "Buscando…",
-      "found": "Encontrados",
-      "toConfirm": "Por confirmar",
-      "done": "{count, plural, one {Se encontró un recurso nuevo} other {Se encontraron # recursos nuevos}}"
+      "unavailable": "El descubrimiento automático aún no está disponible. Mientras tanto, agrega los recursos a mano.",
+      "registered": "Recursos registrados"
     },
     "review": {
       "title": "3. Revisa los recursos de cada identidad",
@@ -1517,27 +1517,38 @@
     },
     "empty": {
       "title": "{name} no tiene recursos",
-      "text": "Acceso a objetos no podrá probar esta identidad. Descubre recursos de nuevo o agrégalos a mano."
+      "text": "Acceso a objetos no podrá probar esta identidad. Agrega sus recursos a mano."
     },
     "add": {
       "kind": "Tipo",
       "value": "Identificador",
-      "button": "Agregar a {name}"
+      "button": "Agregar a {name}",
+      "done": "Recurso agregado a {name}"
     },
     "delete": {
       "label": "Eliminar {value}",
       "title": "Eliminar el recurso",
       "text": "Se quitará «{value}» de esta identidad. No se borra nada en tu API.",
-      "confirm": "Eliminar recurso"
+      "confirm": "Eliminar recurso",
+      "done": "Se eliminó «{value}»"
     },
     "errors": {
-      "valueRequired": "Escribe el identificador del recurso."
+      "valueRequired": "Escribe el identificador del recurso.",
+      "typeRequired": "Escribe el tipo de recurso.",
+      "valueInvalid": "El identificador admite hasta 500 caracteres, sin caracteres de control.",
+      "ownedByOther": "Ese recurso ya pertenece a otra identidad. Un objeto tiene un solo dueño.",
+      "identityNotFound": "La identidad ya no existe. Recarga la página.",
+      "anonymousOwner": "La identidad anónima no tiene recursos.",
+      "notFound": "El recurso ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo completar la acción",
+      "reference": "Referencia: {id}"
     },
-    "locked": {
-      "title": "Disponible tras verificar",
-      "text": "Los recursos se descubren llamando a tu API, así que primero debes verificar la propiedad del host.",
-      "action": "Ir a verificación"
-    }
+    "subject": "los recursos",
+    "identitiesSubject": "las identidades",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Policy": {
     "crumb": "Política",

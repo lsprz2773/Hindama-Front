@@ -27,6 +27,15 @@ import {
   type IdentityTest,
   type IdentityUpdate,
 } from "@/lib/api/schemas/identities";
+import {
+  resourceCreateSchema,
+  resourcePageSchema,
+  resourceSchema,
+  resourceUpdateSchema,
+  type Resource,
+  type ResourceCreate,
+  type ResourceUpdate,
+} from "@/lib/api/schemas/resources";
 import type { Schemas } from "@/lib/api/types";
 import {
   verificationRequestSchema,
@@ -287,6 +296,73 @@ export async function testIdentity(http: HttpClient, id: string, identityId: str
 export function useAfterIdentities(id: string) {
   const client = useQueryClient();
   return () => {
+    void client.invalidateQueries({ queryKey: identitiesKey(id) });
+    void client.invalidateQueries({ queryKey: projectKey(id), exact: true });
+  };
+}
+
+export const resourcesKey = (id: string) => [...projectKey(id), "resources"] as const;
+
+/** `listResources` (V-23): los de una identidad, por tipo y luego por identificador. */
+export function useResources(
+  id: string,
+  {
+    identityId,
+    page = 1,
+    pageSize = 100,
+  }: { identityId: string | null; page?: number; pageSize?: number },
+) {
+  const http = useHttpClient();
+  return useQuery({
+    queryKey: [...resourcesKey(id), { identityId, page, pageSize }],
+    queryFn: async ({ signal }) =>
+      (
+        await http.read(`${projectPath(id)}/resources`, resourcePageSchema, {
+          query: { page, page_size: pageSize, identity_id: identityId ?? undefined },
+          signal,
+        })
+      ).data,
+    placeholderData: keepPreviousData,
+    enabled: identityId !== null,
+    retry: false,
+  });
+}
+
+function resourcePath(id: string, resourceId: string) {
+  return `${projectPath(id)}/resources/${encodeURIComponent(resourceId)}`;
+}
+
+/** `createResource` (V-23): queda `manual` y confirmado. */
+export async function createResource(http: HttpClient, id: string, input: ResourceCreate) {
+  const body = resourceCreateSchema.parse(input);
+  return (
+    await http.post<Resource>(`${projectPath(id)}/resources`, { body, schema: resourceSchema })
+  ).data;
+}
+
+/** `updateResource` (V-23): confirmar un recurso descubierto o corregirlo. */
+export async function updateResource(
+  http: HttpClient,
+  id: string,
+  resourceId: string,
+  input: ResourceUpdate,
+) {
+  const body = resourceUpdateSchema.parse(input);
+  return (
+    await http.patch<Resource>(resourcePath(id, resourceId), { body, schema: resourceSchema })
+  ).data;
+}
+
+/** `deleteResource` (V-23): solo lo quita de Hindama, no de la API del analista. */
+export async function deleteResource(http: HttpClient, id: string, resourceId: string) {
+  await http.delete(resourcePath(id, resourceId));
+}
+
+/** Tras cambiar recursos: las listas, las identidades (`resource_count`) y el proyecto (módulos). */
+export function useAfterResources(id: string) {
+  const client = useQueryClient();
+  return () => {
+    void client.invalidateQueries({ queryKey: resourcesKey(id) });
     void client.invalidateQueries({ queryKey: identitiesKey(id) });
     void client.invalidateQueries({ queryKey: projectKey(id), exact: true });
   };

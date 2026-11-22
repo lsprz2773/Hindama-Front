@@ -556,49 +556,173 @@ test.describe("V-21 y V-22 identidades", () => {
 });
 
 test.describe("V-23 recursos por identidad", () => {
-  test("muestra los identificadores y cambia de identidad", async ({ page }) => {
-    await page.goto("/projects/pedidos/resources");
+  const RESOURCES = `**/api/projects/${PROJECT_ID}/resources**`;
+  const USER_A = "0192e3a0-6666-7000-8000-000000000002";
+  const ORDER_BY_ID = "0192e3a0-5555-7000-8000-000000000003";
+  const DISCOVERED = {
+    id: "0192e3a0-7777-7000-8000-000000000009",
+    identity_id: USER_A,
+    resource_type: "pedido",
+    value: "303",
+    source: "discovered",
+    confirmed: false,
+    created_at: "2026-11-16T10:07:00Z",
+  };
+  const page1 = (items: unknown[]) => ({ items, total: items.length, page: 1, page_size: 100 });
+
+  test("muestra los identificadores del contrato y los recursos de cada identidad", async ({
+    page,
+  }) => {
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
     await expect(
       page.getByRole("heading", { name: "Recursos por identidad", level: 1 }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("checkbox", { name: "orderId es identificador" }).first(),
-    ).toBeChecked();
-    await expect(page.getByRole("checkbox", { name: "sku es identificador" })).not.toBeChecked();
-
-    await expect(page.getByText("8f21c0de")).toBeVisible();
-    await page.getByRole("radio", { name: /Cliente B/ }).click();
-    await expect(page.getByText("1b7e44a0")).toBeVisible();
+    // Ejemplo `OperationPage`: /orders/{orderId} identifica un «pedido».
+    await expect(page.getByRole("checkbox", { name: "orderId es identificador" })).toBeChecked();
+    await expect(page.getByLabel("Tipo de recurso de orderId")).toHaveValue("pedido");
+    // La anónima no tiene recursos y no aparece; «Usuario A» trae su `resource_count`.
+    await expect(page.getByRole("radio", { name: "Usuario A · 3" })).toBeChecked();
+    await expect(page.getByRole("radio", { name: /Anónimo/ })).toHaveCount(0);
+    await expect(page.getByText("101", { exact: true })).toBeVisible();
+    // El descubrimiento aún no existe en el backend.
+    await expect(page.getByRole("button", { name: "Descubrir recursos" })).toBeDisabled();
+    await expect(page.getByText("aún no está disponible")).toBeVisible();
   });
 
-  test("descubrir, confirmar, agregar a mano y eliminar", async ({ page }) => {
-    await page.goto("/projects/pedidos/resources");
-    await page.getByRole("button", { name: "Descubrir recursos" }).click();
-    await expect(page.getByText("recursos nuevos")).toBeVisible();
+  test("cambiar un identificador envía la selección completa con updateOperation", async ({
+    page,
+  }) => {
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/operations/${ORDER_BY_ID}`,
+      { status: 422, body: problem(422, "validation.failed") },
+      "PATCH",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    const type = page.getByLabel("Tipo de recurso de orderId");
+    await type.fill("");
+    await page.getByRole("button", { name: "Guardar" }).click();
+    await expect(page.getByText("Escribe el tipo de recurso.")).toBeVisible();
+    expect(calls).toHaveLength(0);
 
-    const pending = page.getByRole("listitem").filter({ hasText: "new-cli-" });
-    await pending.getByRole("button", { name: "Confirmar" }).click();
-    await expect(pending.getByText("Confirmado")).toBeVisible();
-
-    await page.getByRole("textbox", { name: "Identificador" }).fill("zz9900");
-    await page.getByRole("button", { name: /Agregar a Cliente A/ }).click();
-    await expect(page.getByText("zz9900")).toBeVisible();
-
-    await page.getByRole("button", { name: "Eliminar zz9900" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Eliminar recurso" }).click();
-    await expect(page.getByText("zz9900")).toHaveCount(0);
+    await page.getByRole("checkbox", { name: "orderId es identificador" }).uncheck();
+    await page.getByRole("button", { name: "Guardar" }).click();
+    await expect(page.getByText("No se pudo completar la acción")).toBeVisible();
+    expect(calls[0].postDataJSON()).toEqual({ resource_parameters: [] });
   });
 
-  test("identidad sin recursos avisa que Acceso a objetos no podrá probarla", async ({ page }) => {
-    await page.goto("/projects/pedidos/resources");
-    await page.getByRole("radio", { name: /Soporte/ }).click();
-    await expect(page.getByText("Soporte no tiene recursos")).toBeVisible();
+  test("confirmar un recurso descubierto lo marca con updateResource", async ({ page }) => {
+    await mockBff(page, RESOURCES, { body: page1([DISCOVERED]) }, "GET");
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/resources/${DISCOVERED.id}`,
+      { body: { ...DISCOVERED, confirmed: true } },
+      "PATCH",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    const row = page.getByRole("listitem").filter({ hasText: "303" });
+    await expect(row.getByText("Descubierto")).toBeVisible();
+    await expect(row.getByText("Por confirmar")).toBeVisible();
+    await row.getByRole("button", { name: "Confirmar" }).click();
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0].postDataJSON()).toEqual({ confirmed: true });
   });
 
-  test("sin verificar la propiedad la vista está bloqueada con su motivo", async ({ page }) => {
-    await page.goto("/projects/pagos/resources");
-    await expect(page.getByText("Disponible tras verificar").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ir a verificación" })).toBeVisible();
+  test("agregar a mano: valida, explica un dueño repetido y envía createResource", async ({
+    page,
+  }) => {
+    const calls: unknown[] = [];
+    let owned = true;
+    await page.route(`**/api/projects/${PROJECT_ID}/resources`, async (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      calls.push(route.request().postDataJSON());
+      if (owned) {
+        owned = false;
+        return route.fulfill({
+          status: 409,
+          contentType: "application/problem+json",
+          body: JSON.stringify(problem(409, "resource.owned_by_other")),
+        });
+      }
+      await route.fallback();
+    });
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await page.getByRole("button", { name: "Agregar a Usuario A" }).click();
+    await expect(page.getByText("Escribe el identificador del recurso.")).toBeVisible();
+    expect(calls).toHaveLength(0);
+
+    await page.getByLabel("Tipo", { exact: true }).fill("pedido");
+    await page.getByLabel("Identificador", { exact: true }).fill(" 202 ");
+    await page.getByRole("button", { name: "Agregar a Usuario A" }).click();
+    await expect(page.getByText("Ese recurso ya pertenece a otra identidad.")).toBeVisible();
+
+    await page.getByLabel("Identificador", { exact: true }).fill("404");
+    await page.getByRole("button", { name: "Agregar a Usuario A" }).click();
+    await expect(page.getByText("Recurso agregado a Usuario A")).toBeVisible();
+    expect(calls).toEqual([
+      { identity_id: USER_A, resource_type: "pedido", value: "202" },
+      { identity_id: USER_A, resource_type: "pedido", value: "404" },
+    ]);
+  });
+
+  test("eliminar un recurso pide confirmación y usa deleteResource", async ({ page }) => {
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/resources/0192e3a0-7777-7000-8000-000000000001`,
+      { status: 204 },
+      "DELETE",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await page.getByRole("button", { name: "Eliminar 101" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("No se borra nada en tu API.")).toBeVisible();
+    await dialog.getByRole("button", { name: "Eliminar recurso" }).click();
+    await expect(page.getByText("Se eliminó «101»")).toBeVisible();
+    expect(calls).toHaveLength(1);
+  });
+
+  test("una identidad sin recursos avisa que Acceso a objetos no podrá probarla", async ({
+    page,
+  }) => {
+    await mockBff(page, RESOURCES, { body: page1([]) }, "GET");
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await expect(page.getByText("Usuario A no tiene recursos")).toBeVisible();
+  });
+
+  test("sin identidades con credencial pide agregar una", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/identities**`,
+      {
+        body: {
+          items: [
+            {
+              id: "0192e3a0-6666-7000-8000-000000000001",
+              name: "Anónimo",
+              role: "other",
+              role_label: null,
+              auth_type: "none",
+              credential_suffix: null,
+              field_name: null,
+              login_operation: null,
+              status: "active",
+              last_tested_at: null,
+              last_test_status_code: null,
+              resource_count: 0,
+              warnings: [],
+              created_at: "2026-11-16T09:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 20,
+        },
+      },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await expect(page.getByText("Aún no hay identidades")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Agregar identidad" })).toBeVisible();
   });
 });
 
