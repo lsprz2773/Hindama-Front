@@ -9,11 +9,16 @@ export type FindingStatus = "new" | "persistent" | "regression" | "resolved" | "
 export type ModuleKey =
   "auth" | "config" | "objects" | "functions" | "properties" | "resources" | "sql";
 
+/** Métodos que usan los datos de ejemplo (subconjunto de `HttpMethod` del contrato). */
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
 export interface Finding {
   id: string;
   severity: Severity;
   title: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "API";
+  /** `null` en los hallazgos de toda la API: el contrato envía `operation: null`. */
+  method: HttpMethod | null;
+  /** Vacío cuando `method` es `null`. */
   path: string;
   module: ModuleKey;
   identity: string;
@@ -185,8 +190,8 @@ export const SEED_FINDINGS: Finding[] = [
     id: "f13",
     severity: "info",
     title: "OPTIONS responde con métodos no documentados",
-    method: "API",
-    path: "Toda la API",
+    method: null,
+    path: "",
     module: "config",
     identity: "Anónima",
     owasp: "API9:2023",
@@ -255,7 +260,9 @@ export const SAMPLE_RUN: RunSummary = {
 export type CellKind = "allow" | "deny" | "discrepancy" | "error" | "na" | "expired";
 
 export interface MatrixRow {
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "API";
+  /** `null` en las comprobaciones de toda la API (`operation: null` en el contrato). */
+  method: HttpMethod | null;
+  /** Vacío cuando `method` es `null`. */
   path: string;
   template: "authenticated" | "ownerOrAdmin" | "owner" | "admin" | "public" | "global";
   cells: { kind: CellKind; code?: string; finding?: string }[];
@@ -374,8 +381,8 @@ export const SAMPLE_MATRIX: MatrixRow[] = [
     ],
   },
   {
-    method: "API",
-    path: "global",
+    method: null,
+    path: "",
     template: "global",
     cells: [
       { kind: "discrepancy", code: "cors", finding: "f05" },
@@ -398,7 +405,7 @@ export const RUN_MODULES: {
   { code: "API1", key: "objects", defaultOn: true },
   { code: "API5", key: "functions", blockedNoAdmin: true, defaultOn: false },
   { code: "API3", key: "properties", risk: "medium", defaultOn: false },
-  { code: "API4", key: "resources", risk: "medium", defaultOn: false },
+  { code: "API4", key: "resources", risk: "high", defaultOn: false },
   { code: "SQL", key: "sql", risk: "high", defaultOn: false },
 ];
 
@@ -488,8 +495,8 @@ export function evidenceFor(finding: Finding, baseUrl: string) {
   const host = baseUrl.replace(/^https?:\/\//, "").split("/")[0];
   const code = FINDING_EXTRA[finding.id]?.observed ?? "200";
   const reason = code === "200" ? "OK" : code === "404" ? "Not Found" : "Internal Server Error";
-  const method = finding.method === "API" ? "OPTIONS" : finding.method;
-  const path = finding.path === "Toda la API" ? "/" : finding.path;
+  const method = finding.method ?? "OPTIONS";
+  const path = finding.method ? finding.path : "/";
   const request = [`${method} ${path} HTTP/1.1`, `Host: ${host}`, "Accept: application/json"].join(
     NL,
   );
@@ -540,7 +547,7 @@ export const DEFAULT_REPORT: ProjectReport = {
   ],
 };
 
-export type RunState = "queued" | "running" | "cancelling" | "completed" | "cancelled" | "failed";
+export type RunState = "queued" | "running" | "completed" | "cancelled" | "failed";
 
 export interface HistoryRun {
   number: number;

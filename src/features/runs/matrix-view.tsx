@@ -177,9 +177,9 @@ function Matrix({ base, run }: { base: string; run: number }) {
                       className="bg-panel-2 rounded-[16px] px-3 py-3 align-top font-normal"
                     >
                       <span className="flex flex-wrap items-center gap-2">
-                        <MethodBadge method={row.method} />
+                        {row.method ? <MethodBadge method={row.method} /> : null}
                         <code className="font-mono text-[13px] break-all">
-                          {row.path === "global" ? t("global") : row.path}
+                          {row.method ? row.path : t("global")}
                           {row.ownedBy ? ` ${t("ownedBy", { name: row.ownedBy })}` : ""}
                         </code>
                       </span>

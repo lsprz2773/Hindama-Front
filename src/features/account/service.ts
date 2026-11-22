@@ -13,20 +13,10 @@ export const SESSION_STUB = {
   termsVersion: "2026-10-30",
   termsAcceptedAt: "2026-10-30T10:14:00",
   projects: 4,
-  passwordChangedDaysAgo: 2,
 } as const;
 
 const LATENCY_MS = 500;
 const wait = (ms = LATENCY_MS) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-export async function changePassword(input: { current: string; next: string }): Promise<void> {
-  void input;
-  await wait();
-}
-
-export async function deleteAccount(): Promise<void> {
-  await wait();
-}
 
 export async function confirmTwoFactor(code: string): Promise<void> {
   void code;

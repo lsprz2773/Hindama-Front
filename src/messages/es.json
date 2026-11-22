@@ -459,7 +459,6 @@
     "run": {
       "queued": "En cola",
       "running": "En curso",
-      "cancelling": "Cancelando",
       "completed": "Completada",
       "cancelled": "Cancelada",
       "failed": "Fallida"
@@ -636,10 +635,6 @@
   },
   "HomeNotice": {
     "dismiss": "Cerrar",
-    "account_deleted": {
-      "title": "Tu cuenta se eliminó",
-      "text": "Borramos tus proyectos, contratos, identidades, ejecuciones, hallazgos y reportes. Los respaldos se depuran en un máximo de 30 días."
-    },
     "local_sign_out": {
       "title": "Cerraste sesión solo en este navegador",
       "text": "No pudimos avisar al servicio de acceso. Si usas un equipo compartido, vuelve a intentar cerrar sesión más tarde."
@@ -654,9 +649,6 @@
     "termsValue": "Versión {version}, aceptados el {date}",
     "roleNote": "El rol lo asigna la plataforma y no se puede cambiar desde aquí.",
     "security": "Seguridad",
-    "password": "Contraseña",
-    "passwordChanged": "{days, plural, one {Cambiada por última vez hace # día} other {Cambiada por última vez hace # días}}",
-    "changePassword": "Cambiar contraseña",
     "twoFactor": "Segundo factor (2FA)",
     "twoFactorOn": "Activado.",
     "twoFactorOff": "Desactivado. Te recomendamos activarlo.",
@@ -665,39 +657,7 @@
     "twoFactorDisabled": "Segundo factor desactivado",
     "preferences": "Preferencias",
     "language": "Idioma de la interfaz",
-    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido.",
-    "deleteAccount": "Eliminar cuenta",
-    "deleteText": "{count, plural, one {Se borrará tu proyecto con su contrato, identidades, ejecuciones, hallazgos y reportes.} other {Se borrarán tus # proyectos con sus contratos, identidades, ejecuciones, hallazgos y reportes.}} El borrado es permanente y se completa en un máximo de 30 días, incluidos los respaldos.",
-    "deleteButton": "Eliminar mi cuenta",
-    "deleteDialog": {
-      "title": "Eliminar tu cuenta",
-      "description": "Esta acción no se puede deshacer. Al terminar se cerrará tu sesión y volverás a la página de inicio.",
-      "removed": "Se borra",
-      "removed1": "Tu cuenta y tus datos de acceso",
-      "removed2": "{count, plural, one {Tu proyecto con contrato e identidades} other {Tus # proyectos con contratos e identidades}}",
-      "removed3": "Ejecuciones, hallazgos y reportes",
-      "kept": "Se conserva",
-      "kept1": "Métricas de uso anónimas",
-      "kept2": "Bitácora de auditoría durante 6 meses, sin tu correo"
-    }
-  },
-  "ChangePassword": {
-    "title": "Cambiar contraseña",
-    "description": "Escribe la actual y define una nueva. Tus otras sesiones seguirán abiertas.",
-    "current": "Contraseña actual",
-    "new": "Contraseña nueva",
-    "confirm": "Confirmar contraseña nueva",
-    "submit": "Cambiar contraseña",
-    "successTitle": "Contraseña actualizada",
-    "successText": "Usa la nueva contraseña la próxima vez que inicies sesión.",
-    "done": "Listo",
-    "errors": {
-      "currentRequired": "Escribe tu contraseña actual.",
-      "currentWrong": "La contraseña actual no es correcta.",
-      "weak": "La contraseña nueva aún no cumple todos los requisitos.",
-      "reused": "Elige una contraseña distinta de la anterior.",
-      "mismatch": "Las contraseñas no coinciden."
-    }
+    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido."
   },
   "DisableTwoFactor": {
     "title": "Desactivar el segundo factor",
@@ -1767,6 +1727,7 @@
     "timeout": "Tiempo agotado"
   },
   "Findings": {
+    "globalOperation": "Toda la API",
     "title": "Hallazgos",
     "subtitle": "Estado actual del proyecto, con los resultados de la ejecución n.º {number}.",
     "subtitleNone": "Aún no hay ejecuciones en este proyecto.",
@@ -1818,6 +1779,7 @@
     "open": "Abrir {title}"
   },
   "FindingDetail": {
+    "globalOperation": "Toda la API",
     "crumb": "Hallazgo",
     "notFound": "Hallazgo no encontrado",
     "summary": "Resumen del hallazgo",

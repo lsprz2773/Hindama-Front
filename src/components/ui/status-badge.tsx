@@ -22,7 +22,6 @@ export const STATUS_TONE = {
   run: {
     queued: "info",
     running: "progress",
-    cancelling: "warning",
     completed: "ok",
     cancelled: "info",
     failed: "danger",

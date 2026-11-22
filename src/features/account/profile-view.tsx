@@ -2,16 +2,13 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
-import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { useToast } from "@/components/ui/toast";
-import { useRouter } from "@/i18n/navigation";
-import { NOTICE_KEY, TWO_FACTOR_KEY, useFlag, writeFlag } from "./browser-store";
-import { ChangePasswordDialog } from "./change-password-dialog";
+import { TWO_FACTOR_KEY, useFlag, writeFlag } from "./browser-store";
 import { DisableTwoFactorDialog } from "./disable-two-factor-dialog";
-import { SESSION_STUB, deleteAccount } from "./service";
+import { SESSION_STUB } from "./service";
 
 function Card({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -55,14 +52,13 @@ function Row({
   );
 }
 
-/** V-09. Perfil de usuario: datos, seguridad (contraseña y 2FA), idioma y baja de la cuenta. */
+/** V-09. Perfil de usuario: datos, seguridad (2FA) e idioma. */
 export function ProfileView() {
   const t = useTranslations("Profile");
   const format = useFormatter();
-  const router = useRouter();
   const toast = useToast();
   const twoFactor = useFlag(TWO_FACTOR_KEY) === "on";
-  const [dialog, setDialog] = useState<"password" | "delete" | "disable" | null>(null);
+  const [dialog, setDialog] = useState<"disable" | null>(null);
 
   const initials = SESSION_STUB.name
     .split(" ")
@@ -123,16 +119,6 @@ export function ProfileView() {
       <div className="flex min-w-0 flex-[2_1_480px] flex-col gap-5">
         <Card id="profile-security" title={t("security")}>
           <Row
-            icon="lock"
-            title={t("password")}
-            text={t("passwordChanged", { days: SESSION_STUB.passwordChangedDaysAgo })}
-            action={
-              <Button variant="secondary" onClick={() => setDialog("password")}>
-                {t("changePassword")}
-              </Button>
-            }
-          />
-          <Row
             icon="shield"
             title={t("twoFactor")}
             text={
@@ -164,54 +150,14 @@ export function ProfileView() {
             action={<LanguageSelector variant="segmented" />}
           />
         </Card>
-
-        <Card id="profile-delete" title={t("deleteAccount")}>
-          <p className="text-muted text-sm leading-[1.55]">
-            {t("deleteText", { count: SESSION_STUB.projects })}
-          </p>
-          <div>
-            <Button variant="danger" onClick={() => setDialog("delete")}>
-              {t("deleteButton")}
-            </Button>
-          </div>
-        </Card>
       </div>
 
-      <ChangePasswordDialog
-        open={dialog === "password"}
-        onOpenChange={(open) => setDialog(open ? "password" : null)}
-      />
       <DisableTwoFactorDialog
         open={dialog === "disable"}
         onOpenChange={(open) => setDialog(open ? "disable" : null)}
         onDisabled={() => {
           writeFlag(TWO_FACTOR_KEY, null);
           toast.show({ type: "success", title: t("twoFactorDisabled") });
-        }}
-      />
-      <DeleteDialog
-        open={dialog === "delete"}
-        onOpenChange={(open) => setDialog(open ? "delete" : null)}
-        title={t("deleteDialog.title")}
-        description={t("deleteDialog.description")}
-        confirmText={SESSION_STUB.email}
-        consequences={{
-          heading: t("deleteDialog.removed"),
-          items: [
-            t("deleteDialog.removed1"),
-            t("deleteDialog.removed2", { count: SESSION_STUB.projects }),
-            t("deleteDialog.removed3"),
-          ],
-        }}
-        keeps={{
-          heading: t("deleteDialog.kept"),
-          items: [t("deleteDialog.kept1"), t("deleteDialog.kept2")],
-        }}
-        confirmLabel={t("deleteButton")}
-        onConfirm={async () => {
-          await deleteAccount();
-          writeFlag(NOTICE_KEY, "account_deleted");
-          router.push("/");
         }}
       />
     </div>

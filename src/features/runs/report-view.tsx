@@ -235,7 +235,7 @@ function Report({ project, runId }: { project: Project; runId: string }) {
                 {discrepancies.map(({ row, cell, i }) => (
                   <tr key={`${row.method}${row.path}${i}`}>
                     <td className={cn(td, mono)}>
-                      {row.method === "API" ? t("matrix.global") : `${row.method} ${row.path}`}
+                      {row.method ? `${row.method} ${row.path}` : t("matrix.global")}
                     </td>
                     <td className={td}>{identities[i]}</td>
                     <td className={td}>{t("matrix.deny")}</td>
