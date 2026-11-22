@@ -312,9 +312,13 @@ test.describe("V-30 detalle de hallazgo", () => {
     await dialog.getByRole("radio", { name: /Falso positivo/ }).check();
     await dialog.getByRole("textbox").fill("El balanceador responde así a propósito.");
     await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
+    // El modal sale con animación: se espera a que termine antes de leer la página.
+    await expect(dialog).toHaveCount(0);
     await expect(page.getByText("Hallazgo descartado como falso positivo")).toBeVisible();
     await expect(page.getByText("Descartado como falso positivo", { exact: true })).toBeVisible();
-    await expect(page.getByText("El balanceador responde así a propósito.")).toBeVisible();
+    await expect(
+      page.locator("#main").getByText("El balanceador responde así a propósito."),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Aceptar el riesgo" })).toHaveCount(0);
 
     // Ya no cuenta entre los abiertos de la lista.
