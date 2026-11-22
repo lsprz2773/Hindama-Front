@@ -237,7 +237,7 @@ export function Gallery() {
             { code: "url.unresolved" },
             {
               code: "contract.unparsed_element",
-              message: "#/paths/~1orders~1{orderId}/get/parameters/2",
+              location: "/paths/~1orders~1{orderId}/get/parameters/2",
             },
             { code: "contract.unchanged" },
           ]}

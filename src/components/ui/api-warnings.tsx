@@ -28,8 +28,11 @@ function messageKey(code: KnownWarningCode) {
   return code.replace(/\./g, "_") as never;
 }
 
+/** Un aviso tal como llega de la API; las vistas de ejemplo pueden pasar solo el `code`. */
+type WarningInput = Pick<ApiWarning, "code"> & Partial<Omit<ApiWarning, "code">>;
+
 interface ApiWarningsProps {
-  warnings: ApiWarning[];
+  warnings: WarningInput[];
   /** Si se indica, solo se muestran estos códigos (cada vista elige los suyos). */
   only?: KnownWarningCode[];
   className?: string;
@@ -39,27 +42,28 @@ interface ApiWarningsProps {
 export function ApiWarnings({ warnings, only, className }: ApiWarningsProps) {
   const t = useTranslations("Warnings");
   const visible = warnings.filter(
-    (w): w is ApiWarning & { code: KnownWarningCode } =>
+    (w): w is WarningInput & { code: KnownWarningCode } =>
       isKnownWarning(w.code) && (!only || only.includes(w.code)),
   );
   if (visible.length === 0) return null;
 
   return (
     <ul className={`m-0 flex list-none flex-col gap-3 p-0 ${className ?? ""}`}>
-      {visible.map((w) => {
+      {visible.map((w, index) => {
         const key = messageKey(w.code);
         const config = WARNING_CODES[w.code];
         return (
-          <li key={w.code}>
+          <li key={`${w.code}:${w.location ?? index}`}>
             <Banner
               tone={config.tone}
               title={t(`${key}.title` as never)}
               tag={config.persistent ? t("persistent") : t("momentary")}
             >
               {t(`${key}.text` as never)}
-              {w.message ? (
+              {w.location || w.message ? (
                 <code className="bg-track text-fg mt-1.5 block max-w-full self-start rounded-[10px] px-2.5 py-1.5 font-mono text-[12.5px] break-words">
-                  {w.message}
+                  {/* En avisos del contrato, `location` es un JSON Pointer dentro del documento. */}
+                  {w.location ?? w.message}
                 </code>
               ) : null}
             </Banner>

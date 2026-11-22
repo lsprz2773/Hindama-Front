@@ -50,18 +50,82 @@ async function parseBody(response: Response): Promise<unknown> {
   }
 }
 
-function toApiError(status: number, body: unknown): ApiError {
-  const source = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
-  const nested = (
-    source.error && typeof source.error === "object" ? source.error : source
-  ) as Record<string, unknown>;
-  const fields = nested.fields && typeof nested.fields === "object" ? nested.fields : undefined;
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+/** `Retry-After` en segundos o como fecha HTTP (RFC 9110). */
+export function parseRetryAfter(value: string | null, now = Date.now()): number | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  const date = Date.parse(trimmed);
+  if (Number.isNaN(date)) return undefined;
+  return Math.max(0, Math.ceil((date - now) / 1000));
+}
+
+/**
+ * Lee un error en formato Problem Details (convenciones, sección 8): `code` y `request_id`
+ * en la raíz, y `errors[]` con `field`, `code` y `message`. Se guarda el `code` de cada
+ * error, no su `message`; los errores con `field: null` van a la lista general.
+ */
+export function toApiError(status: number, body: unknown, headers?: Headers): ApiError {
+  const problem = asRecord(body);
+  const fields: Record<string, string[]> = {};
+  const general: string[] = [];
+
+  if (Array.isArray(problem.errors)) {
+    for (const item of problem.errors) {
+      const entry = asRecord(item);
+      const code = asString(entry.code);
+      if (!code) continue;
+      const field = asString(entry.field);
+      if (field) (fields[field] ??= []).push(code);
+      else general.push(code);
+    }
+  }
+
+  const allow = headers?.get("Allow");
   return new ApiError({
     status,
-    code: typeof nested.code === "string" ? nested.code : undefined,
-    message: typeof nested.message === "string" ? nested.message : undefined,
-    fields: fields as Record<string, string> | undefined,
+    code: asString(problem.code),
+    requestId: asString(problem.request_id) ?? headers?.get("X-Request-Id") ?? undefined,
+    detail: asString(problem.detail),
+    fields,
+    general,
+    retryAfter: status === 429 ? parseRetryAfter(headers?.get("Retry-After") ?? null) : undefined,
+    allow:
+      status === 405 && allow
+        ? allow
+            .split(",")
+            .map((m) => m.trim())
+            .filter(Boolean)
+        : undefined,
   });
+}
+
+/** Lee `warnings[]` de un recurso correcto (convenciones, sección 9). */
+export function readWarnings(body: unknown): ApiWarning[] {
+  const list = asRecord(body).warnings;
+  if (!Array.isArray(list)) return [];
+  const warnings: ApiWarning[] = [];
+  for (const item of list) {
+    const entry = asRecord(item);
+    const code = asString(entry.code);
+    if (!code) continue;
+    warnings.push({
+      code,
+      message: asString(entry.message) ?? null,
+      location: asString(entry.location) ?? null,
+    });
+  }
+  return warnings;
 }
 
 /**
@@ -104,17 +168,10 @@ export function createHttpClient(options: HttpClientOptions) {
     }
 
     const parsed = await parseBody(response);
-    if (!response.ok) throw toApiError(response.status, parsed);
+    if (!response.ok) throw toApiError(response.status, parsed, response.headers);
 
-    const envelope = (parsed && typeof parsed === "object" ? parsed : {}) as {
-      data?: T;
-      warnings?: ApiWarning[];
-    };
-    return {
-      data: ("data" in envelope ? envelope.data : parsed) as T,
-      warnings: Array.isArray(envelope.warnings) ? envelope.warnings : [],
-      status: response.status,
-    };
+    // Un recurso viene sin sobre y una lista con `items` (convenciones, sección 6).
+    return { data: parsed as T, warnings: readWarnings(parsed), status: response.status };
   }
 
   return {
