@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -41,6 +41,8 @@ function actionError(error: unknown, t: ReturnType<typeof useTranslations<"Ident
 function Identities({ project, identities }: { project: Project; identities: Identity[] }) {
   const t = useTranslations("Identities");
   const format = useFormatter();
+  // Referencia de «hace…»; se actualiza cada minuto.
+  const now = useNow({ updateInterval: 60_000 });
   const toast = useToast();
   const http = useHttpClient();
   const afterChange = useAfterIdentities(project.id);
@@ -160,7 +162,7 @@ function Identities({ project, identities }: { project: Project; identities: Ide
                     ? ` · ${identity.last_test_status_code}`
                     : null}
                   {status === "active" && identity.last_tested_at
-                    ? ` · ${t("tested", { time: format.relativeTime(new Date(identity.last_tested_at)) })}`
+                    ? ` · ${t("tested", { time: format.relativeTime(new Date(identity.last_tested_at), now) })}`
                     : null}
                 </span>
                 <span
