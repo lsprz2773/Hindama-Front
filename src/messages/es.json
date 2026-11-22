@@ -614,7 +614,9 @@
   "UserMenu": {
     "profile": "Perfil",
     "language": "Idioma",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "signOutError": "No pudimos cerrar la sesión. Inténtalo de nuevo.",
+    "loading": "Cargando tu cuenta"
   },
   "Copy": {
     "copy": "Copiar",

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
-import { SESSION_STUB } from "@/features/account/service";
 import { AcceptTermsView } from "@/features/projects/accept-terms-view";
 import { resolveLocale } from "@/i18n/params";
 
@@ -22,7 +21,6 @@ export default async function AcceptTermsPage({
   return (
     <AppShell
       role="analyst"
-      userName={SESSION_STUB.name}
       title={t("pageTitle")}
       breadcrumb={[{ label: p("title"), href: "/projects" }, { label: p("newProject") }]}
     >

@@ -15,7 +15,6 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import {
   ACTION_TONE,
-  ADMIN_STUB,
   AUDIT_ACTIONS,
   AUDIT_RECORDS,
   abbreviateId,
@@ -147,7 +146,6 @@ function AuditLogViewInner() {
   return (
     <AppShell
       role="admin"
-      userName={ADMIN_STUB.name}
       breadcrumb={[{ label: t("crumb") }]}
       title={t("title")}
       subtitle={t("subtitle")}

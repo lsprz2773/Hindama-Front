@@ -5,6 +5,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { HydrationFlag } from "@/components/ui/hydration-flag";
 import { ToastProvider } from "@/components/ui/toast";
+import { QueryProvider } from "@/lib/query/provider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -45,7 +46,9 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           >
             {t("skipToContent")}
           </a>
-          <ToastProvider>{children}</ToastProvider>
+          <QueryProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </QueryProvider>
           <HydrationFlag />
         </NextIntlClientProvider>
       </body>

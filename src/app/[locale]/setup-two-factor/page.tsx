@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
-import { SESSION_STUB } from "@/features/account/service";
 import { TwoFactorSetup } from "@/features/account/two-factor-setup";
 import { resolveLocale } from "@/i18n/params";
 
@@ -21,7 +20,6 @@ export default async function MandatoryTwoFactorPage({
   return (
     <AppShell
       role="admin"
-      userName={SESSION_STUB.name}
       title={t("mandatoryHeading")}
       breadcrumb={[{ label: t("adminCrumb") }, { label: t("crumb") }]}
     >

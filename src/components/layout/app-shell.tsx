@@ -3,12 +3,12 @@ import { PageTransition } from "./page-transition";
 import { OfflineBanner } from "@/components/ui/offline-banner";
 import { Breadcrumb, type Crumb } from "./breadcrumb";
 import { Sidebar, type SidebarProject } from "./sidebar";
+import { SessionGuard } from "./session-guard";
 import { UserMenu } from "./user-menu";
 
 interface AppShellProps {
   role: "analyst" | "admin";
   project?: SidebarProject;
-  userName: string;
   breadcrumb?: Crumb[];
   title: string;
   subtitle?: string;
@@ -21,7 +21,6 @@ interface AppShellProps {
 export function AppShell({
   role,
   project,
-  userName,
   breadcrumb,
   title,
   subtitle,
@@ -30,6 +29,7 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div className="min-h-screen p-4 sm:p-6">
+      <SessionGuard />
       <div className="border-line bg-frame flex flex-wrap gap-5 rounded-[34px] border p-4 backdrop-blur-2xl">
         <Sidebar role={role} project={project} />
         <div className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 px-3 pt-3 pb-6">
@@ -43,7 +43,7 @@ export function AppShell({
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {actions}
-              <UserMenu name={userName} />
+              <UserMenu />
             </div>
           </header>
           <main id="main" className="flex flex-col gap-5">

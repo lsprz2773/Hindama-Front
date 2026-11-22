@@ -269,7 +269,6 @@ export function ProjectsScreen() {
   return (
     <AppShell
       role="analyst"
-      userName={SESSION_STUB.name}
       title={t("title")}
       subtitle={t("greeting", { name: SESSION_STUB.name.split(" ")[0], running })}
       actions={

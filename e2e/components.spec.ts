@@ -82,13 +82,7 @@ test.describe("fase 0 · componentes comunes", () => {
   test("insignias de estado: siempre llevan texto", async ({ page }) => {
     await page.goto("/design-system");
     const row = page.locator('[data-kind="run"]');
-    for (const text of [
-      "En cola",
-      "En curso",
-      "Completada",
-      "Cancelada",
-      "Fallida",
-    ]) {
+    for (const text of ["En cola", "En curso", "Completada", "Cancelada", "Fallida"]) {
       await expect(row.getByText(text, { exact: true })).toBeVisible();
     }
   });
@@ -176,7 +170,7 @@ test.describe("fase 0 · marco autenticado (C-01, C-02, C-03)", () => {
 
   test("menú de usuario: perfil, idioma y cerrar sesión", async ({ page }) => {
     await page.goto("/design-system/shell");
-    await page.getByRole("button", { name: /Luis Selvas/ }).click();
+    await page.getByRole("button", { name: /Ana López/ }).click();
     await expect(page.getByRole("menuitem", { name: "Perfil" })).toBeVisible();
     await page.getByRole("button", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/design-system\/shell$/);

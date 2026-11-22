@@ -614,7 +614,9 @@
   "UserMenu": {
     "profile": "Profile",
     "language": "Language",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signOutError": "We couldn't sign you out. Try again.",
+    "loading": "Loading your account"
   },
   "Copy": {
     "copy": "Copy",

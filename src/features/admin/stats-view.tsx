@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { cn } from "@/lib/cn";
 import { useSimulatedLoad } from "./use-simulated-load";
-import { ADMIN_STUB, STATS, STATS_END, type StatsPeriod, type StatsSet } from "./data";
+import { STATS, STATS_END, type StatsPeriod, type StatsSet } from "./data";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
 const DAY = 86_400_000;
@@ -152,7 +152,6 @@ function StatsViewInner() {
   return (
     <AppShell
       role="admin"
-      userName={ADMIN_STUB.name}
       breadcrumb={[{ label: t("crumb") }]}
       title={t("title")}
       subtitle={t("subtitle")}
