@@ -50,7 +50,9 @@ function watchConsole(page: Page, ignore: RegExp = /^$/) {
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
     const text = message.text();
-    if (!ignore.test(text)) errors.push(text.replace(/\s+/g, " ").slice(0, 300));
+    // La URL de un recurso que falló dice cuál fue (el texto de Chrome no la trae).
+    const where = text.startsWith("Failed to load resource") ? ` (${message.location().url})` : "";
+    if (!ignore.test(text)) errors.push(`${text.replace(/\s+/g, " ").slice(0, 300)}${where}`);
   });
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message.slice(0, 300)}`));
   return errors;
