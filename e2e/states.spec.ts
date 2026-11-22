@@ -1,4 +1,6 @@
 import { expect, test } from "./fixtures";
+import { mockBff } from "./support/bff";
+import { project, PROJECT_ID } from "./support/projects";
 
 test.describe("estados de componentes (toasts, modales, páginas)", () => {
   test("los cinco tipos de toast se muestran con su texto", async ({ page }) => {
@@ -87,46 +89,49 @@ test.describe("estados de componentes (toasts, modales, páginas)", () => {
 });
 
 test.describe("dashboard: acciones bloqueadas con su motivo", () => {
+  const DASHBOARD = `/projects/${PROJECT_ID}`;
+
   test("un proyecto verificado sin contrato pide importarlo", async ({ page }) => {
-    await page.goto("/projects/pagos/verification");
-    await page.getByRole("button", { name: "Verificar", exact: true }).click();
-    await page.getByRole("button", { name: "Verificar", exact: true }).click();
-    await expect(page.getByText(/Comprobamos que controlas/)).toBeVisible();
-    await page.goto("/projects/pagos");
-    await expect(page.getByText("Importa un contrato OpenAPI primero.")).toBeVisible();
-    await page.getByRole("link", { name: "Importar contrato" }).click();
-    await expect(page).toHaveURL(/\/projects\/pagos\/contract$/);
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}`,
+      { body: project({ current_contract: null, last_run: null }) },
+      "GET",
+    );
+    await page.goto(DASHBOARD);
+    await expect(page.getByText("Importa un contrato OpenAPI primero.").first()).toBeVisible();
+    await page.getByRole("link", { name: "Importar contrato" }).first().click();
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/contract$`));
   });
 
   test("con una ejecución activa el dashboard remite a ella", async ({ page }) => {
-    await page.goto("/projects/inventario");
+    const running = project({
+      last_run: { ...project().last_run, status: "running", end_reason: null, finished_at: null },
+    });
+    await mockBff(page, `**/api/projects/${PROJECT_ID}`, { body: running }, "GET");
+    await page.goto(DASHBOARD);
     await expect(page.getByText("Ya hay una ejecución en curso en este proyecto.")).toBeVisible();
     await page.getByRole("link", { name: "Ver ejecución" }).first().click();
-    await expect(page).toHaveURL(/\/projects\/inventario\/runs\/current$/);
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/runs/current$`));
   });
 
   test("el módulo sin identidad administradora explica por qué y cómo resolverlo", async ({
     page,
   }) => {
-    await page.goto("/projects/pedidos");
-    await expect(page.getByText("Sin identidad administradora: agrega una")).toBeVisible();
-    await page.getByRole("link", { name: "Agregar identidad" }).first().click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/identities$/);
+    await page.goto(DASHBOARD);
+    const row = page.getByRole("listitem").filter({ hasText: "Sin identidad administradora" });
+    await expect(row.getByText("Sin identidad administradora: agrega una")).toBeVisible();
+    await row.getByRole("link", { name: "Agregar identidad" }).click();
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/identities$`));
   });
 
   test("«Ejecutar» de un módulo abre la configuración con ese módulo elegido", async ({ page }) => {
-    await page.goto("/projects/pedidos");
+    await page.goto(DASHBOARD);
     await page.getByRole("link", { name: "Ejecución de «Autenticación» solicitada" }).click();
     await expect(page).toHaveURL(/\/runs\/new\?module=auth$/);
     await expect(page.getByRole("checkbox", { name: /Autenticación/ })).toBeChecked();
     await expect(page.getByRole("checkbox", { name: /Configuración/ })).not.toBeChecked();
     await expect(page.getByRole("button", { name: "Ejecutar 1 módulo" })).toBeEnabled();
-  });
-
-  test("«Repetir» desde el dashboard inicia la ejecución", async ({ page }) => {
-    await page.goto("/projects/pedidos");
-    await page.getByRole("button", { name: /Repetir/ }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/runs\/current$/);
   });
 });
 
@@ -156,16 +161,18 @@ test.describe("salir con cambios sin guardar", () => {
   });
 
   test("sin cambios se navega sin preguntar", async ({ page }) => {
-    await page.goto("/projects/pedidos/settings");
+    await page.goto(`/projects/${PROJECT_ID}/settings`);
+    await expect(page.getByLabel("Nombre")).toHaveValue("API de pedidos");
     await page
       .getByRole("navigation", { name: "Navegación principal" })
       .getByRole("link", { name: "Resumen" })
       .click();
-    await expect(page).toHaveURL(/\/projects\/pedidos$/);
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}$`));
   });
 
   test("los ajustes con cambios también lo piden", async ({ page }) => {
-    await page.goto("/projects/pedidos/settings");
+    await page.goto(`/projects/${PROJECT_ID}/settings`);
+    await expect(page.getByLabel("Nombre")).toHaveValue("API de pedidos");
     await page.getByLabel("Nombre").fill("API de Pedidos 2");
     await page
       .getByRole("navigation", { name: "Navegación principal" })

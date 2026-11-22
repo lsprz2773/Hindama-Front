@@ -9,9 +9,12 @@ import { expect, test } from "./fixtures";
  * con un enlace de la app.
  */
 
+/** Ejemplo `Project` del contrato: lo devuelve el simulador para cualquier UUID. */
+const API_PROJECT = "/projects/0192e3a0-2222-7000-8000-000000000001";
+
 const PROJECT_ROUTES = [
-  "/projects/pedidos",
-  "/projects/pedidos/settings",
+  API_PROJECT,
+  `${API_PROJECT}/settings`,
   "/projects/pedidos/verification",
   "/projects/pedidos/contract",
   "/projects/pedidos/contract/versions",
@@ -90,7 +93,7 @@ test.describe("navegación sin avisos de Next", () => {
   test("navegar con enlaces entre vistas de proyecto no abre el overlay", async ({ page }) => {
     test.setTimeout(180_000);
     const errors = watchConsole(page);
-    await page.goto("/projects/pedidos");
+    await page.goto(API_PROJECT);
     for (const name of ["Historial", "Hallazgos", "Identidades", "Política"]) {
       await page.getByRole("link", { name, exact: false }).first().click();
       await page.waitForLoadState("domcontentloaded");

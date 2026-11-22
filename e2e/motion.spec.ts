@@ -1,4 +1,6 @@
 import { expect, test } from "./fixtures";
+import { mockBff } from "./support/bff";
+import { page as projectPage, project, summary } from "./support/projects";
 
 // Las estadísticas de administración se muestran según el rol que informa `getMe`.
 test.use({ role: "admin" });
@@ -11,7 +13,7 @@ const animationName = (selector: string) => (page: import("@playwright/test").Pa
 
 test.describe("animaciones", () => {
   test("al cambiar de vista el contenido entra con la transición de página", async ({ page }) => {
-    await page.goto("/projects/pedidos");
+    await page.goto("/projects/0192e3a0-2222-7000-8000-000000000001");
     const nav = page.getByRole("navigation", { name: "Navegación principal" });
     await nav.getByRole("link", { name: "Historial" }).click();
     await expect(page).toHaveURL(/\/history$/);
@@ -27,7 +29,12 @@ test.describe("animaciones", () => {
   });
 
   test("las listas y rejillas entran de forma escalonada", async ({ page }) => {
+    const items = [1, 2, 3, 4].map((n) =>
+      summary(project({ id: `0192e3a0-2222-7000-8000-00000000001${n}`, name: `API ${n}` }), 0),
+    );
+    await mockBff(page, "**/api/projects?*", { body: projectPage(items) });
     await page.goto("/projects");
+    await expect(page.getByRole("heading", { level: 2, name: "API 4" })).toBeVisible();
     const delays = await page
       .locator("ul.stagger")
       .first()
