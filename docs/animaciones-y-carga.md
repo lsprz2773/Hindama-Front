@@ -38,7 +38,6 @@ Reglas:
 | Navegar entre vistas con sesión (todas las V-xx del analista y del administrador) | El marco (barra lateral y cabecera) se queda fijo; el contenido entra con `animate-page-in` | `components/layout/page-transition.tsx`, usado por `AppShell` y `PublicShell` |
 | Entrar a pantallas de acceso (V-02 a V-06, V-35) | El marco completo entra con `animate-page-in` | `components/layout/auth-shell.tsx` |
 | Pasos de un mismo formulario (recuperar contraseña, asistente de proyecto) | Fundido al cambiar de paso | Estados de cada formulario |
-| Cargar una ruta | Esqueleto del marco y de la vista mientras llega (`loading.tsx`) | `app/[locale]/projects`, `projects/[id]`, `admin` |
 | Cambiar de pestaña (Resumen · Matriz · Hallazgos) o de periodo | El selector cambia de color con transición; el contenido se renueva con fundido | `run-tabs.tsx`, `stats-view.tsx` |
 
 ### Modales (C-20 y derivados)
@@ -103,7 +102,7 @@ pestañas, selectores segmentados, interruptor de «Solo discrepancias» y campo
 | `Skeleton`, `SkeletonText`, `SkeletonCard`, `SkeletonStat`, `SkeletonRows`, `SkeletonChart` | `components/ui/skeleton.tsx` | Bloques con el barrido de luz |
 | `SkeletonRegion` | idem | Región accesible: `role="status"`, `aria-busy` y texto «Cargando…» |
 | `ListPageSkeleton`, `DashboardSkeleton`, `TablePageSkeleton`, `DetailSkeleton`, `FormSkeleton`, `StatsSkeleton` | `components/skeletons/page-skeletons.tsx` | Esqueleto de cada tipo de vista, con las medidas de las reales |
-| `AppShellSkeleton` | `components/skeletons/app-shell-skeleton.tsx` | Marco (barra lateral y cabecera) para los `loading.tsx` |
+| `AppShellSkeleton` | `components/skeletons/app-shell-skeleton.tsx` | Marco (barra lateral y cabecera) para cuando se agreguen `loading.tsx` de ruta |
 | `useLoadingPhase` | `lib/use-loading-phase.ts` | Lógica de tiempos |
 | `Loadable` | `components/ui/loadable.tsx` | Une estado de consulta, esqueleto, error y contenido |
 
@@ -135,9 +134,12 @@ const { data, status, refetch } = useQuery(...); // TODO(api)
 </Loadable>
 ```
 
-- Para las rutas, el `loading.tsx` del segmento ya muestra el esqueleto mientras el servidor
-  entrega la página (ver `app/[locale]/projects/loading.tsx`). Si una vista necesita otro,
-  se agrega su propio `loading.tsx`.
+- **Rutas (`loading.tsx`).** Todavía no hay: con `cacheComponents`, agregar un `loading.tsx` a
+  `projects/` o `projects/[id]/` hace que `next build` falle al prerrenderizar («uncached or
+  runtime data … outside of `<Suspense>`», lanzado desde `LocaleLayout`). Al conectar la API,
+  si se quiere un esqueleto de ruta, primero hay que envolver en `<Suspense>` lo que lee datos
+  del layout o marcar el segmento con `export const instant = false`, y comprobar `npm run build`.
+  Mientras tanto, el esqueleto vive dentro de la vista con `Loadable`, que no tiene ese problema.
 - `features/admin/use-simulated-load.ts` es la simulación actual (estadísticas y bitácora):
   se reemplaza por la consulta real y las vistas no cambian. Para ver el estado de error basta
   `sessionStorage.setItem("hindama.simulate.error", "1")`.
