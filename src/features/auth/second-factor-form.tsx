@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { ROLE_KEY, writeFlag } from "@/features/account/browser-store";
 import { useState, type FormEvent } from "react";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ export function SecondFactorForm({ admin = false }: { admin?: boolean }) {
     setError(undefined);
     try {
       await verifyLoginTwoFactor({ code, admin });
-      writeFlag(ROLE_KEY, admin ? "admin" : "analyst");
       router.push(admin ? "/admin" : "/projects");
     } catch (e) {
       setPending(false);

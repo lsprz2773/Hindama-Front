@@ -1,5 +1,8 @@
 import { expect, test } from "./fixtures";
 
+// Las estadísticas de administración se muestran según el rol que informa `getMe`.
+test.use({ role: "admin" });
+
 const animationName = (selector: string) => (page: import("@playwright/test").Page) =>
   page
     .locator(selector)

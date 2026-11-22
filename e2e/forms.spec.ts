@@ -92,6 +92,7 @@ test.describe("validaciones de formularios", () => {
 });
 
 test.describe("títulos de página por idioma", () => {
+  test.use({ role: "admin" });
   const cases: [string, RegExp, RegExp][] = [
     ["/projects/pedidos/history", /^Historial/, /^History/],
     ["/projects/pedidos/findings", /^Hallazgos/, /^Findings/],

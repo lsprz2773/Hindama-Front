@@ -8,6 +8,8 @@ const NOT_FOUND = "No encontramos esta página";
 const SKIP = [/^\/design-system/, /^\/api\//, /^\/en(\/|$)/, /^\/sign-in$/, /^\/sign-up$/];
 
 test.describe("navegación entre vistas", () => {
+  // Recorre también las pantallas de administración, que se muestran según el rol de `getMe`.
+  test.use({ role: "admin" });
   test("ningún enlace interno lleva a un 404", async ({ page }) => {
     test.setTimeout(420_000);
     const seen = new Set<string>();

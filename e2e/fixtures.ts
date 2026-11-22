@@ -1,4 +1,5 @@
 import { test as base } from "@playwright/test";
+import { mockBff, meBody } from "./support/bff";
 import { sessionCookieValue } from "./support/session";
 
 export { expect } from "@playwright/test";
@@ -6,6 +7,11 @@ export { expect } from "@playwright/test";
 interface Options {
   /** Con `true` (por defecto) la prueba empieza con una sesión del BFF ya iniciada. */
   signedIn: boolean;
+  /**
+   * Rol que devuelve `GET /api/me`. Sin valor responde el simulador del contrato (analista);
+   * `"admin"` sirve para las pantallas de administración, que eligen qué mostrar según el rol.
+   */
+  role: "analyst" | "admin" | null;
 }
 
 /**
@@ -16,6 +22,7 @@ interface Options {
  */
 export const test = base.extend<Options>({
   signedIn: [true, { option: true }],
+  role: [null, { option: true }],
   context: async ({ context, signedIn }, provide) => {
     if (signedIn) {
       await context.addCookies([
@@ -32,7 +39,8 @@ export const test = base.extend<Options>({
     }
     await provide(context);
   },
-  page: async ({ page }, runTest) => {
+  page: async ({ page, role }, runTest) => {
+    if (role) await mockBff(page, "**/api/me", { body: meBody(role) }, "GET");
     const goto = page.goto.bind(page);
     page.goto = async (url, options) => {
       const response = await goto(url, options);

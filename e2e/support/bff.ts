@@ -48,3 +48,19 @@ export async function mockBff(page: Page, pattern: string, response: Fulfill, me
   });
   return requests;
 }
+
+/** Cuerpo de `getMe` (esquema `Me` del contrato) con el rol pedido. */
+export function meBody(role: "analyst" | "admin") {
+  return {
+    id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    name: "Ana López",
+    email: "ana@ejemplo.mx",
+    role,
+    terms: {
+      current_version: "2026-10-30",
+      accepted_version: "2026-10-30",
+      accepted_at: "2026-10-30T12:00:00Z",
+      acceptance_required: false,
+    },
+  };
+}

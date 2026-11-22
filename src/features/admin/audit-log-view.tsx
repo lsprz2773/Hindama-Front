@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
-import { ROLE_KEY, useFlag } from "@/features/account/browser-store";
+import { useMe } from "@/features/account/api";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -422,7 +422,8 @@ function AuditLogViewInner() {
 
 /** Solo para administradores: un analista con sesión ve el 403 (RNF-05). */
 export function AuditLogView() {
-  const role = useFlag(ROLE_KEY);
+  // Solo decide qué pantalla mostrar; los permisos los aplica la API.
+  const role = useMe().data?.role;
   return role === "analyst" ? (
     <ErrorPanel code={403} audience="analyst" href="/projects" />
   ) : (
