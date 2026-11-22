@@ -4,7 +4,8 @@ import { decodeClaims } from "./jwt";
 
 /**
  * Llamadas a Cognito desde el servidor con el cliente confidencial (ADR-005, guía del
- * frontend secciones 2.3 y 2.4). Solo `USER_PASSWORD_AUTH` y `REFRESH_TOKEN_AUTH`. Ninguna
+ * frontend secciones 2.3 y 2.4): registro, confirmación del correo, recuperación de la contraseña,
+ * `USER_PASSWORD_AUTH`, `REFRESH_TOKEN_AUTH` y `RevokeToken`. Ninguna
  * necesita credenciales de AWS: se autentican con el Client ID y el `SECRET_HASH`. El secreto
  * del cliente nunca sale del servidor. No se registran cuerpos ni tokens.
  */
@@ -37,7 +38,14 @@ export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 async function call(
   config: BffConfig,
-  action: "InitiateAuth" | "RevokeToken",
+  action:
+    | "InitiateAuth"
+    | "RevokeToken"
+    | "SignUp"
+    | "ConfirmSignUp"
+    | "ResendConfirmationCode"
+    | "ForgotPassword"
+    | "ConfirmForgotPassword",
   body: Record<string, unknown>,
   fetchImpl: FetchLike,
 ): Promise<Record<string, unknown>> {
@@ -140,6 +148,105 @@ export async function revokeRefreshToken(
       Token: refreshToken,
       ClientId: config.cognitoClientId,
       ClientSecret: config.cognitoClientSecret,
+    },
+    fetchImpl,
+  );
+}
+
+/** `SignUp` (RF-01): `Username` = correo; atributos obligatorios `email` y `name` (guía §2.2). */
+export async function signUp(
+  config: BffConfig,
+  input: { email: string; name: string; password: string },
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "SignUp",
+    {
+      ClientId: config.cognitoClientId,
+      SecretHash: secretHash(input.email, config.cognitoClientId, config.cognitoClientSecret),
+      Username: input.email,
+      Password: input.password,
+      UserAttributes: [
+        { Name: "email", Value: input.email },
+        { Name: "name", Value: input.name },
+      ],
+    },
+    fetchImpl,
+  );
+}
+
+/** `ConfirmSignUp` (RF-02): código de 6 dígitos enviado al correo. */
+export async function confirmSignUp(
+  config: BffConfig,
+  email: string,
+  code: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "ConfirmSignUp",
+    {
+      ClientId: config.cognitoClientId,
+      SecretHash: secretHash(email, config.cognitoClientId, config.cognitoClientSecret),
+      Username: email,
+      ConfirmationCode: code,
+    },
+    fetchImpl,
+  );
+}
+
+/** `ResendConfirmationCode` (RF-02). El pool envía como máximo 50 correos al día (guía §2.2). */
+export async function resendConfirmationCode(
+  config: BffConfig,
+  email: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "ResendConfirmationCode",
+    {
+      ClientId: config.cognitoClientId,
+      SecretHash: secretHash(email, config.cognitoClientId, config.cognitoClientSecret),
+      Username: email,
+    },
+    fetchImpl,
+  );
+}
+
+/** `ForgotPassword` (RF-05): envía un código al correo verificado. */
+export async function forgotPassword(
+  config: BffConfig,
+  email: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "ForgotPassword",
+    {
+      ClientId: config.cognitoClientId,
+      SecretHash: secretHash(email, config.cognitoClientId, config.cognitoClientSecret),
+      Username: email,
+    },
+    fetchImpl,
+  );
+}
+
+/** `ConfirmForgotPassword` (RF-05): código y contraseña nueva en la misma llamada. */
+export async function confirmForgotPassword(
+  config: BffConfig,
+  input: { email: string; code: string; password: string },
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "ConfirmForgotPassword",
+    {
+      ClientId: config.cognitoClientId,
+      SecretHash: secretHash(input.email, config.cognitoClientId, config.cognitoClientSecret),
+      Username: input.email,
+      ConfirmationCode: input.code,
+      Password: input.password,
     },
     fetchImpl,
   );
