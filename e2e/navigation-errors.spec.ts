@@ -24,12 +24,12 @@ const PROJECT_ROUTES = [
   `${API_PROJECT}/resources`,
   `${API_PROJECT}/policy`,
   "/projects/pedidos/history",
-  "/projects/pedidos/findings",
-  "/projects/pedidos/findings/f01",
-  "/projects/pedidos/runs/new",
-  "/projects/pedidos/runs/current",
-  "/projects/pedidos/runs/3",
-  "/projects/pedidos/runs/3/matrix",
+  `${API_PROJECT}/findings`,
+  `${API_PROJECT}/findings/0192e3a0-8888-7000-8000-000000000001`,
+  `${API_PROJECT}/runs/new`,
+  `${API_PROJECT}/runs/current`,
+  `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003`,
+  `${API_PROJECT}/runs/0192e3a0-7777-7000-8000-000000000003/matrix`,
   "/projects/pedidos/runs/3/report",
 ];
 

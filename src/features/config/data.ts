@@ -1,6 +1,6 @@
 /**
- * Datos de ejemplo de la configuración de un proyecto (fase 4).
- * TODO(api): se reemplazan por las respuestas de la API; los tipos son el contrato esperado.
+ * Tipos de identidad que aún usa `lib/contract/identities`. Los datos de ejemplo se quitaron al
+ * conectar las fases 4 y 5.
  */
 
 export type AuthForm = "login" | "bearer" | "cookie" | "header";
@@ -19,46 +19,3 @@ export interface Identity {
   resources: number;
   fixed?: boolean;
 }
-
-export const SEED_IDENTITIES: Identity[] = [
-  {
-    id: "anonima",
-    name: "Anónima",
-    role: "other",
-    roleNote: "Sin autenticar",
-    auth: "none",
-    last4: null,
-    status: "active",
-    resources: 0,
-    fixed: true,
-  },
-  {
-    id: "cliente-a",
-    name: "Cliente A",
-    role: "user",
-    auth: "login",
-    last4: "a9F2",
-    status: "active",
-    testedAgo: "2 h",
-    resources: 9,
-  },
-  {
-    id: "cliente-b",
-    name: "Cliente B",
-    role: "user",
-    auth: "bearer",
-    last4: "7c1e",
-    status: "expiredCredential",
-    resources: 9,
-  },
-  {
-    id: "soporte",
-    name: "Soporte",
-    role: "other",
-    roleNote: "soporte",
-    auth: "header",
-    last4: "0b3d",
-    status: "active",
-    resources: 0,
-  },
-];

@@ -1,5 +1,7 @@
 import { expect, test } from "./fixtures";
+import { mockBff } from "./support/bff";
 import { PROJECT_ID } from "./support/projects";
+import { completedRun, RUN_ID } from "./support/runs";
 
 /**
  * Recorre la app siguiendo los enlaces internos de cada pantalla y comprueba que ninguno lleve
@@ -63,20 +65,26 @@ test.describe("navegación entre vistas", () => {
     }
   });
 
-  test("las vistas más profundas se alcanzan con clics desde el historial", async ({ page }) => {
-    // TODO(api): la matriz y los hallazgos (fases 5 y 6) siguen con el proyecto de ejemplo.
-    await page.goto("/projects/pedidos/history");
-    await page.getByRole("link", { name: "Abrir" }).first().click();
-    await expect(page).toHaveURL(/\/runs\/3$/);
+  test("las vistas más profundas se alcanzan con clics desde los resultados", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`,
+      { body: completedRun() },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/runs/${RUN_ID}`);
     await page.getByRole("tab", { name: "Matriz de acceso" }).click();
-    await expect(page).toHaveURL(/\/runs\/3\/matrix$/);
+    await expect(page).toHaveURL(new RegExp(`/runs/${RUN_ID}/matrix$`));
     // Un solo clic: repetirlo cancelaría la navegación mientras compila la vista de destino.
+    await page.getByRole("tab", { name: /^Hallazgos/ }).click();
+    await expect(page).toHaveURL(new RegExp(`/findings\\?run=${RUN_ID}$`), { timeout: 30_000 });
     await page
-      .getByRole("link", { name: /Soporte: 200 · Discrepancia/ })
-      .first()
+      .getByRole("link", { name: "Acceso a un objeto de otra identidad", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/findings\/f\d+$/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/findings\/0192e3a0-8888-7000-8000-000000000001$/, {
+      timeout: 30_000,
+    });
     await page.getByRole("link", { name: "Hallazgos", exact: true }).first().click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/findings$/);
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/findings$`));
   });
 });

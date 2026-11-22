@@ -103,7 +103,11 @@ function Report({ project, runId }: { project: Project; runId: string }) {
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="print-hidden border-line bg-frame mx-auto mb-5 flex max-w-[1000px] flex-wrap items-center justify-between gap-3 rounded-3xl border p-3 backdrop-blur-2xl">
-        <ButtonLink href={`${base}/runs/${run.number}`} variant="secondary">
+        {/* TODO(api): V-32 (fase 6). Sin el id de la ejecución, un proyecto de la API vuelve al historial. */}
+        <ButtonLink
+          href={isUuid(project.id) ? `${base}/history` : `${base}/runs/${run.number}`}
+          variant="secondary"
+        >
           <Icon name="chevronLeft" size={16} />
           {t("back")}
         </ButtonLink>

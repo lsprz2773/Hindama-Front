@@ -1,9 +1,8 @@
 import type { Severity } from "@/components/ui/severity";
-import type { ProjectReport } from "@/features/projects/seed";
 
 /**
- * Datos de ejemplo de ejecuciones y hallazgos (fase 5).
- * TODO(api): se reemplazan por las respuestas de la API; los tipos son el contrato esperado.
+ * Datos de ejemplo que aún usan el historial y el reporte (V-31, V-32).
+ * TODO(api): se quitan al conectar la fase 6; las vistas de la fase 5 ya leen la API.
  */
 export type FindingStatus = "new" | "persistent" | "regression" | "resolved" | "acceptedRisk";
 export type ModuleKey =
@@ -227,14 +226,6 @@ export const SEED_FINDINGS: Finding[] = [
   },
 ];
 
-export const FINDING_STATUS_ORDER: FindingStatus[] = [
-  "new",
-  "persistent",
-  "regression",
-  "acceptedRisk",
-  "resolved",
-];
-
 export interface RunSummary {
   number: number;
   date: string;
@@ -269,13 +260,6 @@ export interface MatrixRow {
   /** La ruta se prueba con el recurso de esta identidad («de Cliente A»). */
   ownedBy?: string;
 }
-
-export const MATRIX_IDENTITIES = [
-  { name: "Anónima", role: "unauthenticated" },
-  { name: "Cliente A", role: "owner" },
-  { name: "Cliente B", role: "user" },
-  { name: "Soporte", role: "other" },
-] as const;
 
 export const SAMPLE_MATRIX: MatrixRow[] = [
   {
@@ -393,50 +377,6 @@ export const SAMPLE_MATRIX: MatrixRow[] = [
   },
 ];
 
-export const RUN_MODULES: {
-  code: string;
-  key: ModuleKey;
-  risk?: "medium" | "high";
-  blockedNoAdmin?: boolean;
-  defaultOn: boolean;
-}[] = [
-  { code: "API2", key: "auth", defaultOn: true },
-  { code: "API8", key: "config", defaultOn: true },
-  { code: "API1", key: "objects", defaultOn: true },
-  { code: "API5", key: "functions", blockedNoAdmin: true, defaultOn: false },
-  { code: "API3", key: "properties", risk: "medium", defaultOn: false },
-  { code: "API4", key: "resources", risk: "high", defaultOn: false },
-  { code: "SQL", key: "sql", risk: "high", defaultOn: false },
-];
-
-export const RUN_LIMITS = [
-  { key: "rps", value: 5, max: 20 },
-  { key: "concurrency", value: 2, max: 5 },
-  { key: "total", value: 2000, max: 5000 },
-  { key: "duration", value: 15, max: 30 },
-] as const;
-
-export const SAMPLE_PENDING_RESOURCES = [
-  {
-    operation: "POST /orders",
-    location: "/orders/8f21",
-    attempts: 3,
-    lastError: "Tiempo de espera agotado (504)",
-  },
-  {
-    operation: "POST /users",
-    location: "/users/412",
-    attempts: 3,
-    lastError: "Acceso denegado (403)",
-  },
-  {
-    operation: "POST /files",
-    location: "/files/9c1d",
-    attempts: 3,
-    lastError: "Conexión rechazada",
-  },
-];
-
 const NL = "\n";
 
 export const EVIDENCE = {
@@ -460,12 +400,6 @@ export const EVIDENCE = {
   ].join("\n"),
   curl: "curl https://api.pedidos-staging.ejemplo.mx/orders/1042 -H 'Authorization: Bearer ****a9F2'",
 };
-
-export const FINDING_HISTORY = [
-  { run: 3, date: "2026-10-28", status: "persistent" as const },
-  { run: 2, date: "2026-10-21", status: "persistent" as const },
-  { run: 1, date: "2026-10-14", status: "new" as const },
-];
 
 /** Datos de la prueba de cada hallazgo de ejemplo. TODO(api): vienen en el detalle del hallazgo. */
 export const FINDING_EXTRA: Record<
@@ -513,39 +447,6 @@ export function evidenceFor(finding: Finding, baseUrl: string) {
     curl: `curl -X ${method} https://${host}${path} -H 'Accept: application/json'`,
   };
 }
-
-/** Historial del hallazgo entre ejecuciones. TODO(api). */
-export function historyFor(
-  status: FindingStatus,
-): { run: number; date: string; status: FindingStatus }[] {
-  if (status === "new") return [{ run: 3, date: "2026-10-28", status: "new" }];
-  if (status === "regression")
-    return [
-      { run: 3, date: "2026-10-28", status: "regression" },
-      { run: 2, date: "2026-10-21", status: "resolved" },
-      { run: 1, date: "2026-10-14", status: "new" },
-    ];
-  return FINDING_HISTORY.map((h) => ({ ...h }));
-}
-
-/** Reporte de una ejecución recién terminada cuando el proyecto aún no tenía uno. TODO(api). */
-export const DEFAULT_REPORT: ProjectReport = {
-  runNumber: 1,
-  date: "2026-11-18",
-  requests: 2000,
-  minutes: "6:12",
-  modulesRun: 4,
-  severities: [0, 1, 2, 3, 1],
-  modules: [
-    { code: "API2", key: "auth", findings: 2 },
-    { code: "API8", key: "config", findings: 3 },
-    { code: "API1", key: "objects", findings: 2 },
-    { code: "API5", key: "functions", findings: null, blocked: true },
-    { code: "API3", key: "properties", findings: 0 },
-    { code: "API4", key: "resources", findings: null },
-    { code: "SQL", key: "sql", findings: null },
-  ],
-};
 
 export type RunState = "queued" | "running" | "completed" | "cancelled" | "failed";
 

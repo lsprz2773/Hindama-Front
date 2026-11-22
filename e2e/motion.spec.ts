@@ -1,6 +1,7 @@
 import { expect, test } from "./fixtures";
 import { mockBff } from "./support/bff";
-import { page as projectPage, project, summary } from "./support/projects";
+import { page as projectPage, project, PROJECT_ID, summary } from "./support/projects";
+import { completedRun, RUN_ID } from "./support/runs";
 
 // Las estadísticas de administración se muestran según el rol que informa `getMe`.
 test.use({ role: "admin" });
@@ -89,7 +90,13 @@ test.describe("animaciones", () => {
   });
 
   test("las barras de severidad y las gráficas se dibujan al aparecer", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/3");
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`,
+      { body: completedRun() },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/runs/${RUN_ID}`);
     const bar = page.locator("span.animate-grow-x").first();
     expect(await bar.evaluate((el) => getComputedStyle(el).animationName)).toBe("grow-x");
     await page.goto("/admin");
