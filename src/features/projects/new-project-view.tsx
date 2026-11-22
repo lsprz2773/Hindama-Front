@@ -8,12 +8,15 @@ import { HelpPanel } from "@/components/ui/help-panel";
 import { Icon } from "@/components/ui/icon";
 import { inputClass, TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
-import { TERMS_KEY, useFlag, useIsClient } from "@/features/account/browser-store";
+import { useMe } from "@/features/account/api";
 import { useRouter } from "@/i18n/navigation";
+import { projectCreateSchema } from "@/lib/api/schemas/projects";
+import { fieldErrors } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { ApiError } from "@/lib/http";
+import { ApiError, type ApiWarning } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
 import { checkBaseUrl } from "@/lib/url";
-import { createProject } from "./store";
+import { createProject, useRefreshProjects } from "./api";
 
 const MAX_NAME = 100;
 const MAX_DESCRIPTION = 500;
@@ -34,55 +37,86 @@ export function NewProjectView() {
   const t = useTranslations("NewProject");
   const router = useRouter();
   const toast = useToast();
-  const isClient = useIsClient();
-  const termsAccepted = useFlag(TERMS_KEY);
+  const http = useHttpClient();
+  const refresh = useRefreshProjects();
+  const me = useMe();
+  const termsRequired = me.data?.terms.acceptance_required === true;
 
-  // Sin aceptar los términos de uso responsable no se puede crear el primer proyecto (RF-16).
+  // Sin aceptar los términos vigentes no se puede crear un proyecto (RF-16, RN-12).
   useEffect(() => {
-    if (isClient && termsAccepted === null) router.replace("/projects/new/terms");
-  }, [isClient, termsAccepted, router]);
+    if (termsRequired) router.replace("/projects/new/terms");
+  }, [termsRequired, router]);
 
   const [step, setStep] = useState<WizardStep>("data");
   const [projectId, setProjectId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; url?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; description?: string; url?: string }>({});
+  const [warnings, setWarnings] = useState<ApiWarning[]>([]);
   const [pending, setPending] = useState(false);
 
   const check = baseUrl.trim() ? checkBaseUrl(baseUrl) : null;
   const insecure = check?.ok === true && check.insecure;
   const stepIndex = WIZARD_STEPS.indexOf(step);
 
+  /** Texto de un código de error de campo (los mismos que devuelve la API). */
+  function fieldMessage(field: "name" | "description" | "url", code: string | undefined) {
+    if (!code) return undefined;
+    if (field === "url") {
+      if (code === "validation.required") return t("errors.urlRequired");
+      if (code === "url.scheme_not_allowed") return t("errors.url.protocol");
+      if (code === "url.destination_not_allowed") return t("errors.url.destination");
+      return t("errors.url.invalid");
+    }
+    if (field === "name") {
+      return code === "validation.required" ? t("errors.nameRequired") : t("errors.nameInvalid");
+    }
+    return t("errors.descriptionInvalid");
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (pending) return;
-    const next: typeof errors = {};
-    if (!name.trim()) next.name = t("errors.nameRequired");
-    if (!baseUrl.trim()) next.url = t("errors.urlRequired");
-    else if (check && !check.ok) next.url = t(`errors.url.${check.problem}`);
+    const parsed = projectCreateSchema.safeParse({ name, description, base_url: baseUrl });
+    const local = parsed.success ? {} : fieldErrors(parsed.error);
+    const next: typeof errors = {
+      name: fieldMessage("name", local.name?.[0]),
+      description: fieldMessage("description", local.description?.[0]),
+      url: fieldMessage("url", local.base_url?.[0]),
+    };
+    // Ayuda en el navegador para redes privadas o locales; la API es la que decide (RF-11).
+    if (!next.url && check && !check.ok) next.url = t(`errors.url.${check.problem}`);
     setErrors(next);
-    if (next.name || next.url) return;
+    if (next.name || next.description || next.url || !parsed.success) return;
 
     setPending(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600)); // TODO(api): crear el proyecto
-      const project = createProject({
-        name: name.trim(),
-        description: description.trim(),
-        baseUrl: baseUrl.trim(),
-      });
-      setProjectId(project.id);
+      const result = await createProject(http, parsed.data);
+      setProjectId(result.data.id);
+      setWarnings(result.data.warnings);
+      await refresh.projects();
       setStep("contract");
-      toast.show({ type: "success", title: t("created", { name: project.name }) });
+      toast.show({ type: "success", title: t("created", { name: result.data.name }) });
     } catch (e) {
-      if (e instanceof ApiError && e.kind === "conflict")
-        setErrors({ name: t("errors.nameTaken") });
-      else
+      if (e instanceof ApiError && e.code === "terms.not_accepted") {
+        router.replace("/projects/new/terms");
+      } else if (e instanceof ApiError && e.kind === "validation" && e.fields) {
+        setErrors({
+          name: fieldMessage("name", e.fieldCode("name")),
+          description: fieldMessage("description", e.fieldCode("description")),
+          url: fieldMessage("url", e.fieldCode("base_url")),
+        });
+      } else
         toast.show({
           type: "error",
           title: t("errors.networkTitle"),
-          text: t("errors.networkText"),
+          text:
+            e instanceof ApiError && e.status === 429
+              ? t("errors.rateLimited")
+              : e instanceof ApiError && e.requestId
+                ? t("errors.reference", { id: e.requestId })
+                : t("errors.networkText"),
           action: { label: t("errors.retry"), onClick: () => void onSubmit(event) },
         });
     } finally {
@@ -175,8 +209,15 @@ export function NewProjectView() {
                 maxLength={MAX_DESCRIPTION}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                aria-invalid={errors.description ? true : undefined}
+                aria-describedby={errors.description ? "project-description-error" : undefined}
                 className={cn(inputClass, "py-3.5 leading-[1.5]")}
               />
+              {errors.description ? (
+                <p id="project-description-error" role="alert" className="text-danger text-sm">
+                  {errors.description}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -218,6 +259,9 @@ export function NewProjectView() {
             <p className="text-muted max-w-[60ch] text-[15px] leading-[1.55]">
               {t(`panels.${step}.text`)}
             </p>
+            {step === "contract" && warnings.length > 0 ? (
+              <ApiWarnings warnings={warnings} />
+            ) : null}
             <div className="flex flex-wrap gap-3">
               {step === "done" ? (
                 <ButtonLink href={`/projects/${projectId}`}>{t("panels.done.action")}</ButtonLink>
