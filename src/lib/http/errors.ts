@@ -48,6 +48,7 @@ export interface ApiErrorInit {
   general?: string[];
   retryAfter?: number;
   allow?: string[];
+  found?: string;
 }
 
 /**
@@ -71,6 +72,8 @@ export class ApiError extends Error {
   readonly retryAfter?: number;
   /** 405: métodos permitidos según la cabecera `Allow`. */
   readonly allow?: readonly string[];
+  /** `VerificationProblem.found`: lo que obtuvo la verificación. Texto no confiable, solo escapado. */
+  readonly found?: string;
 
   constructor(init: ApiErrorInit) {
     super(init.code ?? `HTTP ${init.status}`);
@@ -84,6 +87,7 @@ export class ApiError extends Error {
     this.general = init.general ?? [];
     this.retryAfter = init.retryAfter;
     this.allow = init.allow;
+    this.found = init.found;
   }
 
   /** Primer código de error de un campo, o `undefined` si el campo no tiene errores. */

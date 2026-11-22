@@ -120,6 +120,7 @@ export function toApiError(status: number, body: unknown, headers?: Headers): Ap
     detail: asString(problem.detail),
     fields,
     general,
+    found: asString(problem.found)?.slice(0, 200),
     retryAfter: status === 429 ? parseRetryAfter(headers?.get("Retry-After") ?? null) : undefined,
     allow:
       status === 405 && allow

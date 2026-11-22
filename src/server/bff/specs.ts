@@ -7,6 +7,7 @@ import {
   projectSchema,
   projectUpdateSchema,
 } from "@/lib/api/schemas/projects";
+import { verificationRequestSchema, verificationSchema } from "@/lib/api/schemas/verification";
 import type { ApiRouteSpec } from "./route";
 
 /**
@@ -23,4 +24,10 @@ export const SPECS = {
   getProject: { path: project, response: projectSchema },
   updateProject: { path: project, body: projectUpdateSchema, response: projectSchema },
   deleteProject: { path: project, query: deleteProjectQuerySchema },
+  getVerification: { path: [...project, "verification"], response: verificationSchema },
+  verifyOwnership: {
+    path: [...project, "verification"],
+    body: verificationRequestSchema,
+    response: verificationSchema,
+  },
 } satisfies Record<string, ApiRouteSpec>;
