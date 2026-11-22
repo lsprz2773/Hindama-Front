@@ -5,14 +5,9 @@
  * construir y probar las vistas; al conectar el BFF conservan sus firmas.
  */
 
-/** Sesión simulada hasta que exista la autenticación real. */
+/** Nombre simulado que aún usan V-13 y V-31 hasta conectarlas (fases 3 y 6). */
 export const SESSION_STUB = {
   name: "Luis Selvas",
-  email: "luis@ejemplo.mx",
-  memberSince: "2026-10-30",
-  termsVersion: "2026-10-30",
-  termsAcceptedAt: "2026-10-30T10:14:00",
-  projects: 4,
 } as const;
 
 const LATENCY_MS = 500;

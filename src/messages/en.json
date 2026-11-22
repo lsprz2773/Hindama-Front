@@ -649,9 +649,10 @@
     "title": "Profile",
     "role": "Role",
     "analyst": "Analyst",
-    "memberSince": "Member since",
+    "admin": "Administrator",
     "terms": "Responsible-use terms",
     "termsValue": "Version {version}, accepted on {date}",
+    "termsPending": "You haven't accepted version {version} yet.",
     "roleNote": "The role is assigned by the platform and can't be changed from here.",
     "security": "Security",
     "twoFactor": "Two-factor authentication (2FA)",
@@ -662,7 +663,9 @@
     "twoFactorDisabled": "Two-factor authentication disabled",
     "preferences": "Preferences",
     "language": "Interface language",
-    "languageNote": "It is remembered in this browser. Dates and deadlines follow the chosen language."
+    "languageNote": "It is remembered in this browser. Dates and deadlines follow the chosen language.",
+    "subject": "your profile",
+    "loading": "Loading your profile"
   },
   "DisableTwoFactor": {
     "title": "Disable two-factor authentication",

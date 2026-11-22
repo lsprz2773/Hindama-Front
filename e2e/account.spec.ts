@@ -1,12 +1,60 @@
 import { expect, test } from "./fixtures";
+import { meBody, mockBff, problem } from "./support/bff";
 
 test.describe("V-09 perfil", () => {
-  test("muestra los datos de la cuenta y el rol", async ({ page }) => {
+  test("muestra los datos de la cuenta y el rol que devuelve la API", async ({ page }) => {
     await page.goto("/profile");
     await expect(page.getByRole("heading", { name: "Perfil", level: 1 })).toBeVisible();
-    await expect(page.getByText("luis@ejemplo.mx", { exact: true })).toBeVisible();
+    // Ejemplo `Me` del contrato: analista que aún no acepta los términos.
+    await expect(page.getByRole("heading", { name: "Ana López", level: 2 })).toBeVisible();
+    await expect(page.getByText("ana@ejemplo.com", { exact: true })).toBeVisible();
     await expect(page.getByText("Analista", { exact: true })).toBeVisible();
+    await expect(page.getByText("Aún no aceptas la versión 2026-10-30.")).toBeVisible();
     await expect(page.getByText("El rol lo asigna la plataforma")).toBeVisible();
+    await expect(page.getByText("Miembro desde")).toHaveCount(0);
+  });
+
+  test("con los términos aceptados muestra la versión y la fecha", async ({ page }) => {
+    await mockBff(page, "**/api/me", { body: meBody("admin") }, "GET");
+    await page.goto("/profile");
+    await expect(page.getByText("Administrador", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Versión 2026-10-30, aceptados el /)).toBeVisible();
+  });
+
+  test("mientras carga muestra el esqueleto", async ({ page }) => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/api/me", async (route) => {
+      await gate;
+      await route.fallback();
+    });
+    await page.goto("/profile");
+    await expect(page.getByRole("status", { name: "Cargando tu perfil" })).toBeVisible();
+    release();
+    await expect(page.getByText("ana@ejemplo.com", { exact: true })).toBeVisible();
+  });
+
+  test("si la API falla muestra el error con su referencia y permite reintentar", async ({
+    page,
+  }) => {
+    await mockBff(page, "**/api/me", { status: 500, body: problem(500, "internal.error") }, "GET");
+    await page.goto("/profile");
+    await expect(page.getByText("req-e2e-500")).toBeVisible();
+    await page.unrouteAll();
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByText("ana@ejemplo.com", { exact: true })).toBeVisible();
+  });
+
+  test("503: servicio no disponible sin detalles internos", async ({ page }) => {
+    await mockBff(
+      page,
+      "**/api/me",
+      { status: 503, body: problem(503, "service.unavailable") },
+      "GET",
+    );
+    await page.goto("/profile");
+    await expect(page.getByText("503", { exact: true })).toBeVisible();
+    await expect(page.getByText("req-e2e-503")).toBeVisible();
   });
 
   test("activar y desactivar el 2FA (V-10) cambia el estado del perfil", async ({ page }) => {

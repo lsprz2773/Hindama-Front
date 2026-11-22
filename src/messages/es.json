@@ -649,9 +649,10 @@
     "title": "Perfil",
     "role": "Rol",
     "analyst": "Analista",
-    "memberSince": "Miembro desde",
+    "admin": "Administrador",
     "terms": "Términos de uso responsable",
     "termsValue": "Versión {version}, aceptados el {date}",
+    "termsPending": "Aún no aceptas la versión {version}.",
     "roleNote": "El rol lo asigna la plataforma y no se puede cambiar desde aquí.",
     "security": "Seguridad",
     "twoFactor": "Segundo factor (2FA)",
@@ -662,7 +663,9 @@
     "twoFactorDisabled": "Segundo factor desactivado",
     "preferences": "Preferencias",
     "language": "Idioma de la interfaz",
-    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido."
+    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido.",
+    "subject": "tu perfil",
+    "loading": "Cargando tu perfil"
   },
   "DisableTwoFactor": {
     "title": "Desactivar el segundo factor",
