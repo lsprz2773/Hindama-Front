@@ -530,3 +530,147 @@ describe("identidades (V-21 y V-22)", () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 });
+
+const RID = "0192e3a0-8888-7000-8000-000000000001";
+const RESOURCE = {
+  id: RID,
+  identity_id: IID,
+  resource_type: "pedido",
+  value: "101",
+  source: "manual",
+  confirmed: true,
+  created_at: "2026-11-04T10:00:00Z",
+};
+const resourceParams = { projectId: PID, resourceId: RID };
+
+describe("recursos (V-23)", () => {
+  it("listResources reenvía el filtro por identidad y valida la página", async () => {
+    const apiFetch = api(Response.json({ items: [RESOURCE], total: 1, page: 1, page_size: 100 }));
+    const response = await handleApiRoute(
+      SPECS.listResources,
+      request("GET", `/api/projects/${PID}/resources?identity_id=${IID}&page_size=100`),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(200);
+    expect(String(apiFetch.mock.calls[0][0])).toBe(
+      `http://api.internal:8000/projects/${PID}/resources?page_size=100&identity_id=${IID}`,
+    );
+  });
+
+  it.each([
+    ["un identity_id que no es UUID", "identity_id=cliente-a"],
+    ["un page_size mayor que 100", "page_size=101"],
+    ["un tipo con caracteres de control", "resource_type=pe%0Adido"],
+    ["un parámetro desconocido", "owner=otro"],
+  ])("listResources rechaza %s sin llamar a la API", async (_label, query) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.listResources,
+      request("GET", `/api/projects/${PID}/resources?${query}`),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("listResources trata una respuesta inválida como error", async () => {
+    const apiFetch = api(
+      Response.json({
+        items: [{ ...RESOURCE, source: "magia" }],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      }),
+    );
+    const response = await handleApiRoute(
+      SPECS.listResources,
+      request("GET", `/api/projects/${PID}/resources`),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(502);
+  });
+
+  it("createResource recorta y normaliza el identificador", async () => {
+    const apiFetch = api(Response.json(RESOURCE, { status: 201 }));
+    const response = await handleApiRoute(
+      SPECS.createResource,
+      request("POST", `/api/projects/${PID}/resources`, {
+        body: { identity_id: IID, resource_type: " pedido ", value: " 101 " },
+      }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(201);
+    expect(JSON.parse(String(apiFetch.mock.calls[0][1].body))).toEqual({
+      identity_id: IID,
+      resource_type: "pedido",
+      value: "101",
+    });
+  });
+
+  it.each([
+    ["sin identificador", { identity_id: IID, resource_type: "pedido", value: " " }],
+    [
+      "un identificador largo",
+      { identity_id: IID, resource_type: "pedido", value: "1".repeat(501) },
+    ],
+    [
+      "un identificador con control",
+      { identity_id: IID, resource_type: "pedido", value: "1\u0000" },
+    ],
+    ["una identidad que no es UUID", { identity_id: "a", resource_type: "pedido", value: "1" }],
+    [
+      "campos extra",
+      { identity_id: IID, resource_type: "pedido", value: "1", source: "discovered" },
+    ],
+  ])("createResource rechaza %s sin llamar a la API", async (_label, body) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.createResource,
+      request("POST", `/api/projects/${PID}/resources`, { body }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("updateResource confirma y rechaza un cuerpo vacío", async () => {
+    const apiFetch = api(Response.json(RESOURCE));
+    const confirmed = await handleApiRoute(
+      SPECS.updateResource,
+      request("PATCH", `/api/projects/${PID}/resources/${RID}`, { body: { confirmed: true } }),
+      resourceParams,
+      deps({ apiFetch }),
+    );
+    expect(confirmed.status).toBe(200);
+    expect(String(apiFetch.mock.calls[0][0])).toBe(
+      `http://api.internal:8000/projects/${PID}/resources/${RID}`,
+    );
+
+    const emptyFetch = vi.fn<FetchLike>();
+    const empty = await handleApiRoute(
+      SPECS.updateResource,
+      request("PATCH", `/api/projects/${PID}/resources/${RID}`, { body: {} }),
+      resourceParams,
+      deps({ apiFetch: emptyFetch }),
+    );
+    expect(empty.status).toBe(422);
+    expect(emptyFetch).not.toHaveBeenCalled();
+  });
+
+  it("deleteResource rechaza un id que no es UUID", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.deleteResource,
+      request("DELETE", `/api/projects/${PID}/resources/..%2Fidentities`),
+      { projectId: PID, resourceId: "../identities" },
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(404);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+});

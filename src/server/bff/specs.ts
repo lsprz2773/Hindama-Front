@@ -28,6 +28,13 @@ import {
   identityUpdateSchema,
   listIdentitiesQuerySchema,
 } from "@/lib/api/schemas/identities";
+import {
+  listResourcesQuerySchema,
+  resourceCreateSchema,
+  resourcePageSchema,
+  resourceSchema,
+  resourceUpdateSchema,
+} from "@/lib/api/schemas/resources";
 import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
 import type { ApiRouteSpec } from "./route";
 
@@ -105,4 +112,20 @@ export const SPECS = {
     body: policyBulkUpdateSchema,
     response: policyBulkResultSchema,
   },
+  listResources: {
+    path: [...project, "resources"],
+    query: listResourcesQuerySchema,
+    response: resourcePageSchema,
+  },
+  createResource: {
+    path: [...project, "resources"],
+    body: resourceCreateSchema,
+    response: resourceSchema,
+  },
+  updateResource: {
+    path: [...project, "resources", { param: "resourceId" }],
+    body: resourceUpdateSchema,
+    response: resourceSchema,
+  },
+  deleteResource: { path: [...project, "resources", { param: "resourceId" }] },
 } satisfies Record<string, ApiRouteSpec>;
