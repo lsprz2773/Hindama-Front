@@ -142,7 +142,7 @@ function Dashboard({ project }: { project: Project }) {
           )}
 
           {stats.length > 0 ? (
-            <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-4">
+            <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-4">
               {stats.map(([value, label]) => (
                 <div
                   key={label}
@@ -165,7 +165,7 @@ function Dashboard({ project }: { project: Project }) {
             </h2>
             {report ? (
               <>
-                <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                <ul className="stagger m-0 flex list-none flex-col gap-3 p-0">
                   {SEVERITIES.map((sev, i) => (
                     <li key={sev} className="flex items-center gap-3 text-sm">
                       <span className="w-[88px] flex-none">{ts(sev)}</span>
@@ -243,7 +243,7 @@ function Dashboard({ project }: { project: Project }) {
           ) : null}
         </div>
         {project.verified || report ? (
-          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-2.5 p-0">
+          <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-2.5 p-0">
             {(report?.modules ?? []).map((m) => {
               // Cada bloqueo lleva su motivo y el enlace donde se resuelve (C-13).
               const block = m.blocked

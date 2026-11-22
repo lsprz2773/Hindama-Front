@@ -1,3 +1,4 @@
+import { PageTransition } from "./page-transition";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ButtonLink } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export function PublicShell({ children, notice }: { children: ReactNode; notice?
         </header>
         {notice}
         <main id="main" className="flex flex-col gap-5">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
         <footer className="text-muted flex flex-wrap justify-between gap-3 px-4 pt-[18px] pb-2 text-sm">
           <span>© 2026 Hindama</span>

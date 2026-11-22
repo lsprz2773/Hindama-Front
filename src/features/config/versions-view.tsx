@@ -41,7 +41,7 @@ function Versions({ id }: { id: string }) {
         <h2 id="versions-list" className="text-lg font-semibold">
           {t("count", { count: CONTRACT_VERSIONS.length })}
         </h2>
-        <ol className="m-0 flex list-none flex-col gap-2 p-0">
+        <ol className="stagger m-0 flex list-none flex-col gap-2 p-0">
           {CONTRACT_VERSIONS.map((v, index) => {
             const current = index === 0;
             const selected = v.name === compare;
@@ -114,7 +114,7 @@ function Versions({ id }: { id: string }) {
           >
             {t("diffTitle", { from: "v2.4.0", to: compare })}
           </h2>
-          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 p-0">
+          <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 p-0">
             {(["added", "modified", "removed"] as const).map((kind) => (
               <li
                 key={kind}
@@ -157,7 +157,7 @@ function Versions({ id }: { id: string }) {
           <h2 id="versions-changes" className="text-lg font-semibold">
             {t("changes")}
           </h2>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
             {changes.map((c) => {
               const style = KIND_STYLE[c.kind];
               return (

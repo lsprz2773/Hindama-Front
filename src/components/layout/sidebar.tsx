@@ -201,8 +201,10 @@ function NavItem({
   locked?: boolean;
 }) {
   const className = cn(
-    "flex min-h-11 items-center gap-3 rounded-[14px] px-3 text-[15px] no-underline",
-    active ? "bg-accent text-on-accent font-semibold" : "font-medium text-[#c9c1b8]",
+    "flex min-h-11 items-center gap-3 rounded-[14px] px-3 text-[15px] no-underline transition-colors duration-200",
+    active
+      ? "bg-accent text-on-accent font-semibold"
+      : "font-medium text-[#c9c1b8] hover:bg-white/8",
     locked && "cursor-not-allowed opacity-60",
   );
   const content = (

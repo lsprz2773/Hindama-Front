@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-2xl text-[15px] no-underline transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-2xl text-[15px] no-underline transition duration-150 cursor-pointer hover:brightness-110 active:translate-y-px active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
   {
     variants: {
       variant: {

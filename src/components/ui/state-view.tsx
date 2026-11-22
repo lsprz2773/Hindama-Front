@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { formatCountdown, useCountdown } from "@/lib/use-countdown";
 import { Button, ButtonLink } from "./button";
 import { Icon, type IconName } from "./icon";
+import { SkeletonRows } from "./skeleton";
 
 type Tone = "neutral" | "success" | "danger" | "warning";
 
@@ -49,7 +50,10 @@ export function StateView({
   return (
     <div
       role="status"
-      className={cn("flex flex-col items-center gap-3 px-6 py-12 text-center", className)}
+      className={cn(
+        "animate-fade-in flex flex-col items-center gap-3 px-6 py-12 text-center",
+        className,
+      )}
     >
       <span
         aria-hidden="true"
@@ -81,23 +85,11 @@ export function StateView({
   );
 }
 
-/** Esqueleto de tabla o lista mientras carga. */
+/** Esqueleto de tabla o lista mientras carga (con barrido de luz). */
 export function ListSkeleton({ label, rows = 4 }: { label: string; rows?: number }) {
   return (
-    <div aria-busy="true" aria-label={label} role="status" className="flex flex-col gap-2.5">
-      {Array.from({ length: rows }, (_, i) => (
-        <div
-          key={i}
-          className="border-line bg-panel-2 flex animate-pulse items-center gap-4 rounded-[18px] border px-4 py-3.5"
-        >
-          <span className="bg-track size-10 flex-none rounded-xl" />
-          <div className="flex flex-1 flex-col gap-2">
-            <span className="bg-track h-3 w-2/5 rounded" />
-            <span className="bg-track h-2.5 w-3/5 rounded" />
-          </div>
-          <span className="bg-track h-6 w-20 flex-none rounded-full" />
-        </div>
-      ))}
+    <div aria-busy="true" aria-label={label} role="status" className="animate-fade-in">
+      <SkeletonRows rows={rows} />
     </div>
   );
 }

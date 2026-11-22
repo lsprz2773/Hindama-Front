@@ -7,7 +7,9 @@ import { ErrorPanel } from "@/features/errors/error-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { EmptyState, ListSkeleton, LoadErrorState } from "@/components/ui/state-view";
+import { Loadable } from "@/components/ui/loadable";
+import { SkeletonRegion, SkeletonRows } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
@@ -270,142 +272,151 @@ function AuditLogViewInner() {
           </span>
         </div>
 
-        {load.status === "loading" ? (
-          <ListSkeleton label={t("loading")} rows={6} />
-        ) : load.status === "error" ? (
-          <LoadErrorState subject={t("errorSubject")} reference="9D41-70F3" onRetry={load.retry} />
-        ) : visible.length === 0 ? (
-          <EmptyState
-            title={rangeInvalid ? t("empty.invalidTitle") : t("empty.title")}
-            text={rangeInvalid ? t("empty.invalidText") : t("empty.text")}
-          />
-        ) : (
-          <>
-            <div aria-hidden="true" className={cn(GRID, "text-muted px-4 text-[12.5px]")}>
-              <span>{t("cols.date")}</span>
-              <span>{t("cols.user")}</span>
-              <span>{t("cols.action")}</span>
-              <span>{t("cols.project")}</span>
-              <span>{t("cols.ip")}</span>
-              <span />
-            </div>
-            <ul className="m-0 flex min-w-[920px] list-none flex-col gap-1.5 p-0">
-              {rows.map((r) => {
-                const open = openId === r.id;
-                const short = abbreviateId(r.user.id);
-                return (
-                  <li
-                    key={r.id}
-                    className={cn(
-                      "rounded-[18px] border",
-                      open ? "bg-panel-2 border-line-strong" : "border-line bg-panel-2/60",
-                    )}
+        <Loadable
+          status={load.status}
+          skeleton={
+            <SkeletonRegion label={t("loading")}>
+              <SkeletonRows rows={6} />
+            </SkeletonRegion>
+          }
+          error={{ subject: t("errorSubject"), reference: "9D41-70F3", onRetry: load.retry }}
+        >
+          {visible.length === 0 ? (
+            <EmptyState
+              title={rangeInvalid ? t("empty.invalidTitle") : t("empty.title")}
+              text={rangeInvalid ? t("empty.invalidText") : t("empty.text")}
+            />
+          ) : (
+            <>
+              <div aria-hidden="true" className={cn(GRID, "text-muted px-4 text-[12.5px]")}>
+                <span>{t("cols.date")}</span>
+                <span>{t("cols.user")}</span>
+                <span>{t("cols.action")}</span>
+                <span>{t("cols.project")}</span>
+                <span>{t("cols.ip")}</span>
+                <span />
+              </div>
+              <ul className="stagger m-0 flex min-w-[920px] list-none flex-col gap-1.5 p-0">
+                {rows.map((r) => {
+                  const open = openId === r.id;
+                  const short = abbreviateId(r.user.id);
+                  return (
+                    <li
+                      key={r.id}
+                      className={cn(
+                        "rounded-[18px] border",
+                        open ? "bg-panel-2 border-line-strong" : "border-line bg-panel-2/60",
+                      )}
+                    >
+                      <div className={cn(GRID, "px-4 py-3")}>
+                        <code className="font-mono text-[12.5px]">{dateTime(r.at)}</code>
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <button
+                            type="button"
+                            title={t("filterByUser")}
+                            onClick={() => set("user", r.user.id)}
+                            className="text-link cursor-pointer font-mono text-[13px] underline"
+                          >
+                            {short}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={t("copyId", { user: short })}
+                            onClick={() => void copy(r.user.id)}
+                            className="text-muted hover:bg-track inline-flex size-7 cursor-pointer items-center justify-center rounded-lg"
+                          >
+                            <Icon name="copy" size={14} />
+                          </button>
+                          {r.user.deleted ? (
+                            <span className="bg-track rounded-full px-2.5 py-0.5 text-[11.5px] font-bold">
+                              {t("deletedAccount")}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="flex items-center gap-2 text-sm font-semibold">
+                          <span
+                            aria-hidden="true"
+                            className={cn("size-2 rounded-full", DOT[ACTION_TONE[r.action]])}
+                          />
+                          {t(`actions.${r.action}`)}
+                        </span>
+                        <code className="font-mono text-[12.5px]">{r.project ?? "—"}</code>
+                        <code className="font-mono text-[12.5px]">{r.ip}</code>
+                        <button
+                          type="button"
+                          aria-expanded={open}
+                          aria-label={t("detailOf", { date: dateTime(r.at) })}
+                          onClick={() => setOpenId(open ? null : r.id)}
+                          className="text-muted hover:bg-track inline-flex size-9 cursor-pointer items-center justify-center rounded-xl"
+                        >
+                          <Icon name={open ? "chevronUp" : "chevronDown"} size={18} />
+                        </button>
+                      </div>
+                      {open ? (
+                        <dl className="border-line m-0 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-6 gap-y-3 border-t px-4 py-4">
+                          {r.detail.map((d) => (
+                            <div key={d.label} className="flex flex-col gap-0.5">
+                              <dt className="text-muted text-[12.5px]">{t(`detail.${d.label}`)}</dt>
+                              <dd className="m-0 text-sm">
+                                {"raw" in d.value
+                                  ? d.label === "permanentDelete"
+                                    ? t("values.byDate", {
+                                        date: format.dateTime(
+                                          new Date(`${d.value.raw}T00:00:00Z`),
+                                          {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                            timeZone: "UTC",
+                                          },
+                                        ),
+                                      })
+                                    : d.value.raw
+                                  : d.value.msg === "fingerprint"
+                                    ? t("values.fingerprint", {
+                                        fp: `${(r.hostFp ?? "").slice(0, 4)}…${(r.hostFp ?? "").slice(4)}`,
+                                      })
+                                    : t(`values.${d.value.msg}`)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+              <nav
+                aria-label={t("pagination.label")}
+                className="flex flex-wrap items-center justify-between gap-3 pt-2"
+              >
+                <span className="text-muted text-sm" role="status">
+                  {t("pagination.range", { from: first, to: last, total: visible.length })}
+                </span>
+                <span className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={current === 0}
+                    onClick={() => setPage(current - 1)}
                   >
-                    <div className={cn(GRID, "px-4 py-3")}>
-                      <code className="font-mono text-[12.5px]">{dateTime(r.at)}</code>
-                      <span className="flex flex-wrap items-center gap-1.5">
-                        <button
-                          type="button"
-                          title={t("filterByUser")}
-                          onClick={() => set("user", r.user.id)}
-                          className="text-link cursor-pointer font-mono text-[13px] underline"
-                        >
-                          {short}
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={t("copyId", { user: short })}
-                          onClick={() => void copy(r.user.id)}
-                          className="text-muted hover:bg-track inline-flex size-7 cursor-pointer items-center justify-center rounded-lg"
-                        >
-                          <Icon name="copy" size={14} />
-                        </button>
-                        {r.user.deleted ? (
-                          <span className="bg-track rounded-full px-2.5 py-0.5 text-[11.5px] font-bold">
-                            {t("deletedAccount")}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="flex items-center gap-2 text-sm font-semibold">
-                        <span
-                          aria-hidden="true"
-                          className={cn("size-2 rounded-full", DOT[ACTION_TONE[r.action]])}
-                        />
-                        {t(`actions.${r.action}`)}
-                      </span>
-                      <code className="font-mono text-[12.5px]">{r.project ?? "—"}</code>
-                      <code className="font-mono text-[12.5px]">{r.ip}</code>
-                      <button
-                        type="button"
-                        aria-expanded={open}
-                        aria-label={t("detailOf", { date: dateTime(r.at) })}
-                        onClick={() => setOpenId(open ? null : r.id)}
-                        className="text-muted hover:bg-track inline-flex size-9 cursor-pointer items-center justify-center rounded-xl"
-                      >
-                        <Icon name={open ? "chevronUp" : "chevronDown"} size={18} />
-                      </button>
-                    </div>
-                    {open ? (
-                      <dl className="border-line m-0 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-6 gap-y-3 border-t px-4 py-4">
-                        {r.detail.map((d) => (
-                          <div key={d.label} className="flex flex-col gap-0.5">
-                            <dt className="text-muted text-[12.5px]">{t(`detail.${d.label}`)}</dt>
-                            <dd className="m-0 text-sm">
-                              {"raw" in d.value
-                                ? d.label === "permanentDelete"
-                                  ? t("values.byDate", {
-                                      date: format.dateTime(new Date(`${d.value.raw}T00:00:00Z`), {
-                                        day: "numeric",
-                                        month: "short",
-                                        year: "numeric",
-                                        timeZone: "UTC",
-                                      }),
-                                    })
-                                  : d.value.raw
-                                : d.value.msg === "fingerprint"
-                                  ? t("values.fingerprint", {
-                                      fp: `${(r.hostFp ?? "").slice(0, 4)}…${(r.hostFp ?? "").slice(4)}`,
-                                    })
-                                  : t(`values.${d.value.msg}`)}
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-            <nav
-              aria-label={t("pagination.label")}
-              className="flex flex-wrap items-center justify-between gap-3 pt-2"
-            >
-              <span className="text-muted text-sm" role="status">
-                {t("pagination.range", { from: first, to: last, total: visible.length })}
-              </span>
-              <span className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={current === 0}
-                  onClick={() => setPage(current - 1)}
-                >
-                  {t("pagination.previous")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={current >= pages - 1}
-                  onClick={() => setPage(current + 1)}
-                >
-                  {t("pagination.next")}
-                </Button>
-              </span>
-            </nav>
-          </>
-        )}
+                    {t("pagination.previous")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={current >= pages - 1}
+                    onClick={() => setPage(current + 1)}
+                  >
+                    {t("pagination.next")}
+                  </Button>
+                </span>
+              </nav>
+            </>
+          )}
+        </Loadable>
       </section>
     </AppShell>
   );

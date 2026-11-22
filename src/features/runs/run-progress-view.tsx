@@ -120,7 +120,7 @@ function Progress({ project }: { project: Project }) {
             className="bg-track h-3.5 overflow-hidden rounded-lg"
           >
             <div
-              className="bg-accent h-full rounded-lg transition-[width]"
+              className="bg-accent h-full rounded-lg transition-[width] duration-700 ease-out"
               style={{ width: `${percent}%` }}
             />
           </div>
@@ -161,7 +161,7 @@ function Progress({ project }: { project: Project }) {
           <h2 id="run-found" className="text-lg font-semibold">
             {t("found", { count: found.length })}
           </h2>
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-3 p-0">
             {SEVERITIES.map((s, i) => (
               <li
                 key={s}
@@ -211,7 +211,7 @@ function Progress({ project }: { project: Project }) {
           <h2 id="run-modules" className="text-lg font-semibold">
             {t("modules")}
           </h2>
-          <ol className="m-0 flex list-none flex-col gap-2 p-0">
+          <ol className="stagger m-0 flex list-none flex-col gap-2 p-0">
             {MODULES.map((m) => {
               const progress = Math.max(0, Math.min(100, ((percent - m.from) / 25) * 100));
               const active = progress > 0 && progress < 100;

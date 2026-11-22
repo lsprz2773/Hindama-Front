@@ -188,12 +188,227 @@ body {
   outline-offset: 2px;
 }
 
+/*
+ * Sistema de movimiento. Todo usa estas curvas y duraciones; con «reducir movimiento» el bloque
+ * de más abajo las deja casi instantáneas (el estado final se conserva con `both`).
+ */
+@theme {
+  --ease-out-soft: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ease-in-soft: cubic-bezier(0.4, 0, 0.8, 0.3);
+
+  --animate-page-in: page-in 320ms var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 220ms ease-out both;
+  --animate-rise: rise 420ms var(--ease-out-soft) both;
+  --animate-overlay-in: fade-in 180ms ease-out both;
+  --animate-overlay-out: fade-out 160ms ease-in both;
+  --animate-modal-in: modal-in 240ms var(--ease-out-soft) both;
+  --animate-modal-out: modal-out 160ms var(--ease-in-soft) both;
+  --animate-menu-in: menu-in 160ms var(--ease-out-soft) both;
+  --animate-menu-out: menu-out 120ms ease-in both;
+  --animate-toast-in: toast-in 320ms var(--ease-out-soft) both;
+  --animate-toast-out: toast-out 200ms var(--ease-in-soft) both;
+  --animate-grow-x: grow-x 600ms var(--ease-out-soft) both;
+  --animate-grow-y: grow-y 700ms var(--ease-out-soft) both;
+  --animate-draw: draw 900ms var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-pop: pop 260ms var(--ease-out-soft) both;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes modal-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 14px)) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes modal-out {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 8px)) scale(0.97);
+    }
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menu-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.97);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateX(28px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes toast-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(28px) scale(0.96);
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes grow-y {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.06);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* Entrada escalonada de listas y rejillas: los hijos suben uno tras otro. */
+.stagger > * {
+  animation: rise 420ms var(--ease-out-soft) both;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 225ms;
+}
+.stagger > *:nth-child(7) {
+  animation-delay: 270ms;
+}
+.stagger > *:nth-child(8) {
+  animation-delay: 315ms;
+}
+.stagger > *:nth-child(n + 9) {
+  animation-delay: 360ms;
+}
+
+/* Esqueleto de carga: barrido de luz sobre el color de las pistas. */
+.skeleton {
+  background-color: color-mix(in srgb, var(--text) 11%, transparent);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--text) 16%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .skeleton {
+    background-image: none;
   }
 }
 

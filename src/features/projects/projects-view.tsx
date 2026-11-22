@@ -60,7 +60,7 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => 
             <DropdownMenu.Content
               align="end"
               sideOffset={8}
-              className="border-line-strong bg-menu text-fg z-50 min-w-[200px] rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+              className="border-line-strong bg-menu text-fg data-[state=open]:animate-menu-in data-[state=closed]:animate-menu-out z-50 min-w-[200px] origin-top-right rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
             >
               <DropdownMenu.Item
                 onSelect={() => router.push(href)}
@@ -219,7 +219,7 @@ export function ProjectsView() {
       {visible.length === 0 ? (
         <NoResultsState onClear={() => setQuery("")} />
       ) : (
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 p-0">
+        <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 p-0">
           {visible.map((project) => (
             <ProjectCard key={project.id} project={project} onDelete={() => setToDelete(project)} />
           ))}

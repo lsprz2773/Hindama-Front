@@ -31,7 +31,11 @@ export interface ToastOptions {
 interface ToastItem extends ToastOptions {
   id: number;
   type: ToastType;
+  /** Está haciendo su animación de salida y se quita al terminar. */
+  closing?: boolean;
 }
+
+const EXIT_MS = 200;
 
 interface ToastApi {
   show: (options: ToastOptions) => number;
@@ -63,7 +67,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const nextId = useRef(1);
 
   const dismiss = useCallback((id: number) => {
-    setItems((current) => current.filter((i) => i.id !== id));
+    // Sale con animación: primero se marca y, al terminar, se quita de la lista.
+    setItems((current) => current.map((i) => (i.id === id ? { ...i, closing: true } : i)));
+    window.setTimeout(() => setItems((current) => current.filter((i) => i.id !== id)), EXIT_MS);
   }, []);
 
   const show = useCallback((options: ToastOptions) => {
@@ -109,14 +115,14 @@ function ToastView({ item, onDismiss }: { item: ToastItem; onDismiss: (id: numbe
   // Cuenta atrás con pausa al pasar el cursor o enfocar.
   const remaining = useRef(duration);
   useEffect(() => {
-    if (duration <= 0 || paused) return;
+    if (duration <= 0 || paused || item.closing) return;
     const startedAt = Date.now();
     const timer = window.setTimeout(() => onDismiss(item.id), remaining.current);
     return () => {
       window.clearTimeout(timer);
       remaining.current -= Date.now() - startedAt;
     };
-  }, [duration, paused, item.id, onDismiss]);
+  }, [duration, paused, item.id, item.closing, onDismiss]);
 
   return (
     <div
@@ -127,7 +133,10 @@ function ToastView({ item, onDismiss }: { item: ToastItem; onDismiss: (id: numbe
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      className="border-line-strong bg-toast text-fg pointer-events-auto relative flex w-full max-w-[400px] items-start gap-3 overflow-hidden rounded-[20px] border py-3.5 pr-3.5 pl-4 shadow-[0_16px_40px_rgba(0,0,0,0.30)] backdrop-blur-xl"
+      className={cn(
+        item.closing ? "animate-toast-out" : "animate-toast-in",
+        "border-line-strong bg-toast text-fg pointer-events-auto relative flex w-full max-w-[400px] items-start gap-3 overflow-hidden rounded-[20px] border py-3.5 pr-3.5 pl-4 shadow-[0_16px_40px_rgba(0,0,0,0.30)] backdrop-blur-xl",
+      )}
     >
       <span
         aria-hidden="true"

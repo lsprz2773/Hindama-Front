@@ -62,7 +62,7 @@ export function AdminSignInForm() {
       adminBadge
       aside={
         <figure className="border-line bg-panel-2 m-0 flex max-w-[520px] flex-col gap-3.5 rounded-[22px] border px-[22px] py-5 backdrop-blur-lg">
-          <ol className="m-0 flex list-none flex-col gap-3 p-0">
+          <ol className="stagger m-0 flex list-none flex-col gap-3 p-0">
             {STEPS.map((step, i) => (
               <li key={step} className="flex items-center gap-3.5">
                 <span

@@ -12,6 +12,16 @@ import { HttpViewer } from "@/components/ui/http-viewer";
 import { RiskConfirmation } from "@/components/ui/risk-confirmation";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import { Loadable } from "@/components/ui/loadable";
+import {
+  DashboardSkeleton,
+  DetailSkeleton,
+  FormSkeleton,
+  ListPageSkeleton,
+  StatsSkeleton,
+  TablePageSkeleton,
+} from "@/components/skeletons/page-skeletons";
+import type { LoadStatus } from "@/lib/use-loading-phase";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { PendingResources } from "@/components/ui/pending-resources";
 import { SeverityBadge, SEVERITIES } from "@/components/ui/severity";
@@ -51,6 +61,42 @@ const REQUEST_SAMPLE = [
 const RESPONSE_SAMPLE = ["HTTP/1.1 200 OK", "", "x".repeat(11 * 1024)].join("\n");
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Demostración de `Loadable`: cambia el estado de la consulta y mira la transición. */
+function LoadableDemo() {
+  const [status, setStatus] = useState<LoadStatus>("ready");
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2.5" role="group" aria-label="Estado de la consulta">
+        {(["loading", "ready", "error"] as LoadStatus[]).map((value) => (
+          <Button
+            key={value}
+            variant={status === value ? "primary" : "secondary"}
+            aria-pressed={status === value}
+            onClick={() => setStatus(value)}
+          >
+            Consulta {value}
+          </Button>
+        ))}
+      </div>
+      <Loadable
+        status={status}
+        skeleton={<ListPageSkeleton label="Cargando la demostración" />}
+        error={{
+          subject: "la demostración",
+          reference: "DEMO-0001",
+          onRetry: () => setStatus("ready"),
+        }}
+      >
+        <EmptyState
+          positive
+          title="Contenido cargado"
+          text="Aparece con un fundido al terminar la carga."
+        />
+      </Loadable>
+    </div>
+  );
+}
 
 /** Galería de componentes comunes de la fase 0. Solo existe en desarrollo (ver la página). */
 export function Gallery() {
@@ -333,6 +379,29 @@ export function Gallery() {
         <p className="text-muted text-sm">
           En las pantallas con sesión este aviso aparece solo cuando el navegador pierde la red.
         </p>
+      </Section>
+
+      <Section id="ds-motion" title="Animaciones y esqueletos de carga">
+        <p className="text-muted text-sm">
+          Entradas de página, modales, menús, toasts, listas y barras. Con «reducir movimiento» todo
+          queda casi instantáneo.
+        </p>
+        <LoadableDemo />
+        <div className="grid gap-5">
+          {[
+            ["Lista", <ListPageSkeleton key="l" label="Esqueleto de lista" />],
+            ["Panel", <DashboardSkeleton key="d" label="Esqueleto de panel" />],
+            ["Tabla", <TablePageSkeleton key="t" label="Esqueleto de tabla" rows={3} />],
+            ["Detalle", <DetailSkeleton key="x" label="Esqueleto de detalle" />],
+            ["Formulario", <FormSkeleton key="f" label="Esqueleto de formulario" fields={2} />],
+            ["Estadísticas", <StatsSkeleton key="s" label="Esqueleto de estadísticas" />],
+          ].map(([name, node]) => (
+            <div key={String(name)} className="flex flex-col gap-2" data-skeleton={String(name)}>
+              <b className="text-sm">{name}</b>
+              {node}
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section id="ds-lang" title="Selector de idioma (C-18)">

@@ -111,7 +111,7 @@ function Contract({ project }: { project: Project }) {
               <code className="font-mono text-sm">pedidos-v2.4.yaml · 312 KB</code>
               <span className="text-muted text-[13.5px]">{t("meta")}</span>
             </div>
-            <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-3">
+            <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-3">
               {summary.map(([value, label]) => (
                 <div
                   key={label}
@@ -288,7 +288,7 @@ function Contract({ project }: { project: Project }) {
               </div>
             </div>
 
-            <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+            <ul className="stagger m-0 flex list-none flex-col gap-1.5 p-0">
               {operations.map((o, i) => {
                 const expanded = open === i;
                 return (

@@ -103,7 +103,7 @@ function Resources({ project }: { project: Project }) {
           {params.length === 0 ? (
             <p className="text-muted text-sm">{t("params.empty")}</p>
           ) : (
-            <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+            <ul className="stagger m-0 flex list-none flex-col gap-1.5 p-0">
               {params.map((p, i) => (
                 <li
                   key={`${p.path}${p.param}`}
@@ -214,7 +214,7 @@ function Resources({ project }: { project: Project }) {
         ) : null}
 
         {current.length > 0 ? (
-          <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-1.5 p-0">
             {current.map((r) => (
               <li
                 key={r.id}

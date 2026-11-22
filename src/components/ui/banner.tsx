@@ -38,7 +38,7 @@ export function Banner({
     <div
       role="status"
       className={cn(
-        "border-line bg-panel-2 flex items-start gap-3.5 rounded-[20px] border border-l-4 px-[18px] py-4 backdrop-blur-lg",
+        "animate-fade-in border-line bg-panel-2 flex items-start gap-3.5 rounded-[20px] border border-l-4 px-[18px] py-4 backdrop-blur-lg",
         style.border,
         className,
       )}
