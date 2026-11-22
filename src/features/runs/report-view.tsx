@@ -17,10 +17,27 @@ import { DashboardSkeleton } from "@/components/skeletons/page-skeletons";
 import { QueryState } from "@/components/ui/query-state";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX } from "./data";
+import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX, SAMPLE_RUN, type RunSummary } from "./data";
 import { isOpen, useFindings } from "./findings-store";
 import { historyRows } from "./history-view";
-import { runSummaryFor } from "./run-results-view";
+
+/** Datos de la ejecución `n` de un proyecto. TODO(api): V-32 (fase 6) y la matriz aún sin conectar; vienen de `getRun`. */
+export function runSummaryFor(project: Project, runId: string): RunSummary | null {
+  const report = project.report;
+  const n = Number(runId);
+  if (!report || !Number.isInteger(n) || n < 1 || n > report.runNumber) return null;
+  if (project.id === "pedidos") return { ...SAMPLE_RUN, number: n };
+  return {
+    number: n,
+    date: report.date,
+    requests: report.requests,
+    minutes: report.minutes,
+    modulesRun: report.modulesRun,
+    blocked: 0,
+    comparison: { new: 0, persistent: 0, resolved: 0, regression: 0 },
+    severities: report.severities,
+  };
+}
 
 type Variant = "run" | "current";
 const SEV_BG = ["bg-sev-1", "bg-sev-2", "bg-sev-3", "bg-sev-4", "bg-sev-5"];
@@ -31,7 +48,8 @@ function Report({ project, runId }: { project: Project; runId: string }) {
   const t = useTranslations("Report");
   const tm = useTranslations("Dashboard.modules");
   const ts = useTranslations("Severity");
-  const tf = useTranslations("FindingDetail");
+  // TODO(api): V-32 (fase 6) aún usa los textos de los hallazgos de ejemplo.
+  const tf = useTranslations("Report.sample");
   const format = useFormatter();
   const toast = useToast();
   const client = useIsClient();
@@ -85,7 +103,11 @@ function Report({ project, runId }: { project: Project; runId: string }) {
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="print-hidden border-line bg-frame mx-auto mb-5 flex max-w-[1000px] flex-wrap items-center justify-between gap-3 rounded-3xl border p-3 backdrop-blur-2xl">
-        <ButtonLink href={`${base}/runs/${run.number}`} variant="secondary">
+        {/* TODO(api): V-32 (fase 6). Sin el id de la ejecución, un proyecto de la API vuelve al historial. */}
+        <ButtonLink
+          href={isUuid(project.id) ? `${base}/history` : `${base}/runs/${run.number}`}
+          variant="secondary"
+        >
           <Icon name="chevronLeft" size={16} />
           {t("back")}
         </ButtonLink>

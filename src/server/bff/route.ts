@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fieldErrors, UUID_PATTERN } from "@/lib/api/zod";
+import { fieldErrors, hasControlChars, UUID_PATTERN } from "@/lib/api/zod";
 import { getDeps, type BffDeps } from "./deps";
 import { problem } from "./problem";
 import { apiPath, proxyToApi, type PreparedRequest } from "./proxy";
@@ -213,4 +213,25 @@ export async function handleApiRoute(
 export function apiRoute(spec: ApiRouteSpec) {
   return async (request: Request, context: Context) =>
     handleApiRoute(spec, request, await context.params, await getDeps());
+}
+
+/**
+ * Relevo SSE de `streamRunEvents` (V-26, ADR-006). Valida los ids como UUID, no admite consulta
+ * y reenvía `Last-Event-ID` solo si cumple el contrato (hasta 64 caracteres sin control).
+ */
+export async function handleRunEvents(
+  request: Request,
+  params: Params,
+  deps: BffDeps,
+): Promise<Response> {
+  const path = resolvePath(
+    ["projects", { param: "projectId" }, "runs", { param: "runId" }, "events"],
+    params,
+  );
+  if (!path) return problem(404, "resource.not_found");
+  const lastEventId = request.headers.get("last-event-id");
+  if (lastEventId !== null && (lastEventId.length > 64 || hasControlChars(lastEventId))) {
+    return fieldsProblem({ "Last-Event-ID": ["validation.format"] });
+  }
+  return proxyToApi(request, path, deps, { stream: true, prepare: prepareWith({ path: [] }) });
 }

@@ -12,7 +12,8 @@ export function RunTabs({
   findings,
 }: {
   base: string;
-  run: number;
+  /** Id de la ejecución (`Run.id`). */
+  run: string;
   active: RunTab;
   findings: number;
 }) {
@@ -20,7 +21,11 @@ export function RunTabs({
   const tabs: { key: RunTab; label: string; href: string }[] = [
     { key: "summary", label: t("summary"), href: `${base}/runs/${run}` },
     { key: "matrix", label: t("matrix"), href: `${base}/runs/${run}/matrix` },
-    { key: "findings", label: t("findings", { count: findings }), href: `${base}/findings` },
+    {
+      key: "findings",
+      label: t("findings", { count: findings }),
+      href: `${base}/findings?run=${run}`,
+    },
   ];
   return (
     <div

@@ -35,6 +35,23 @@ import {
   resourceSchema,
   resourceUpdateSchema,
 } from "@/lib/api/schemas/resources";
+import {
+  listRunResultsQuerySchema,
+  listRunsQuerySchema,
+  resultPageSchema,
+  runCreateSchema,
+  runPageSchema,
+  runRerunSchema,
+  runSchema,
+} from "@/lib/api/schemas/runs";
+import {
+  dismissalCreateSchema,
+  findingOccurrencePageSchema,
+  findingPageSchema,
+  findingSchema,
+  listFindingsQuerySchema,
+  listOccurrencesQuerySchema,
+} from "@/lib/api/schemas/findings";
 import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
 import type { ApiRouteSpec } from "./route";
 
@@ -128,4 +145,46 @@ export const SPECS = {
     response: resourceSchema,
   },
   deleteResource: { path: [...project, "resources", { param: "resourceId" }] },
+  listRuns: {
+    path: [...project, "runs"],
+    query: listRunsQuerySchema,
+    response: runPageSchema,
+  },
+  createRun: {
+    path: [...project, "runs"],
+    body: runCreateSchema,
+    response: runSchema,
+    maxBodyBytes: 4 * 1024,
+  },
+  getRun: { path: [...project, "runs", { param: "runId" }], response: runSchema },
+  cancelRun: { path: [...project, "runs", { param: "runId" }, "cancel"], response: runSchema },
+  rerunRun: {
+    path: [...project, "runs", { param: "runId" }, "rerun"],
+    body: runRerunSchema,
+    response: runSchema,
+    maxBodyBytes: 1024,
+  },
+  listRunResults: {
+    path: [...project, "runs", { param: "runId" }, "results"],
+    query: listRunResultsQuerySchema,
+    response: resultPageSchema,
+  },
+  listFindings: {
+    path: [...project, "findings"],
+    query: listFindingsQuerySchema,
+    response: findingPageSchema,
+  },
+  getFinding: { path: [...project, "findings", { param: "findingId" }], response: findingSchema },
+  listFindingOccurrences: {
+    path: [...project, "findings", { param: "findingId" }, "occurrences"],
+    query: listOccurrencesQuerySchema,
+    response: findingOccurrencePageSchema,
+  },
+  dismissFinding: {
+    path: [...project, "findings", { param: "findingId" }, "dismissal"],
+    body: dismissalCreateSchema,
+    response: findingSchema,
+    maxBodyBytes: 16 * 1024,
+  },
+  revertDismissal: { path: [...project, "findings", { param: "findingId" }, "dismissal"] },
 } satisfies Record<string, ApiRouteSpec>;

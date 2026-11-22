@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { ProjectShell } from "@/features/projects/project-shell";
 import { updateProject, type Project } from "@/features/projects/store";
 import { useRouter } from "@/i18n/navigation";
+import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { RESOLVED_TOTAL, SAMPLE_HISTORY, SEED_FINDINGS, type HistoryRun } from "./data";
 
@@ -235,13 +236,20 @@ function History({ project }: { project: Project }) {
                 {r.changes ? r.changes.join(" · ") : "—"}
               </span>
               <span className="flex justify-end gap-1.5">
-                <ButtonLink
-                  href={r.state === "running" ? `${base}/runs/current` : `${base}/runs/${r.number}`}
-                  variant="secondary"
-                  className="min-h-10 rounded-xl px-3 text-sm"
-                >
-                  {r.state === "running" ? t("viewProgress") : t("open")}
-                </ButtonLink>
+                {/* TODO(api): V-31 (fase 6). Las filas de ejemplo no traen el id de la ejecución
+                    que piden los resultados conectados (V-27), así que en un proyecto de la API
+                    solo se ofrece el avance de la que está en curso. */}
+                {r.state === "running" || !isUuid(project.id) ? (
+                  <ButtonLink
+                    href={
+                      r.state === "running" ? `${base}/runs/current` : `${base}/runs/${r.number}`
+                    }
+                    variant="secondary"
+                    className="min-h-10 rounded-xl px-3 text-sm"
+                  >
+                    {r.state === "running" ? t("viewProgress") : t("open")}
+                  </ButtonLink>
+                ) : null}
                 {r.state !== "running" ? (
                   <ButtonLink
                     href={`${base}/runs/${r.number}/report`}

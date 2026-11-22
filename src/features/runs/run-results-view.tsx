@@ -1,103 +1,127 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { DetailSkeleton } from "@/components/skeletons/page-skeletons";
 import { Banner } from "@/components/ui/banner";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { PendingResources } from "@/components/ui/pending-resources";
-import { SEVERITIES, SeverityMeter, type Severity } from "@/components/ui/severity";
+import { QueryState } from "@/components/ui/query-state";
+import { SEVERITIES, SeverityMeter } from "@/components/ui/severity";
 import { EmptyState } from "@/components/ui/state-view";
-import { useToast } from "@/components/ui/toast";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { ProjectShell } from "@/features/projects/project-shell";
-import { updateProject, type Project } from "@/features/projects/store";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { OPEN_STATUSES, type FindingStatus } from "@/lib/api/schemas/findings";
+import type { Project } from "@/lib/api/schemas/projects";
+import type { Run } from "@/lib/api/schemas/runs";
+import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { SAMPLE_PENDING_RESOURCES, SAMPLE_RUN, type RunSummary } from "./data";
-import { useFindings } from "./findings-store";
+import { useFindings, useRun } from "./api";
+import { MODULE_ORDER, MODULE_VIEW } from "./modules";
+import { RerunButton } from "./rerun-button";
 import { RunTabs } from "./run-tabs";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
 
-/** Datos de la ejecución `n` de un proyecto. TODO(api): vienen del detalle de la ejecución. */
-export function runSummaryFor(project: Project, runId: string): RunSummary | null {
-  const report = project.report;
-  const n = Number(runId);
-  if (!report || !Number.isInteger(n) || n < 1 || n > report.runNumber) return null;
-  if (project.id === "pedidos") return { ...SAMPLE_RUN, number: n };
-  return {
-    number: n,
-    date: report.date,
-    requests: report.requests,
-    minutes: report.minutes,
-    modulesRun: report.modulesRun,
-    blocked: 0,
-    comparison: { new: 0, persistent: 0, resolved: 0, regression: 0 },
-    severities: report.severities,
-  };
+const STATUS_CHIP = {
+  completed: { icon: "check", tone: "text-success bg-success-bg" },
+  cancelled: { icon: "stop", tone: "text-warning bg-warning-bg" },
+  failed: { icon: "alert", tone: "text-danger bg-danger-bg" },
+} as const;
+
+/** Cuántos hallazgos de la ejecución tienen hoy el estado `status` (solo se lee `total`). */
+function useStatusCount(projectId: string, runId: string, status: FindingStatus, enabled: boolean) {
+  const query = useFindings(projectId, { runId, status: [status], pageSize: 1, enabled });
+  return query.data?.total;
 }
 
-function Results({ project, run }: { project: Project; run: RunSummary }) {
+/**
+ * Comparación con la ejecución anterior. `listFindings` con `run_id` da el estado **actual** de
+ * los hallazgos detectados en la ejecución, que solo coincide con su resultado mientras sea la
+ * última del proyecto.
+ * TODO(api): no hay forma de saber cuántos se resolvieron en una ejecución ni la comparación de
+ * una ejecución que ya no es la última.
+ */
+function Comparison({ project, run }: { project: Project; run: Run }) {
+  const t = useTranslations("RunResults");
+  const latest = project.last_run?.id === run.id;
+  const counts = {
+    new: useStatusCount(project.id, run.id, "new", latest && run.number > 1),
+    persistent: useStatusCount(project.id, run.id, "persistent", latest && run.number > 1),
+    regression: useStatusCount(project.id, run.id, "regression", latest && run.number > 1),
+  };
+  const items = [
+    { n: counts.new, name: t("comparison.new"), dot: "bg-accent" },
+    { n: counts.persistent, name: t("comparison.persistent"), dot: "bg-muted" },
+    { n: counts.regression, name: t("comparison.regression"), dot: "bg-danger" },
+  ];
+  return (
+    <section aria-labelledby="cmp-h" className={cn(card, "min-w-[280px] flex-[1_1_300px]")}>
+      <h2 id="cmp-h" className="text-lg font-semibold">
+        {run.number > 1 ? t("comparison.title", { number: run.number - 1 }) : t("comparison.first")}
+      </h2>
+      {run.number === 1 ? (
+        <span className="text-muted text-sm">{t("comparison.firstText")}</span>
+      ) : !latest ? (
+        <span className="text-muted text-sm">{t("comparison.onlyLatest")}</span>
+      ) : (
+        <>
+          <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-3 p-0">
+            {items.map((c) => (
+              <li key={c.name} className="bg-panel-2 flex flex-col gap-1 rounded-[18px] px-4 py-3">
+                <span className="font-display text-3xl leading-none font-medium tabular-nums">
+                  {c.n ?? "—"}
+                </span>
+                <span className="text-muted flex items-center gap-2 text-sm">
+                  <span aria-hidden="true" className={cn("size-2 rounded-full", c.dot)} />
+                  {c.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <span className="text-muted text-[13px] leading-[1.5]">{t("comparison.note")}</span>
+        </>
+      )}
+    </section>
+  );
+}
+
+function Results({ project, run }: { project: Project; run: Run }) {
   const t = useTranslations("RunResults");
   const tm = useTranslations("Dashboard.modules");
   const ts = useTranslations("Severity");
   const format = useFormatter();
-  const toast = useToast();
-  const router = useRouter();
-  const { findings } = useFindings(project.id);
   const base = `/projects/${project.id}`;
-  const total = run.severities.reduce((a, b) => a + b, 0);
-  const isSample = project.id === "pedidos";
-  const modules = project.report?.modules ?? [];
-  const top = [...findings]
-    .filter((f) => f.status !== "resolved" && f.status !== "acceptedRisk")
-    .sort((a, b) => SEVERITIES.indexOf(a.severity) - SEVERITIES.indexOf(b.severity))
-    .slice(0, 3);
-
-  function retest() {
-    if (project.running !== undefined) {
-      toast.show({ type: "warning", title: t("retestBusy") });
-      return;
-    }
-    updateProject(project.id, { running: 0 });
-    toast.show({ type: "info", title: t("retestStarted", { number: run.number }) });
-    router.push(`${base}/runs/current`);
-  }
+  const counts = run.progress.findings_by_severity;
+  const top = useFindings(project.id, { runId: run.id, status: [...OPEN_STATUSES], pageSize: 3 });
+  const status = run.status === "cancelled" || run.status === "failed" ? run.status : "completed";
+  const chip = STATUS_CHIP[status];
+  const minutes =
+    run.started_at && run.finished_at
+      ? Math.max(1, Math.round((Date.parse(run.finished_at) - Date.parse(run.started_at)) / 60_000))
+      : null;
+  const when = run.finished_at ?? run.created_at;
 
   const stats: [string, string][] = [
-    [format.number(run.requests), t("stats.requests")],
-    [run.minutes, t("stats.minutes")],
-    [`${run.modulesRun} / 7`, t("stats.modules")],
-    [String(run.blocked), t("stats.blocked")],
+    [format.number(run.progress.requests_sent), t("stats.requests")],
+    [minutes === null ? "—" : String(minutes), t("stats.minutes")],
+    [`${run.modules.length} / ${MODULE_ORDER.length}`, t("stats.modules")],
+    [
+      `${format.number(run.progress.cells_evaluated)} / ${format.number(run.progress.cells_planned)}`,
+      t("stats.cells"),
+    ],
   ];
-  const comparison = [
-    { n: run.comparison.new, name: t("comparison.new"), dot: "bg-accent" },
-    { n: run.comparison.persistent, name: t("comparison.persistent"), dot: "bg-muted" },
-    { n: run.comparison.resolved, name: t("comparison.resolved"), dot: "bg-success" },
-    { n: run.comparison.regression, name: t("comparison.regression"), dot: "bg-danger" },
-  ];
-  const blockedModules = modules.filter((m) => m.blocked);
+  const partial = run.end_reason === "limit_reached" || run.status !== "completed";
+  const failedResources = run.created_resources.failed;
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <RunTabs base={base} run={run.number} active="summary" findings={total} />
-        <div className="flex flex-wrap gap-3">
-          <ButtonLink href={`${base}/runs/${run.number}/report`} variant="secondary" size="sm">
-            <Icon name="file" size={16} />
-            {t("report")}
-          </ButtonLink>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() =>
-              toast.show({ type: "success", title: t("exported"), text: t("exportedText") })
-            }
-          >
-            <Icon name="download" size={16} />
-            {t("export")}
-          </Button>
-        </div>
+        <RunTabs base={base} run={run.id} active="summary" findings={counts.total} />
+        <ButtonLink href={`${base}/runs/${run.id}/report`} variant="secondary" size="sm">
+          <Icon name="file" size={16} />
+          {t("report")}
+        </ButtonLink>
       </div>
 
       <div className="flex flex-wrap items-start gap-5">
@@ -105,16 +129,20 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
           aria-labelledby="hr-h"
           className="border-line flex min-w-0 flex-[999_1_560px] flex-col gap-5 rounded-[28px] border bg-[image:var(--hero)] p-6 sm:p-8"
         >
-          <span className="text-success bg-success-bg inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-[13px] font-semibold">
-            <Icon name="check" size={16} strokeWidth={2.6} />
-            {t("completed", {
-              date: format.dateTime(new Date(`${run.date}T16:20:00Z`), {
+          <span
+            className={cn(
+              "inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-[13px] font-semibold",
+              chip.tone,
+            )}
+          >
+            <Icon name={chip.icon} size={16} strokeWidth={2.6} />
+            {t(`status.${status}`, {
+              date: format.dateTime(new Date(when), {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
-                timeZone: "UTC",
               }),
             })}
           </span>
@@ -122,29 +150,24 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
             aria-label={t("data")}
             className="text-muted m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-sm"
           >
-            <li>{t("end.normal")}</li>
-            {project.contractOps !== null ? <li>{t("contract", { version: "v2.4.0" })}</li> : null}
-            {run.number > 1 ? <li>{t("repeat", { number: run.number - 1 })}</li> : null}
-          </ul>
-          <div className="flex flex-col gap-2">
-            <h2 id="hr-h" className="font-display text-4xl leading-tight font-medium">
-              {t("headline", { count: total })}
-            </h2>
-            {total > 0 ? (
-              <p className="text-muted text-[15px]">
-                {t("headlineText", {
-                  new: run.comparison.new,
-                  regressions: run.comparison.regression,
-                })}
-              </p>
+            {run.end_reason ? <li>{t(`end.${run.end_reason}`)}</li> : null}
+            {run.contract_version ? (
+              <li>{t("contract", { number: run.contract_version.number })}</li>
             ) : null}
-          </div>
+            {run.source_run_id ? (
+              <li>
+                <Link href={`${base}/runs/${run.source_run_id}`} className="text-link">
+                  {t("repeat")}
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+          <h2 id="hr-h" className="font-display text-4xl leading-tight font-medium">
+            {t("headline", { count: counts.total })}
+          </h2>
           <div className="flex flex-wrap gap-3">
-            <Button size="lg" onClick={retest}>
-              <Icon name="play" size={16} />
-              {t("retest")}
-            </Button>
-            <ButtonLink href={`${base}/findings`} variant="secondary" size="lg">
+            <RerunButton project={project} run={run} label={t("retest")} />
+            <ButtonLink href={`${base}/findings?run=${run.id}`} variant="secondary" size="lg">
               {t("viewFindings")}
             </ButtonLink>
           </div>
@@ -160,36 +183,7 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
           </dl>
         </section>
 
-        <section aria-labelledby="cmp-h" className={cn(card, "min-w-[280px] flex-[1_1_300px]")}>
-          <h2 id="cmp-h" className="text-lg font-semibold">
-            {run.number > 1
-              ? t("comparison.title", { number: run.number - 1 })
-              : t("comparison.first")}
-          </h2>
-          {run.number > 1 ? (
-            <>
-              <ul className="stagger m-0 grid list-none grid-cols-2 gap-3 p-0">
-                {comparison.map((c) => (
-                  <li
-                    key={c.name}
-                    className="bg-panel-2 flex flex-col gap-1 rounded-[18px] px-4 py-3"
-                  >
-                    <span className="font-display text-3xl leading-none font-medium tabular-nums">
-                      {c.n}
-                    </span>
-                    <span className="text-muted flex items-center gap-2 text-sm">
-                      <span aria-hidden="true" className={cn("size-2 rounded-full", c.dot)} />
-                      {c.name}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <span className="text-muted text-[13px] leading-[1.5]">{t("comparison.note")}</span>
-            </>
-          ) : (
-            <span className="text-muted text-sm">{t("comparison.firstText")}</span>
-          )}
-        </section>
+        <Comparison project={project} run={run} />
       </div>
 
       <section aria-labelledby="sv-h" className={card}>
@@ -197,11 +191,11 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
           {t("bySeverity")}
         </h2>
         <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 p-0">
-          {SEVERITIES.map((s: Severity, i) => (
+          {SEVERITIES.map((s) => (
             <li key={s} className="bg-panel-2 flex flex-col gap-2 rounded-[18px] px-4 py-3.5">
               <SeverityMeter severity={s} />
               <span className="font-display text-3xl leading-none font-medium tabular-nums">
-                {run.severities[i]}
+                {counts[s]}
               </span>
               <span className="text-muted text-sm">{ts(s)}</span>
             </li>
@@ -216,43 +210,38 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
               {t("modules")}
             </h2>
             <span className="text-muted text-[13px]">
-              {t("limits", { rps: 5, concurrency: 2, total: format.number(2000), minutes: 15 })}
+              {t("limits", {
+                rps: run.limits.requests_per_second,
+                concurrency: run.limits.concurrency,
+                total: format.number(run.limits.max_requests),
+                minutes: run.limits.max_duration_minutes,
+              })}
             </span>
           </div>
+          {/* TODO(api): `Run` no trae hallazgos ni avance por módulo; solo si se ejecutó. */}
           <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
-            {modules.map((m) => {
-              const incomplete = isSample && m.key === "objects";
-              const note =
-                m.findings === null
-                  ? m.blocked
-                    ? t("moduleBlocked")
-                    : t("moduleNotSelected")
-                  : t("moduleFindings", { count: m.findings }) +
-                    (incomplete ? ` · ${t("incomplete")}` : "");
+            {MODULE_ORDER.map((module) => {
+              const view = MODULE_VIEW[module];
+              const ran = run.modules.includes(module);
               return (
                 <li
-                  key={m.key}
+                  key={module}
                   className={cn(
                     "border-line bg-panel-2 flex flex-wrap items-center gap-4 rounded-[20px] border px-4 py-3",
-                    m.findings === null && "opacity-70",
+                    !ran && "opacity-70",
                   )}
                 >
                   <span
                     aria-hidden="true"
                     className="bg-progress-bg text-accent font-display inline-flex size-11 flex-none items-center justify-center rounded-[14px] text-[13px] font-semibold"
                   >
-                    {m.code}
+                    {view.code}
                   </span>
                   <span className="min-w-[160px] flex-1 text-[15px] font-semibold">
-                    {tm(`names.${m.key}`)}
+                    {tm(`names.${view.key}`)}
                   </span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      m.blocked || incomplete ? "text-warning" : "text-muted",
-                    )}
-                  >
-                    {note}
+                  <span className="text-muted text-sm">
+                    {ran ? t("moduleRun") : t("moduleNotSelected")}
                   </span>
                 </li>
               );
@@ -261,33 +250,30 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
         </section>
 
         <aside className="flex min-w-[280px] flex-[1_1_320px] flex-col gap-5">
-          {isSample || blockedModules.length > 0 ? (
+          {partial || failedResources > 0 ? (
             <section aria-labelledby="ax-h" className={card}>
               <h2 id="ax-h" className="text-lg font-semibold">
                 {t("notices.title")}
               </h2>
-              {isSample ? (
-                <Banner title={t("notices.expired.title", { name: "Cliente B" })}>
-                  {t("notices.expired.text", { count: 38 })}
+              {partial ? (
+                <Banner title={t(`notices.partial.${status}.title`)}>
+                  {t(`notices.partial.${status}.text`)}
                 </Banner>
               ) : null}
-              {blockedModules.map((m) => (
-                <Banner
-                  key={m.key}
-                  title={t("notices.skipped.title", { module: tm(`names.${m.key}`) })}
-                >
-                  {t("notices.skipped.text")}
+              {/* TODO(api): C-15 sin detalle (operación, ubicación, último error); solo el conteo. */}
+              {failedResources > 0 ? (
+                <Banner title={t("notices.pending.title", { count: failedResources })}>
+                  {t("notices.pending.text")}
                 </Banner>
-              ))}
+              ) : null}
             </section>
           ) : null}
-          {isSample ? <PendingResources resources={SAMPLE_PENDING_RESOURCES} /> : null}
-          {top.length > 0 ? (
+          {top.data && top.data.items.length > 0 ? (
             <section aria-labelledby="tp-h" className={card}>
               <h2 id="tp-h" className="text-lg font-semibold">
                 {t("top")}
               </h2>
-              {top.map((f) => (
+              {top.data.items.map((f) => (
                 <Link
                   key={f.id}
                   href={`${base}/findings/${f.id}`}
@@ -308,31 +294,49 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
   );
 }
 
+function RunResults({ project, runId }: { project: Project; runId: string }) {
+  const t = useTranslations("RunResults");
+  const query = useRun(project.id, runId);
+  return (
+    <QueryState query={query} subject={t("subject")} skeleton={<DetailSkeleton />}>
+      {(run) =>
+        run.status === "queued" || run.status === "running" ? (
+          <EmptyState
+            title={t("active.title", { number: run.number })}
+            text={t("active.text")}
+            action={{ label: t("active.action"), href: `/projects/${project.id}/runs/current` }}
+          />
+        ) : (
+          <Results project={project} run={run} />
+        )
+      }
+    </QueryState>
+  );
+}
+
+/** Título con el número de la ejecución en cuanto `getRun` responde. */
+function useRunTitle(id: string, runId: string) {
+  const t = useTranslations("RunResults");
+  const run = useRun(id, isUuid(id) && isUuid(runId) ? runId : null).data;
+  return run ? t("title", { number: run.number }) : t("titleLoading");
+}
+
 /** V-27. Resultados de una ejecución: resumen, comparación con la anterior y avisos (RF-54 a RF-60, RF-71). */
 export function RunResultsView({ id, runId }: { id: string; runId: string }) {
   const t = useTranslations("RunResults");
+  const title = useRunTitle(id, runId);
   return (
     <ProjectShell
       id={id}
-      trail={[
-        { label: t("crumbHistory"), href: `/projects/${id}/history` },
-        { label: t("title", { number: runId }) },
-      ]}
-      title={t("title", { number: runId })}
-    >
-      {(project) => {
-        const run = runSummaryFor(project, runId);
-        if (!project.report)
-          return (
-            <EmptyState
-              title={t("none.title")}
-              text={t("none.text")}
-              action={{ label: t("none.action"), href: `/projects/${id}/runs/new` }}
-            />
-          );
-        if (!run) return <ErrorPanel code={404} standalone={false} href={`/projects/${id}`} />;
-        return <Results key={`${project.id}-${runId}`} project={project} run={run} />;
-      }}
-    </ProjectShell>
+      trail={[{ label: t("crumbHistory"), href: `/projects/${id}/history` }, { label: title }]}
+      title={title}
+      render={(project) =>
+        isUuid(runId) ? (
+          <RunResults key={runId} project={project} runId={runId} />
+        ) : (
+          <ErrorPanel code={404} standalone={false} href={`/projects/${id}`} />
+        )
+      }
+    />
   );
 }

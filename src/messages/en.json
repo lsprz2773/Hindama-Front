@@ -569,17 +569,17 @@
     "description": "It moves to “Accepted risk” and stops counting among the open ones. Choose the reason.",
     "reason": "Reason",
     "reasons": {
-      "accepted": "Accepted risk",
+      "accepted_risk": "Accepted risk",
       "false_positive": "False positive"
     },
     "justification": "Justification",
     "required": "(required)",
     "placeholder": "Explain why this risk is accepted",
     "help": "It is saved in the finding's history, not in the audit log.",
-    "tooShort": "Write a justification of at least {min} characters.",
+    "missing": "Write a justification.",
     "submit": "Dismiss finding",
     "reasonText": {
-      "accepted": "The finding is real and you decide not to fix it for now.",
+      "accepted_risk": "The finding is real and you decide not to fix it for now.",
       "false_positive": "The finding is not real: the API behaves as expected."
     },
     "notes": {
@@ -1038,7 +1038,8 @@
       "emptyTitle": "No results yet",
       "emptyText": "Verify ownership and run your first test to see each module here.",
       "ran": "Included in the last run"
-    }
+    },
+    "repeat": "Repeat last run"
   },
   "ProjectSettings": {
     "crumb": "Settings",
@@ -1638,8 +1639,6 @@
       "title": "Test modules",
       "lead": "Choose which OWASP API Top 10 categories to test in this run.",
       "selected": "{count, plural, =0 {None selected} other {# selected}}",
-      "noAdmin": "Requires an administrator identity",
-      "addIdentity": "Add identity",
       "notes": {
         "auth": "Tokens, sessions and credentials",
         "config": "Headers, CORS and error messages",
@@ -1649,7 +1648,23 @@
         "resources": "Loads the server with repeated requests",
         "sql": "Sends injection payloads; modifies test data"
       },
-      "risk": "Risk"
+      "risk": "Risk",
+      "missing": {
+        "project_not_verified": "Requires verifying host ownership",
+        "no_contract": "Requires importing the contract",
+        "insufficient_identities": "Requires at least two identities",
+        "no_admin_identity": "Requires an admin identity",
+        "no_resources": "Requires resources assigned to identities",
+        "policy_unconfirmed": "Requires confirming the access policy"
+      },
+      "fix": {
+        "project_not_verified": "Verify",
+        "no_contract": "Import contract",
+        "insufficient_identities": "Add identity",
+        "no_admin_identity": "Add identity",
+        "no_resources": "Assign resources",
+        "policy_unconfirmed": "Review policy"
+      }
     },
     "risk": {
       "medium": "Medium risk",
@@ -1671,11 +1686,11 @@
       "verified": "The base URL is verified",
       "noActive": "No other run is active",
       "https": "The URL uses HTTPS",
-      "policy": "The cleanup policy is confirmed"
+      "policy": "The access policy is confirmed"
     },
     "run": "{count, plural, =0 {Run tests} one {Run # module} other {Run # modules}}",
     "starting": "Starting…",
-    "started": "Run started",
+    "started": "Run #{number} queued",
     "confirmFirst": "Confirm every risk module to run.",
     "readOnly": {
       "title": "What Hindama does",
@@ -1686,21 +1701,28 @@
       "goVerify": "Go to verification",
       "active": "A run is already in progress.",
       "viewRun": "View the run"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "moduleUnavailable": "A module no longer meets its requirements. Check the list and try again.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be started",
+      "reference": "Reference: {id}"
     }
   },
   "RunProgress": {
     "title": "Run in progress",
     "crumb": "In progress",
     "crumbHistory": "Runs",
-    "live": "Live",
-    "completed": "Finished",
     "started": "Started at {time} · {modules, plural, one {# module} other {# modules}}",
     "now": "Testing now: <b>{module}</b>",
     "progressLabel": "Run progress",
     "stats": {
       "requests": "Requests sent",
       "minutes": "Elapsed time",
-      "speed": "Speed"
+      "speed": "Speed limit",
+      "cells": "{done} / {total}",
+      "cellsLabel": "Checks"
     },
     "viewResults": "View results",
     "cancel": "Cancel run",
@@ -1708,33 +1730,48 @@
     "recent": "Most recent",
     "noneYet": "Findings will appear here as soon as they are detected.",
     "modules": "Modules",
-    "moduleDone": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
-    "moduleRunning": "Running · {percent} %",
+    "moduleDone": "Done",
+    "moduleRunning": "Running",
     "modulePending": "Waiting",
-    "notices": {
-      "title": "Notices",
-      "expired": {
-        "title": "{name}'s token expired",
-        "text": "Its tests were skipped. Update the token and run again.",
-        "action": "Update"
-      },
-      "blocked": {
-        "title": "{count, plural, one {# request blocked} other {# requests blocked}}",
-        "text": "Your API answered <code>429</code>. Hindama slowed down automatically."
-      }
-    },
     "cancelDialog": {
       "title": "Cancel run no. {number}?",
       "text": "The {count, plural, one {# finding} other {# findings}} found so far are kept and the test resources created are deleted.",
       "confirm": "Cancel run",
       "keep": "Keep running"
     },
-    "cancelled": "Run no. {number} cancelled",
     "finished": "Run no. {number} finished",
     "none": {
       "title": "There is no run in progress",
       "text": "Start a new run to follow its progress here.",
       "action": "New run"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Live",
+      "completed": "Finished",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "cancelling": "Cancelling…",
+    "queuedAt": "Queued · {modules, plural, one {# module} other {# modules}}",
+    "subject": "the run",
+    "lost": {
+      "title": "The live connection was lost",
+      "text": "Reload the page to see the current state of the run."
+    },
+    "pending": {
+      "title": "{count, plural, one {# test resource couldn't be deleted} other {# test resources couldn't be deleted}}",
+      "text": "Hindama tried 3 times. Delete them by hand in your API."
+    },
+    "cancelRequested": "Cancellation of run #{number} requested",
+    "ended": {
+      "cancelled": "Run #{number} cancelled",
+      "failed": "Run #{number} didn't finish"
+    },
+    "errors": {
+      "notActive": "The run already finished.",
+      "failed": "The run could not be cancelled",
+      "reference": "Reference: {id}"
     }
   },
   "RunTabs": {
@@ -1744,35 +1781,29 @@
     "findings": "Findings ({count})"
   },
   "RunResults": {
-    "title": "Run no. {number}",
+    "title": "Run #{number}",
     "crumbHistory": "History",
-    "none": {
-      "title": "There are no runs yet",
-      "text": "When you finish your first run, its results will appear here.",
-      "action": "New run"
-    },
     "report": "Generate report",
-    "export": "Export to Excel",
-    "exported": "Export ready",
-    "exportedText": "The file was downloaded with the run's findings.",
     "retest": "Test again",
-    "retestBusy": "A run is already in progress",
-    "retestStarted": "Repeating run no. {number}",
-    "completed": "Completed · {date}",
     "data": "Run details",
     "end": {
-      "normal": "End: normal"
+      "normal": "End: normal",
+      "limit_reached": "End: a limit was reached",
+      "cancelled_by_user": "End: cancelled by the user",
+      "verification_invalid": "End: the host verification is no longer valid",
+      "heartbeat_expired": "End: the engine stopped responding",
+      "lost_in_queue": "End: lost in the queue",
+      "error": "End: internal error"
     },
-    "contract": "Contract {version}",
-    "repeat": "Repeat of run no. {number}",
+    "contract": "Contract #{number}",
+    "repeat": "Repeats an earlier run",
     "headline": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
-    "headlineText": "{new, plural, one {# is new} other {# are new}} and {regressions, plural, one {# is a regression} other {# are regressions}} of something that was already resolved.",
     "viewFindings": "View findings",
     "stats": {
       "requests": "Requests",
-      "minutes": "Minutes elapsed",
+      "minutes": "Minutes",
       "modules": "Modules run",
-      "blocked": "Blocked requests"
+      "cells": "Checks evaluated"
     },
     "comparison": {
       "title": "Compared with run no. {number}",
@@ -1780,89 +1811,99 @@
       "firstText": "There is no earlier run to compare with.",
       "new": "New",
       "persistent": "Persistent",
-      "resolved": "Resolved",
       "regression": "Regressions",
-      "note": "A finding is a regression when it comes back after being marked as resolved."
+      "note": "A finding is a regression when it comes back after being marked as resolved.",
+      "onlyLatest": "The comparison uses the current status of the findings, so it is only shown for the project's latest run."
     },
     "bySeverity": "By severity",
     "modules": "Modules",
     "limits": "Limits: {rps} req/s · {concurrency} concurrent · {total} requests · {minutes} min",
-    "moduleBlocked": "Not run: no administrator identity",
     "moduleNotSelected": "Not selected",
-    "moduleFindings": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
-    "incomplete": "incomplete",
     "notices": {
       "title": "Notices",
-      "expired": {
-        "title": "{name} had an expired credential",
-        "text": "{count} Object access tests were skipped. That module's results are incomplete."
+      "partial": {
+        "completed": {
+          "title": "Partial result",
+          "text": "The run stopped when it reached a limit and some checks were not evaluated."
+        },
+        "cancelled": {
+          "title": "Run cancelled",
+          "text": "The results are partial: they only include what was evaluated before it stopped."
+        },
+        "failed": {
+          "title": "The run did not finish",
+          "text": "The results are partial: they only include what was evaluated before the failure."
+        }
       },
-      "skipped": {
-        "title": "{module} was not run",
-        "text": "An identity with the administrator role is missing."
+      "pending": {
+        "title": "{count, plural, one {# test resource could not be deleted} other {# test resources could not be deleted}}",
+        "text": "Hindama tried 3 times. Delete them by hand in your API."
       }
     },
-    "top": "Most severe"
+    "top": "Most severe",
+    "titleLoading": "Run results",
+    "subject": "the run",
+    "status": {
+      "completed": "Completed · {date}",
+      "cancelled": "Cancelled · {date}",
+      "failed": "Did not finish · {date}"
+    },
+    "moduleRun": "Run",
+    "active": {
+      "title": "Run #{number} is still in progress",
+      "text": "Its results will show up here when it finishes.",
+      "action": "View progress"
+    }
   },
   "Matrix": {
     "title": "Access matrix",
-    "onlyDiscrepancies": "Only discrepancies",
+    "subject": "the matrix",
+    "onlyDiscrepancies": "Discrepancies only",
+    "module": "Module",
+    "allModules": "All modules",
     "legend": {
       "title": "Legend",
-      "allow": "Allowed, as expected",
-      "deny": "Denied, as expected",
-      "discrepancy": "Discrepancy: opens the finding",
-      "error": "Error: the test could not finish",
-      "skipped": "Skipped or not applicable, with its reason"
+      "pass": "Pass: responded as expected",
+      "fail": "Discrepancy: did not respond as expected",
+      "error": "Error: could not be evaluated",
+      "skipped": "Skipped: expired credential or missing requirement"
     },
-    "summary": "{rows, plural, one {# operation} other {# operations}} · {identities} identities · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
+    "summary": "{rows, plural, one {# row} other {# rows}} · {identities, plural, one {# identity} other {# identities}} · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
     "none": {
-      "title": "There are no discrepancies",
+      "title": "No discrepancies",
       "text": "Every identity got the expected response."
     },
     "empty": {
-      "title": "This run has no matrix",
-      "text": "The matrix is built when the object access module is tested with at least two identities."
+      "title": "This run has no results",
+      "text": "The matrix fills in as the run evaluates its checks."
     },
     "caption": "Response of each operation for each identity",
-    "operation": "Operation and policy",
-    "roles": {
-      "unauthenticated": "Unauthenticated",
-      "owner": "User · owner",
-      "user": "User",
-      "other": "Other"
+    "operation": "Operation and module",
+    "global": "Whole API",
+    "identityDeleted": "{name} (deleted)",
+    "notEvaluated": "Not evaluated",
+    "verdict": {
+      "pass": "Pass",
+      "fail": "Discrepancy",
+      "error": "Error",
+      "skipped": "Skipped"
     },
-    "global": "Whole API · CORS and headers",
-    "ownedBy": "of {name}",
-    "templates": {
-      "authenticated": "Any authenticated user",
-      "ownerOrAdmin": "Owner or administrator",
-      "owner": "Owner only",
-      "admin": "Administrator only",
-      "public": "Public",
-      "global": "Global check"
+    "expected": "Expected: {value}",
+    "codes": {
+      "allowed": "allowed",
+      "denied": "denied",
+      "own_data_only": "own data only",
+      "no_sql_error": "no SQL error"
     },
-    "expected": {
-      "allow": "Expected: allow",
-      "deny": "Expected: deny"
-    },
-    "discrepancy": "Discrepancy",
-    "error": "Error",
-    "notApplicable": "Not applicable",
-    "usesAnonymous": "Uses the anonymous identity",
-    "notTested": "Not tested",
-    "expiredCredential": "Expired credential",
-    "cors": "Open CORS",
-    "timeout": "Timed out"
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Findings": {
     "globalOperation": "Entire API",
     "title": "Findings",
     "subtitle": "Current state of the project, with the results of run no. {number}.",
     "subtitleNone": "There are no runs in this project yet.",
-    "export": "Export to Excel",
-    "exported": "Export ready",
-    "exportedText": "{count, plural, one {# finding was exported.} other {# findings were exported.}} It only includes the filtered ones.",
     "empty": {
       "title": "There are no findings yet",
       "text": "Run the tests to see here what we find in your API.",
@@ -1873,7 +1914,6 @@
       "module": "Module",
       "severity": "Severity",
       "status": "Status",
-      "reason": "Dismissal reason",
       "allModules": "All modules",
       "allSeverities": "All",
       "all": "All",
@@ -1882,19 +1922,16 @@
     "status": {
       "open": "Open"
     },
-    "reason": {
-      "all": "Accepted risk and false positive",
-      "accepted": "Accepted risk",
-      "false_positive": "False positive"
-    },
     "chips": {
       "status": "Status: {value}",
       "module": "Module: {value}",
       "severity": "Severity: {value}",
-      "reason": "Reason: {value}",
-      "remove": "Remove filter “{filter}”"
+      "remove": "Remove filter “{filter}”",
+      "run": "Run #{number}",
+      "runLoading": "Run",
+      "runText": "Run"
     },
-    "showing": "Showing {shown} of {total} · sorted by severity · “Export to Excel” includes only the filtered ones",
+    "showing": "Showing {shown} of {total} · sorted by severity",
     "openCount": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
     "count": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
     "cols": {
@@ -1905,103 +1942,95 @@
       "classification": "Classification",
       "status": "Status"
     },
-    "open": "Open {title}"
+    "open": "Open {title}",
+    "subject": "the findings",
+    "none": "This project has no findings.",
+    "identityDeleted": "{name} (deleted)",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "FindingDetail": {
-    "globalOperation": "Entire API",
+    "globalOperation": "Whole API",
     "crumb": "Finding",
-    "notFound": "Finding not found",
+    "subject": "the finding",
     "summary": "Finding summary",
     "severity": "{severity} severity",
+    "identityDeleted": "{name} (deleted)",
     "fields": {
       "operation": "Operation",
       "identity": "Identity",
       "module": "Module",
       "owasp": "OWASP",
-      "cwe": "CWE"
+      "cwe": "CWE",
+      "detected": "Detected"
     },
+    "detectedRuns": "From run #{first} to run #{last}",
     "newTab": "(opens in a new tab)",
-    "retest": "Test again",
-    "retestStarted": "Testing this finding again",
-    "retestText": "Only this operation is repeated; you will see the result in a few seconds.",
     "acceptRisk": "Accept the risk",
     "accepted": {
       "accepted": "Risk accepted",
       "falsePositive": "Dismissed as a false positive",
-      "note": "If a run detects it again, it stays accepted. You can revert it and it will go back to “{status}”."
-    },
-    "statusName": {
-      "new": "New",
-      "persistent": "Persistent",
-      "regression": "Regression",
-      "resolved": "Resolved",
-      "acceptedRisk": "Accepted risk"
+      "note": "Dismissed on {date}. If a run detects it again, it stays accepted. If you revert it, it goes back to “Persistent”."
     },
     "revert": "Revert",
-    "reverted": "The finding went back to “{status}”",
+    "reverted": "The finding went back to “Persistent”",
+    "resolved": {
+      "not_detected": "Resolved: a run no longer detected it",
+      "identity_deleted": "Resolved: the identity was deleted",
+      "operation_retired": "Resolved: the operation left the contract",
+      "at": "Since {date}."
+    },
     "toast": {
       "accepted": "Risk accepted",
       "falsePositive": "Finding dismissed as a false positive"
     },
-    "policies": {
-      "owner": "Owner only",
-      "admin": "Administrator only",
-      "authenticated": "Any authenticated user",
-      "public": "Public",
-      "global": "Global check"
-    },
-    "expected": {
-      "title": "Expected by the “{policy}” policy",
-      "denied": "Denied",
-      "secure": "Secure configuration",
-      "text": {
-        "owner": "403 or 404: the resource belongs to another user",
-        "admin": "403: the operation is for administrators only",
-        "authenticated": "401: a valid, current credential is required",
-        "public": "Any identity can read it",
-        "global": "The response must not expose the insecure behavior or value"
-      }
-    },
-    "observed": {
-      "title": "Observed as {identity}",
-      "404": "404 Not Found",
-      "500": "500 Server error",
-      "text": {
-        "owner": "The API returned the whole resource",
-        "admin": "The API ran the operation without being an administrator",
-        "authenticated": "The API answered without validating the credential as expected",
-        "public": "The API answered",
-        "global": "The response includes the behavior described in the finding"
-      }
+    "why": {
+      "title": "Why it is a flaw · {identity}",
+      "resource": "Resource: {type} “{value}”",
+      "resourceOwner": "Resource: {type} “{value}” owned by {owner}"
     },
     "evidence": {
-      "title": "Evidence from run {run}",
+      "title": "Evidence from run #{run}",
       "copyCurl": "Copy as curl",
       "request": "Request",
-      "masked": "Credential masked",
+      "masked": "Credentials masked",
       "response": "Response · {status}",
-      "size": "{bytes} bytes"
+      "truncated": "Body cut to 10 KB"
     },
     "fix": {
-      "title": "How to fix it",
-      "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
-      "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
-      "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
-      "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
-      "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
-      "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
-      "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
+      "title": "How to fix it"
     },
     "history": {
       "title": "History",
-      "run": "Run {number}",
+      "run": "Run #{number}",
+      "analyst": "By the analyst",
       "reason": {
-        "new": "First detected in run {number}",
-        "persistent": "Detected again in run {number}",
+        "detected": "Detected",
+        "not_detected": "No longer detected",
         "regression": "Came back after being resolved",
-        "resolved": "No longer detected in run {number}",
-        "acceptedRisk": "Risk accepted"
+        "accepted": "Risk accepted",
+        "false_positive": "Marked as a false positive",
+        "reverted": "The dismissal was reverted",
+        "identity_deleted": "The identity was deleted",
+        "operation_retired": "The operation left the contract"
       }
+    },
+    "occurrences": {
+      "title": "Detections",
+      "subject": "the detections",
+      "viewRun": "View run #{number}"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}",
+    "errors": {
+      "notOpen": "The finding is no longer open. Its status was refreshed.",
+      "notDismissed": "The finding was no longer dismissed. Its status was refreshed.",
+      "justification": "Check the justification: it is required and cannot contain control characters.",
+      "dismiss": "The finding could not be dismissed",
+      "revert": "The dismissal could not be reverted",
+      "reference": "Reference: {id}"
     }
   },
   "History": {
@@ -2121,6 +2150,42 @@
       "title": "There is nothing to report yet",
       "text": "The report is built from a finished run.",
       "action": "New run"
+    },
+    "sample": {
+      "statusName": {
+        "new": "New",
+        "persistent": "Persistent",
+        "regression": "Regression",
+        "resolved": "Resolved",
+        "acceptedRisk": "Accepted risk"
+      },
+      "expected": {
+        "text": {
+          "owner": "403 or 404: the resource belongs to another user",
+          "admin": "403: the operation is for administrators only",
+          "authenticated": "401: a valid, current credential is required",
+          "public": "Any identity can read it",
+          "global": "The response must not expose the insecure behavior or value"
+        }
+      },
+      "observed": {
+        "text": {
+          "owner": "The API returned the whole resource",
+          "admin": "The API ran the operation without being an administrator",
+          "authenticated": "The API answered without validating the credential as expected",
+          "public": "The API answered",
+          "global": "The response includes the behavior described in the finding"
+        }
+      },
+      "fix": {
+        "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
+        "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
+        "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
+        "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
+        "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
+        "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
+        "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
+      }
     }
   },
   "Stats": {
@@ -2338,5 +2403,22 @@
     "list": "Loading the list",
     "detail": "Loading the details",
     "chart": "Loading the chart"
+  },
+  "Rerun": {
+    "started": "Run #{number} queued",
+    "confirm": {
+      "title": "Repeat run #{number}",
+      "text": "It includes modules that change test data or load the server. Confirmation is required for every run.",
+      "heading": "Risky modules",
+      "button": "Confirm and repeat"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "notVerified": "Verify the host's ownership before running.",
+      "moduleUnavailable": "A module of the run no longer meets its requirements. Check the project.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be repeated",
+      "reference": "Reference: {id}"
+    }
   }
 }
