@@ -1714,15 +1714,15 @@
     "title": "Run in progress",
     "crumb": "In progress",
     "crumbHistory": "Runs",
-    "live": "Live",
-    "completed": "Finished",
     "started": "Started at {time} · {modules, plural, one {# module} other {# modules}}",
     "now": "Testing now: <b>{module}</b>",
     "progressLabel": "Run progress",
     "stats": {
       "requests": "Requests sent",
       "minutes": "Elapsed time",
-      "speed": "Speed"
+      "speed": "Speed limit",
+      "cells": "{done} / {total}",
+      "cellsLabel": "Checks"
     },
     "viewResults": "View results",
     "cancel": "Cancel run",
@@ -1730,33 +1730,48 @@
     "recent": "Most recent",
     "noneYet": "Findings will appear here as soon as they are detected.",
     "modules": "Modules",
-    "moduleDone": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
-    "moduleRunning": "Running · {percent} %",
+    "moduleDone": "Done",
+    "moduleRunning": "Running",
     "modulePending": "Waiting",
-    "notices": {
-      "title": "Notices",
-      "expired": {
-        "title": "{name}'s token expired",
-        "text": "Its tests were skipped. Update the token and run again.",
-        "action": "Update"
-      },
-      "blocked": {
-        "title": "{count, plural, one {# request blocked} other {# requests blocked}}",
-        "text": "Your API answered <code>429</code>. Hindama slowed down automatically."
-      }
-    },
     "cancelDialog": {
       "title": "Cancel run no. {number}?",
       "text": "The {count, plural, one {# finding} other {# findings}} found so far are kept and the test resources created are deleted.",
       "confirm": "Cancel run",
       "keep": "Keep running"
     },
-    "cancelled": "Run no. {number} cancelled",
     "finished": "Run no. {number} finished",
     "none": {
       "title": "There is no run in progress",
       "text": "Start a new run to follow its progress here.",
       "action": "New run"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Live",
+      "completed": "Finished",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "cancelling": "Cancelling…",
+    "queuedAt": "Queued · {modules, plural, one {# module} other {# modules}}",
+    "subject": "the run",
+    "lost": {
+      "title": "The live connection was lost",
+      "text": "Reload the page to see the current state of the run."
+    },
+    "pending": {
+      "title": "{count, plural, one {# test resource couldn't be deleted} other {# test resources couldn't be deleted}}",
+      "text": "Hindama tried 3 times. Delete them by hand in your API."
+    },
+    "cancelRequested": "Cancellation of run #{number} requested",
+    "ended": {
+      "cancelled": "Run #{number} cancelled",
+      "failed": "Run #{number} didn't finish"
+    },
+    "errors": {
+      "notActive": "The run already finished.",
+      "failed": "The run could not be cancelled",
+      "reference": "Reference: {id}"
     }
   },
   "RunTabs": {

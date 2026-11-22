@@ -241,42 +241,105 @@ test.describe("V-16 repetir la última ejecución", () => {
 });
 
 test.describe("V-26 ejecución en curso", () => {
-  test("muestra el avance en vivo y los módulos", async ({ page }) => {
-    await page.goto("/projects/inventario/runs/current");
+  const active = (page: Parameters<typeof mockBff>[0]) =>
+    mockBff(page, PROJECT, { body: project({ last_run: runningSummary() }) }, "GET");
+
+  test("muestra el avance en vivo con los eventos del stream", async ({ page }) => {
+    await active(page);
+    const urls = await mockProgress(page, [
+      { event: "snapshot", data: runningRun() },
+      {
+        event: "progress",
+        data: { ...runningRun().progress, percent: 64, requests_sent: 97, cells_evaluated: 77 },
+      },
+    ]);
+    await page.goto(`${BASE}/runs/current`);
     await expect(page.getByRole("heading", { name: "Ejecución en curso", level: 1 })).toBeVisible();
     await expect(page.getByText("En vivo")).toBeVisible();
     const bar = page.getByRole("progressbar", { name: "Avance de la ejecución" });
-    const first = Number(await bar.getAttribute("aria-valuenow"));
-    await expect
-      .poll(async () => Number(await bar.getAttribute("aria-valuenow")), { timeout: 10_000 })
-      .toBeGreaterThan(first);
+    await expect(bar).toHaveAttribute("aria-valuenow", "64");
+    await expect(page.getByText("77 / 120")).toBeVisible();
+    await expect(page.getByText("2 hallazgos hasta ahora")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Módulos" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Avisos" })).toBeVisible();
+    expect(urls[0]).toContain(`/api/projects/${PROJECT_ID}/runs/${RUN_ID}/progress`);
   });
 
-  test("cancelar pide confirmación y deja el proyecto sin ejecución activa", async ({ page }) => {
-    await page.goto("/projects/inventario/runs/current");
+  test("al terminar lo avisa y ofrece ver los resultados", async ({ page }) => {
+    await active(page);
+    await mockProgress(page, [
+      { event: "snapshot", data: runningRun() },
+      { event: "end", data: completedRun() },
+    ]);
+    await page.goto(`${BASE}/runs/current`);
+    await expect(page.getByText("Ejecución n.º 3 terminada")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver resultados" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/runs/${RUN_ID}$`),
+    );
+    await expect(page.getByRole("button", { name: "Cancelar ejecución" })).toHaveCount(0);
+  });
+
+  test("cancelar pide confirmación y envía la cancelación", async ({ page }) => {
+    await active(page);
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    const cancelling = runningRun({ cancel_requested_at: "2026-11-17T09:11:00Z" });
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}/cancel`,
+      { status: 202, body: cancelling },
+      "POST",
+    );
+    // Tras pedir la cancelación, `getRun` la refleja (el simulador repite su ejemplo).
+    await page.route(`**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`, (route) =>
+      route.request().method() === "GET" && calls.length > 0
+        ? route.fulfill({ json: cancelling })
+        : route.fallback(),
+    );
+    await page.goto(`${BASE}/runs/current`);
     await page.getByRole("button", { name: "Cancelar ejecución" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText("¿Cancelar la ejecución n.º 1?")).toBeVisible();
-
+    await expect(dialog.getByText("¿Cancelar la ejecución n.º 3?")).toBeVisible();
     await dialog.getByRole("button", { name: "Seguir ejecutando" }).click();
     await expect(dialog).toHaveCount(0);
+    expect(calls).toHaveLength(0);
 
     await page.getByRole("button", { name: "Cancelar ejecución" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Cancelar ejecución" }).click();
-    await expect(page).toHaveURL(/\/projects\/inventario$/);
-    await expect(page.getByText("Ejecución n.º 1 cancelada")).toBeVisible();
+    await expect(page.getByText("Se pidió cancelar la ejecución n.º 3")).toBeVisible();
+    expect(calls).toHaveLength(1);
+    await expect(page.getByText("Cancelando…")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Cancelar ejecución" })).toBeDisabled();
+  });
 
-    await page.goto("/projects/inventario/runs/current");
-    await expect(page.getByText("No hay una ejecución en curso")).toBeVisible();
+  test("cancelar una ejecución que ya terminó lo explica", async ({ page }) => {
+    await active(page);
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}/cancel`,
+      { status: 409, body: problem(409, "run.not_active") },
+      "POST",
+    );
+    await page.goto(`${BASE}/runs/current`);
+    await page.getByRole("button", { name: "Cancelar ejecución" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Cancelar ejecución" }).click();
+    await expect(page.getByText("La ejecución ya terminó.")).toBeVisible();
+  });
+
+  test("si se pierde el stream lo avisa", async ({ page }) => {
+    await active(page);
+    await mockProgress(page, [], 503);
+    await page.goto(`${BASE}/runs/current`);
+    await expect(page.getByText("Se perdió la conexión en vivo")).toBeVisible();
+    // La última foto de `getRun` sigue visible.
+    await expect(page.getByRole("progressbar", { name: "Avance de la ejecución" })).toBeVisible();
   });
 
   test("sin ejecución activa ofrece iniciar una nueva", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/current");
+    await page.goto(`${BASE}/runs/current`);
     await expect(page.getByText("No hay una ejecución en curso")).toBeVisible();
     await page.getByRole("link", { name: "Nueva ejecución" }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/runs\/new$/);
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/new$`));
   });
 });
 
