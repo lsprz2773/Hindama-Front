@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { RouteParams } from "@/components/layout/route-params";
 import { pageTitle } from "@/i18n/metadata";
 import { SEED_PROJECTS } from "@/features/projects/seed";
 import { SettingsView } from "@/features/projects/settings-view";
-import { resolveLocale } from "@/i18n/params";
 
 export function generateStaticParams() {
   return SEED_PROJECTS.map((p) => ({ id: p.id }));
@@ -14,10 +14,8 @@ export async function generateMetadata({
   return pageTitle(params, "settings");
 }
 
-export default async function ProjectSettingsPage({
+export default function ProjectSettingsPage({
   params,
 }: PageProps<"/[locale]/projects/[id]/settings">) {
-  const { id } = await params;
-  await resolveLocale(params);
-  return <SettingsView id={id} />;
+  return <RouteParams params={params}>{({ id }) => <SettingsView id={id} />}</RouteParams>;
 }

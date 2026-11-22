@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { RouteParams } from "@/components/layout/route-params";
 import { pageTitle } from "@/i18n/metadata";
 import { IdentityFormView } from "@/features/config/identity-form-view";
 import { SEED_PROJECTS } from "@/features/projects/seed";
-import { resolveLocale } from "@/i18n/params";
 
 export function generateStaticParams() {
   return SEED_PROJECTS.flatMap((p) =>
@@ -16,10 +16,12 @@ export async function generateMetadata({
   return pageTitle(params, "identityEdit");
 }
 
-export default async function Page({
+export default function Page({
   params,
 }: PageProps<"/[locale]/projects/[id]/identities/[identityId]">) {
-  const { id, identityId } = await params;
-  await resolveLocale(params);
-  return <IdentityFormView id={id} identityId={identityId} />;
+  return (
+    <RouteParams params={params}>
+      {({ id, identityId }) => <IdentityFormView id={id} identityId={identityId} />}
+    </RouteParams>
+  );
 }

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { RouteParams } from "@/components/layout/route-params";
 import { pageTitle } from "@/i18n/metadata";
 import { SEED_PROJECTS } from "@/features/projects/seed";
 import { FindingDetailView } from "@/features/runs/finding-detail-view";
 import { SEED_FINDINGS } from "@/features/runs/data";
-import { resolveLocale } from "@/i18n/params";
 
 export function generateStaticParams() {
   return SEED_PROJECTS.flatMap((p) =>
@@ -17,10 +17,12 @@ export async function generateMetadata({
   return pageTitle(params, "finding");
 }
 
-export default async function Page({
+export default function Page({
   params,
 }: PageProps<"/[locale]/projects/[id]/findings/[findingId]">) {
-  const { id, findingId } = await params;
-  await resolveLocale(params);
-  return <FindingDetailView id={id} findingId={findingId} />;
+  return (
+    <RouteParams params={params}>
+      {({ id, findingId }) => <FindingDetailView id={id} findingId={findingId} />}
+    </RouteParams>
+  );
 }
