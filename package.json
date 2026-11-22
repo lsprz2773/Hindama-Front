@@ -10,8 +10,12 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "contract:types": "openapi-typescript contract/openapi.yaml -o src/lib/api/schema.d.ts",
+    "contract:check": "node scripts/check-contract.mjs",
+    "pretest": "npm run contract:check",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "mock:api": "prism mock contract/openapi.yaml --port 4010 --host 127.0.0.1 --errors",
     "e2e": "playwright test"
   },
   "dependencies": {
@@ -32,6 +36,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
+    "@stoplight/prism-cli": "5.16.0",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -44,6 +49,7 @@
     "eslint-config-next": "16.4.5",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^27.4.0",
+    "openapi-typescript": "7.13.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
