@@ -569,17 +569,17 @@
     "description": "Pasa a «Riesgo aceptado» y deja de contar entre los abiertos. Elige el motivo.",
     "reason": "Motivo",
     "reasons": {
-      "accepted": "Riesgo aceptado",
+      "accepted_risk": "Riesgo aceptado",
       "false_positive": "Falso positivo"
     },
     "justification": "Justificación",
     "required": "(obligatoria)",
     "placeholder": "Explica por qué se acepta este riesgo",
     "help": "Se guarda en el historial del hallazgo, no en la bitácora.",
-    "tooShort": "Escribe una justificación de al menos {min} caracteres.",
+    "missing": "Escribe una justificación.",
     "submit": "Descartar hallazgo",
     "reasonText": {
-      "accepted": "El hallazgo es real y decides no corregirlo por ahora.",
+      "accepted_risk": "El hallazgo es real y decides no corregirlo por ahora.",
       "false_positive": "El hallazgo no es real: la API se comporta como se espera."
     },
     "notes": {
@@ -1953,98 +1953,84 @@
   "FindingDetail": {
     "globalOperation": "Toda la API",
     "crumb": "Hallazgo",
-    "notFound": "Hallazgo no encontrado",
+    "subject": "el hallazgo",
     "summary": "Resumen del hallazgo",
     "severity": "Severidad {severity}",
+    "identityDeleted": "{name} (eliminada)",
     "fields": {
       "operation": "Operación",
       "identity": "Identidad",
       "module": "Módulo",
       "owasp": "OWASP",
-      "cwe": "CWE"
+      "cwe": "CWE",
+      "detected": "Detectado"
     },
+    "detectedRuns": "De la ejecución n.º {first} a la n.º {last}",
     "newTab": "(se abre en una pestaña nueva)",
-    "retest": "Volver a probar",
-    "retestStarted": "Probando de nuevo este hallazgo",
-    "retestText": "Solo se repite esta operación; verás el resultado en unos segundos.",
     "acceptRisk": "Aceptar el riesgo",
     "accepted": {
       "accepted": "Riesgo aceptado",
       "falsePositive": "Descartado como falso positivo",
-      "note": "Si una ejecución lo vuelve a detectar, seguirá aceptado. Puedes revertirlo y volverá a «{status}»."
-    },
-    "statusName": {
-      "new": "Nuevo",
-      "persistent": "Persistente",
-      "regression": "Regresión",
-      "resolved": "Resuelto",
-      "acceptedRisk": "Riesgo aceptado"
+      "note": "Descartado el {date}. Si una ejecución lo vuelve a detectar, seguirá aceptado. Si lo reviertes, vuelve a «Persistente»."
     },
     "revert": "Revertir",
-    "reverted": "El hallazgo volvió a «{status}»",
+    "reverted": "El hallazgo volvió a «Persistente»",
+    "resolved": {
+      "not_detected": "Resuelto: una ejecución ya no lo detectó",
+      "identity_deleted": "Resuelto: se eliminó la identidad",
+      "operation_retired": "Resuelto: la operación salió del contrato",
+      "at": "Desde el {date}."
+    },
     "toast": {
       "accepted": "Riesgo aceptado",
       "falsePositive": "Hallazgo descartado como falso positivo"
     },
-    "policies": {
-      "owner": "Solo propietario",
-      "admin": "Solo administrador",
-      "authenticated": "Cualquier autenticado",
-      "public": "Pública",
-      "global": "Comprobación global"
-    },
-    "expected": {
-      "title": "Esperado según la política «{policy}»",
-      "denied": "Denegado",
-      "secure": "Configuración segura",
-      "text": {
-        "owner": "403 o 404: el recurso pertenece a otro usuario",
-        "admin": "403: la operación es solo para administradores",
-        "authenticated": "401: se requiere una credencial válida y vigente",
-        "public": "Cualquier identidad puede consultarla",
-        "global": "La respuesta no debe exponer el comportamiento o el valor inseguro"
-      }
-    },
-    "observed": {
-      "title": "Observado como {identity}",
-      "404": "404 No encontrado",
-      "500": "500 Error del servidor",
-      "text": {
-        "owner": "La API devolvió el recurso completo",
-        "admin": "La API ejecutó la operación sin ser administrador",
-        "authenticated": "La API respondió sin validar la credencial como se esperaba",
-        "public": "La API respondió",
-        "global": "La respuesta incluye el comportamiento descrito en el hallazgo"
-      }
+    "why": {
+      "title": "Por qué es una falla · {identity}",
+      "resource": "Recurso: {type} «{value}»",
+      "resourceOwner": "Recurso: {type} «{value}» de {owner}"
     },
     "evidence": {
-      "title": "Evidencia de la ejecución {run}",
+      "title": "Evidencia de la ejecución n.º {run}",
       "copyCurl": "Copiar como curl",
       "request": "Petición",
-      "masked": "Credencial enmascarada",
+      "masked": "Credenciales enmascaradas",
       "response": "Respuesta · {status}",
-      "size": "{bytes} bytes"
+      "truncated": "Cuerpo recortado a 10 KB"
     },
     "fix": {
-      "title": "Cómo corregirlo",
-      "API1": "Antes de devolver un recurso, comprueba en el servidor que pertenezca al usuario del token. Compara el identificador del propietario con el del usuario autenticado y responde 404 cuando no coincida, para no revelar que existe.",
-      "API2": "Valida la firma, la vigencia y el destinatario del token en cada petición. Rechaza con 401 las credenciales vencidas o revocadas y no aceptes tokens sin expiración.",
-      "API3": "Define una lista de campos permitidos por operación y descarta el resto. Nunca asignes directamente el cuerpo de la petición al modelo: campos como el estado o el rol solo los cambia el servidor.",
-      "API4": "Limita el tamaño de página, el número de peticiones por identidad y la duración de cada una. Responde 429 con Retry-After cuando se alcance el límite.",
-      "API5": "Verifica el rol en el servidor para cada función administrativa, no solo en la interfaz. Niega por omisión y concede el acceso explícitamente.",
-      "API8": "Revisa la configuración del servidor: agrega las cabeceras de seguridad, restringe CORS a orígenes conocidos y devuelve errores genéricos sin trazas ni versiones.",
-      "API9": "Mantén un inventario de las operaciones y versiones expuestas. Deshabilita los métodos y las rutas que no estén documentados."
+      "title": "Cómo corregirlo"
     },
     "history": {
       "title": "Historial",
-      "run": "Ejecución {number}",
+      "run": "Ejecución n.º {number}",
+      "analyst": "Por el analista",
       "reason": {
-        "new": "Detectado por primera vez en la ejecución {number}",
-        "persistent": "Se detectó de nuevo en la ejecución {number}",
+        "detected": "Detectado",
+        "not_detected": "Ya no se detectó",
         "regression": "Reapareció tras haberse resuelto",
-        "resolved": "Ya no se detectó en la ejecución {number}",
-        "acceptedRisk": "Riesgo aceptado"
+        "accepted": "Riesgo aceptado",
+        "false_positive": "Marcado como falso positivo",
+        "reverted": "Se revirtió el descarte",
+        "identity_deleted": "Se eliminó la identidad",
+        "operation_retired": "La operación salió del contrato"
       }
+    },
+    "occurrences": {
+      "title": "Detecciones",
+      "subject": "las detecciones",
+      "viewRun": "Ver la ejecución n.º {number}"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}",
+    "errors": {
+      "notOpen": "El hallazgo ya no está abierto. Se actualizó su estado.",
+      "notDismissed": "El hallazgo ya no estaba descartado. Se actualizó su estado.",
+      "justification": "Revisa la justificación: es obligatoria y no admite caracteres de control.",
+      "dismiss": "No se pudo descartar el hallazgo",
+      "revert": "No se pudo revertir el descarte",
+      "reference": "Referencia: {id}"
     }
   },
   "History": {
@@ -2164,6 +2150,42 @@
       "title": "Aún no hay nada que reportar",
       "text": "El reporte se genera a partir de una ejecución terminada.",
       "action": "Nueva ejecución"
+    },
+    "sample": {
+      "statusName": {
+        "new": "Nuevo",
+        "persistent": "Persistente",
+        "regression": "Regresión",
+        "resolved": "Resuelto",
+        "acceptedRisk": "Riesgo aceptado"
+      },
+      "expected": {
+        "text": {
+          "owner": "403 o 404: el recurso pertenece a otro usuario",
+          "admin": "403: la operación es solo para administradores",
+          "authenticated": "401: se requiere una credencial válida y vigente",
+          "public": "Cualquier identidad puede consultarla",
+          "global": "La respuesta no debe exponer el comportamiento o el valor inseguro"
+        }
+      },
+      "observed": {
+        "text": {
+          "owner": "La API devolvió el recurso completo",
+          "admin": "La API ejecutó la operación sin ser administrador",
+          "authenticated": "La API respondió sin validar la credencial como se esperaba",
+          "public": "La API respondió",
+          "global": "La respuesta incluye el comportamiento descrito en el hallazgo"
+        }
+      },
+      "fix": {
+        "API1": "Antes de devolver un recurso, comprueba en el servidor que pertenezca al usuario del token. Compara el identificador del propietario con el del usuario autenticado y responde 404 cuando no coincida, para no revelar que existe.",
+        "API2": "Valida la firma, la vigencia y el destinatario del token en cada petición. Rechaza con 401 las credenciales vencidas o revocadas y no aceptes tokens sin expiración.",
+        "API3": "Define una lista de campos permitidos por operación y descarta el resto. Nunca asignes directamente el cuerpo de la petición al modelo: campos como el estado o el rol solo los cambia el servidor.",
+        "API4": "Limita el tamaño de página, el número de peticiones por identidad y la duración de cada una. Responde 429 con Retry-After cuando se alcance el límite.",
+        "API5": "Verifica el rol en el servidor para cada función administrativa, no solo en la interfaz. Niega por omisión y concede el acceso explícitamente.",
+        "API8": "Revisa la configuración del servidor: agrega las cabeceras de seguridad, restringe CORS a orígenes conocidos y devuelve errores genéricos sin trazas ni versiones.",
+        "API9": "Mantén un inventario de las operaciones y versiones expuestas. Deshabilita los métodos y las rutas que no estén documentados."
+      }
     }
   },
   "Stats": {

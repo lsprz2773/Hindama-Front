@@ -4,12 +4,14 @@ import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import type { DismissalReason } from "@/lib/api/schemas/findings";
 import { cn } from "@/lib/cn";
 import { useSubmit, type SubmitError } from "./use-submit";
 
-export type RiskReason = "accepted" | "false_positive";
-export const MIN_JUSTIFICATION = 10;
-export const MAX_JUSTIFICATION = 500;
+/** `DismissalReason` del contrato. */
+export type RiskReason = DismissalReason;
+/** `DismissalCreate.justification`: obligatoria tras recortar espacios, hasta 2000 caracteres. */
+export const MAX_JUSTIFICATION = 2000;
 
 export interface AcceptRiskDialogProps {
   open: boolean;
@@ -31,12 +33,12 @@ export function AcceptRiskDialog({
   const t = useTranslations("AcceptRisk");
   const td = useTranslations("Dialogs");
   const areaId = useId();
-  const [reason, setReason] = useState<RiskReason>("accepted");
+  const [reason, setReason] = useState<RiskReason>("accepted_risk");
   const [text, setText] = useState("");
   const [touched, setTouched] = useState(false);
 
   const trimmed = text.trim();
-  const invalid = trimmed.length < MIN_JUSTIFICATION;
+  const invalid = trimmed.length === 0;
   const showError = touched && invalid;
 
   const { busy, error, submit, reset } = useSubmit(
@@ -60,7 +62,7 @@ export function AcceptRiskDialog({
           reset();
           setText("");
           setTouched(false);
-          setReason("accepted");
+          setReason("accepted_risk");
         }
         onOpenChange(next);
       }}
@@ -82,7 +84,7 @@ export function AcceptRiskDialog({
     >
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
         <legend className="mb-2 p-0 text-sm font-semibold">{t("reason")}</legend>
-        {(["accepted", "false_positive"] as const).map((value) => {
+        {(["accepted_risk", "false_positive"] as const).map((value) => {
           const selected = reason === value;
           return (
             <label
@@ -133,7 +135,7 @@ export function AcceptRiskDialog({
           {showError ? (
             <span role="alert" className="flex items-center gap-2">
               <Icon name="alertCircle" size={16} className="text-danger" />
-              {t("tooShort", { min: MIN_JUSTIFICATION })}
+              {t("missing")}
             </span>
           ) : (
             <span className="text-muted">{t("help")}</span>

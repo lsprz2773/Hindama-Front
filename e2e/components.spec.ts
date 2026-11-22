@@ -60,18 +60,22 @@ test.describe("fase 0 · componentes comunes", () => {
     await expect(dialog.getByRole("button", { name: "Reintentar" })).toBeVisible();
   });
 
-  test("aceptar riesgo: exige 10 caracteres de justificación y guarda el motivo", async ({
+  test("aceptar riesgo: exige la justificación y guarda el motivo del contrato", async ({
     page,
   }) => {
     await page.goto("/design-system");
     await page.getByRole("button", { name: "Aceptar riesgo (C-09)" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
-    await expect(dialog.getByRole("alert")).toContainText("al menos 10 caracteres");
+    await expect(dialog.getByRole("alert")).toContainText("Escribe una justificación.");
+    // Solo espacios no cuenta: `DismissalCreate.justification` se recorta.
+    await dialog.getByRole("textbox").fill("   ");
+    await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
+    await expect(dialog.getByRole("alert")).toContainText("Escribe una justificación.");
 
     await dialog.getByRole("radio", { name: "Falso positivo" }).check();
     await dialog.getByRole("textbox").fill("La API solo se expone dentro de la red interna.");
-    await expect(dialog.getByText("47/500")).toBeVisible();
+    await expect(dialog.getByText("47/2000")).toBeVisible();
     await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
     await expect(dialog).toBeHidden();
     await expect(page.getByRole("status").filter({ hasText: "Decisión guardada" })).toContainText(

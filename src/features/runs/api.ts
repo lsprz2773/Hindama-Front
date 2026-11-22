@@ -253,12 +253,13 @@ export function useFindings(
 }
 
 /** `getFinding` (V-30). */
-export function useFinding(id: string, findingId: string) {
+export function useFinding(id: string, findingId: string, enabled = true) {
   const http = useHttpClient();
   return useQuery({
     queryKey: [...findingsKey(id), "detail", findingId],
     queryFn: async ({ signal }) =>
       (await http.read(findingPath(id, findingId), findingSchema, { signal })).data,
+    enabled,
     retry: false,
   });
 }

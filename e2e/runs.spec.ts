@@ -1,6 +1,6 @@
 import { expect, test } from "./fixtures";
 import { mockBff, problem } from "./support/bff";
-import { finding } from "./support/findings";
+import { finding, FINDING_ID, findingDetail, OCCURRENCE } from "./support/findings";
 import { project, PROJECT_ID } from "./support/projects";
 import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "./support/runs";
 
@@ -684,65 +684,164 @@ test.describe("V-29 hallazgos", () => {
 });
 
 test.describe("V-30 detalle de hallazgo", () => {
-  test("muestra esperado, observado, evidencia, corrección e historial", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings/f01");
+  const DETAIL = `**/api/projects/${PROJECT_ID}/findings/${FINDING_ID}`;
+  const URL_DETAIL = `${BASE}/findings/${FINDING_ID}`;
+  const dismissed = (reason = "false_positive") =>
+    findingDetail({
+      status: "accepted_risk",
+      dismissal: {
+        reason,
+        justification: "El balanceador responde así a propósito.",
+        dismissed_at: "2026-11-18T10:00:00Z",
+      },
+    });
+
+  test("muestra la explicación, la evidencia, la corrección y el historial", async ({ page }) => {
+    await page.goto(URL_DETAIL);
     await expect(
-      page.getByRole("heading", {
-        name: "Un usuario puede leer pedidos de otro usuario",
-        level: 1,
-      }),
+      page.getByRole("heading", { name: "Acceso a un objeto de otra identidad", level: 1 }),
     ).toBeVisible();
-    await expect(page.getByText("Severidad crítica")).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: /Esperado según la política «Solo propietario»/ }),
-    ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Observado como Soporte" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Evidencia de la ejecución 3" })).toBeVisible();
-    await expect(page.getByText("Authorization: Bearer ••••••••••a9F2")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Cómo corregirlo" })).toBeVisible();
-    await expect(page.getByText("Detectado por primera vez en la ejecución 1")).toBeVisible();
+    await expect(page.getByText("Severidad alta")).toBeVisible();
+    await expect(page.getByText("De la ejecución n.º 2 a la n.º 3")).toBeVisible();
     await expect(page.getByRole("link", { name: /CWE-639/ })).toHaveAttribute(
       "href",
       "https://cwe.mitre.org/data/definitions/639.html",
     );
+    await expect(page.getByRole("link", { name: /CWE-639/ })).toHaveAttribute(
+      "rel",
+      "noopener noreferrer",
+    );
+    await expect(
+      page.getByRole("heading", { name: "Por qué es una falla · Cliente B" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/obtuvo el recurso «1001» \(order\) de «Cliente A»/).first(),
+    ).toBeVisible();
+    await expect(page.getByText("Recurso: order «1001» de Cliente A")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Evidencia de la ejecución n.º 3" }),
+    ).toBeVisible();
+    const request = page
+      .getByRole("region", { name: "Evidencia de la ejecución n.º 3" })
+      .getByLabel("Petición");
+    await expect(request).toContainText("GET https://api.ejemplo.com/v1/orders/1001");
+    await expect(request).toContainText("authorization: ****x9Qz");
+    await expect(page.getByRole("heading", { name: "Cómo corregirlo" })).toBeVisible();
+    await expect(
+      page.getByText(/pertenece al usuario autenticado antes de devolverlo/),
+    ).toBeVisible();
+    const history = page.getByRole("region", { name: "Historial" });
+    await expect(history.getByRole("listitem")).toHaveCount(2);
+    await expect(history.getByRole("listitem").first()).toContainText("Ejecución n.º 2");
+    await expect(history.getByRole("listitem").first()).toContainText("Detectado");
   });
 
-  test("copiar como curl deja el comando en el portapapeles", async ({ page, context }) => {
+  test("copiar como curl deja el comando con la credencial enmascarada", async ({
+    page,
+    context,
+  }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/projects/pedidos/findings/f01");
+    await page.goto(URL_DETAIL);
     await page.getByRole("button", { name: "Copiar como curl" }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("curl https://");
+    const curl = await page.evaluate(() => navigator.clipboard.readText());
+    expect(curl).toContain("curl -X GET 'https://api.ejemplo.com/v1/orders/1001'");
+    expect(curl).toContain("-H 'authorization: ****x9Qz'");
   });
 
-  test("aceptar el riesgo, verlo descartado y revertirlo", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings/f01");
+  test("la evidencia se muestra como texto aunque traiga HTML", async ({ page }) => {
+    const occurrence = {
+      ...OCCURRENCE,
+      evidence: {
+        ...OCCURRENCE.evidence,
+        response: {
+          ...OCCURRENCE.evidence.response,
+          body: '<img src=x onerror="window.__xss=1"><script>window.__xss=2</script>',
+          body_truncated: true,
+        },
+      },
+    };
+    await mockBff(page, DETAIL, { body: findingDetail({ last_occurrence: occurrence }) }, "GET");
+    await page.goto(URL_DETAIL);
+    await expect(page.getByText("Cuerpo recortado a 10 KB")).toBeVisible();
+    await expect(page.getByText(/<img src=x onerror=/)).toBeVisible();
+    await expect(page.locator("#main img")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as { __xss?: number }).__xss)).toBeUndefined();
+  });
+
+  test("aceptar el riesgo envía el motivo y la justificación y muestra el descarte", async ({
+    page,
+  }) => {
+    const calls = await mockBff(page, `${DETAIL}/dismissal`, { body: dismissed() }, "POST");
+    // Tras descartarlo, `getFinding` lo devuelve en `accepted_risk` (el simulador repite su ejemplo).
+    await page.route(DETAIL, (route) =>
+      route.request().method() === "GET" && calls.length > 0
+        ? route.fulfill({ json: dismissed() })
+        : route.fallback(),
+    );
+    await page.goto(URL_DETAIL);
     await page.getByRole("button", { name: "Aceptar el riesgo" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
     await dialog.getByRole("radio", { name: /Falso positivo/ }).check();
-    await dialog.getByRole("textbox").fill("El balanceador responde así a propósito.");
+    await dialog.getByRole("textbox").fill("  El balanceador responde así a propósito.  ");
     await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
-    // El modal sale con animación: se espera a que termine antes de leer la página.
     await expect(dialog).toHaveCount(0);
+    expect(calls[0].postDataJSON()).toEqual({
+      reason: "false_positive",
+      justification: "El balanceador responde así a propósito.",
+    });
     await expect(page.getByText("Hallazgo descartado como falso positivo")).toBeVisible();
     await expect(page.getByText("Descartado como falso positivo", { exact: true })).toBeVisible();
     await expect(
       page.locator("#main").getByText("El balanceador responde así a propósito."),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Aceptar el riesgo" })).toHaveCount(0);
+  });
 
-    // Ya no cuenta entre los abiertos de la lista.
-    await page.goto("/projects/pedidos/findings");
-    await expect(page.getByRole("heading", { name: "8 hallazgos abiertos" })).toBeVisible();
+  test("un hallazgo que ya no está abierto lo explica en el diálogo", async ({ page }) => {
+    await mockBff(
+      page,
+      `${DETAIL}/dismissal`,
+      { status: 409, body: problem(409, "finding.not_open") },
+      "POST",
+    );
+    await page.goto(URL_DETAIL);
+    await page.getByRole("button", { name: "Aceptar el riesgo" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox").fill("Riesgo asumido por el equipo.");
+    await dialog.getByRole("button", { name: "Descartar hallazgo" }).click();
+    await expect(dialog.getByRole("alert")).toContainText("El hallazgo ya no está abierto.");
+  });
 
-    await page.goto("/projects/pedidos/findings/f01");
+  test("revertir el descarte lo devuelve a persistente", async ({ page }) => {
+    const calls = await mockBff(page, `${DETAIL}/dismissal`, { status: 204 }, "DELETE");
+    await page.route(DETAIL, (route) =>
+      route.request().method() === "GET" && calls.length === 0
+        ? route.fulfill({ json: dismissed("accepted_risk") })
+        : route.fallback(),
+    );
+    await page.goto(URL_DETAIL);
+    await expect(page.getByText("Riesgo aceptado", { exact: true }).first()).toBeVisible();
     await page.getByRole("button", { name: "Revertir" }).click();
     await expect(page.getByText("El hallazgo volvió a «Persistente»")).toBeVisible();
+    expect(calls).toHaveLength(1);
     await expect(page.getByRole("button", { name: "Aceptar el riesgo" })).toBeVisible();
   });
 
+  test("las detecciones muestran su evidencia y llevan a su ejecución", async ({ page }) => {
+    await page.goto(URL_DETAIL);
+    const section = page.getByRole("region", { name: "Detecciones" });
+    await section.getByText("Ejecución n.º 3").first().click();
+    await expect(section.getByRole("link", { name: "Ver la ejecución n.º 3" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/runs/0192e3a0-7777-7000-8000-000000000003$`),
+    );
+  });
+
   test("un hallazgo que no existe responde 404", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings/f99");
-    await expect(page.getByText("Hallazgo no encontrado").first()).toBeVisible();
+    await mockBff(page, DETAIL, { status: 404, body: problem(404, "resource.not_found") }, "GET");
+    await page.goto(URL_DETAIL);
+    await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
+    await page.goto(`${BASE}/findings/f01`);
+    await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
   });
 });

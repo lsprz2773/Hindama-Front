@@ -48,7 +48,8 @@ function Report({ project, runId }: { project: Project; runId: string }) {
   const t = useTranslations("Report");
   const tm = useTranslations("Dashboard.modules");
   const ts = useTranslations("Severity");
-  const tf = useTranslations("FindingDetail");
+  // TODO(api): V-32 (fase 6) aún usa los textos de los hallazgos de ejemplo.
+  const tf = useTranslations("Report.sample");
   const format = useFormatter();
   const toast = useToast();
   const client = useIsClient();

@@ -569,17 +569,17 @@
     "description": "It moves to “Accepted risk” and stops counting among the open ones. Choose the reason.",
     "reason": "Reason",
     "reasons": {
-      "accepted": "Accepted risk",
+      "accepted_risk": "Accepted risk",
       "false_positive": "False positive"
     },
     "justification": "Justification",
     "required": "(required)",
     "placeholder": "Explain why this risk is accepted",
     "help": "It is saved in the finding's history, not in the audit log.",
-    "tooShort": "Write a justification of at least {min} characters.",
+    "missing": "Write a justification.",
     "submit": "Dismiss finding",
     "reasonText": {
-      "accepted": "The finding is real and you decide not to fix it for now.",
+      "accepted_risk": "The finding is real and you decide not to fix it for now.",
       "false_positive": "The finding is not real: the API behaves as expected."
     },
     "notes": {
@@ -1951,100 +1951,86 @@
     "page": "Page {page} of {pages}"
   },
   "FindingDetail": {
-    "globalOperation": "Entire API",
+    "globalOperation": "Whole API",
     "crumb": "Finding",
-    "notFound": "Finding not found",
+    "subject": "the finding",
     "summary": "Finding summary",
     "severity": "{severity} severity",
+    "identityDeleted": "{name} (deleted)",
     "fields": {
       "operation": "Operation",
       "identity": "Identity",
       "module": "Module",
       "owasp": "OWASP",
-      "cwe": "CWE"
+      "cwe": "CWE",
+      "detected": "Detected"
     },
+    "detectedRuns": "From run #{first} to run #{last}",
     "newTab": "(opens in a new tab)",
-    "retest": "Test again",
-    "retestStarted": "Testing this finding again",
-    "retestText": "Only this operation is repeated; you will see the result in a few seconds.",
     "acceptRisk": "Accept the risk",
     "accepted": {
       "accepted": "Risk accepted",
       "falsePositive": "Dismissed as a false positive",
-      "note": "If a run detects it again, it stays accepted. You can revert it and it will go back to “{status}”."
-    },
-    "statusName": {
-      "new": "New",
-      "persistent": "Persistent",
-      "regression": "Regression",
-      "resolved": "Resolved",
-      "acceptedRisk": "Accepted risk"
+      "note": "Dismissed on {date}. If a run detects it again, it stays accepted. If you revert it, it goes back to “Persistent”."
     },
     "revert": "Revert",
-    "reverted": "The finding went back to “{status}”",
+    "reverted": "The finding went back to “Persistent”",
+    "resolved": {
+      "not_detected": "Resolved: a run no longer detected it",
+      "identity_deleted": "Resolved: the identity was deleted",
+      "operation_retired": "Resolved: the operation left the contract",
+      "at": "Since {date}."
+    },
     "toast": {
       "accepted": "Risk accepted",
       "falsePositive": "Finding dismissed as a false positive"
     },
-    "policies": {
-      "owner": "Owner only",
-      "admin": "Administrator only",
-      "authenticated": "Any authenticated user",
-      "public": "Public",
-      "global": "Global check"
-    },
-    "expected": {
-      "title": "Expected by the “{policy}” policy",
-      "denied": "Denied",
-      "secure": "Secure configuration",
-      "text": {
-        "owner": "403 or 404: the resource belongs to another user",
-        "admin": "403: the operation is for administrators only",
-        "authenticated": "401: a valid, current credential is required",
-        "public": "Any identity can read it",
-        "global": "The response must not expose the insecure behavior or value"
-      }
-    },
-    "observed": {
-      "title": "Observed as {identity}",
-      "404": "404 Not Found",
-      "500": "500 Server error",
-      "text": {
-        "owner": "The API returned the whole resource",
-        "admin": "The API ran the operation without being an administrator",
-        "authenticated": "The API answered without validating the credential as expected",
-        "public": "The API answered",
-        "global": "The response includes the behavior described in the finding"
-      }
+    "why": {
+      "title": "Why it is a flaw · {identity}",
+      "resource": "Resource: {type} “{value}”",
+      "resourceOwner": "Resource: {type} “{value}” owned by {owner}"
     },
     "evidence": {
-      "title": "Evidence from run {run}",
+      "title": "Evidence from run #{run}",
       "copyCurl": "Copy as curl",
       "request": "Request",
-      "masked": "Credential masked",
+      "masked": "Credentials masked",
       "response": "Response · {status}",
-      "size": "{bytes} bytes"
+      "truncated": "Body cut to 10 KB"
     },
     "fix": {
-      "title": "How to fix it",
-      "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
-      "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
-      "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
-      "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
-      "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
-      "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
-      "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
+      "title": "How to fix it"
     },
     "history": {
       "title": "History",
-      "run": "Run {number}",
+      "run": "Run #{number}",
+      "analyst": "By the analyst",
       "reason": {
-        "new": "First detected in run {number}",
-        "persistent": "Detected again in run {number}",
+        "detected": "Detected",
+        "not_detected": "No longer detected",
         "regression": "Came back after being resolved",
-        "resolved": "No longer detected in run {number}",
-        "acceptedRisk": "Risk accepted"
+        "accepted": "Risk accepted",
+        "false_positive": "Marked as a false positive",
+        "reverted": "The dismissal was reverted",
+        "identity_deleted": "The identity was deleted",
+        "operation_retired": "The operation left the contract"
       }
+    },
+    "occurrences": {
+      "title": "Detections",
+      "subject": "the detections",
+      "viewRun": "View run #{number}"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}",
+    "errors": {
+      "notOpen": "The finding is no longer open. Its status was refreshed.",
+      "notDismissed": "The finding was no longer dismissed. Its status was refreshed.",
+      "justification": "Check the justification: it is required and cannot contain control characters.",
+      "dismiss": "The finding could not be dismissed",
+      "revert": "The dismissal could not be reverted",
+      "reference": "Reference: {id}"
     }
   },
   "History": {
@@ -2164,6 +2150,42 @@
       "title": "There is nothing to report yet",
       "text": "The report is built from a finished run.",
       "action": "New run"
+    },
+    "sample": {
+      "statusName": {
+        "new": "New",
+        "persistent": "Persistent",
+        "regression": "Regression",
+        "resolved": "Resolved",
+        "acceptedRisk": "Accepted risk"
+      },
+      "expected": {
+        "text": {
+          "owner": "403 or 404: the resource belongs to another user",
+          "admin": "403: the operation is for administrators only",
+          "authenticated": "401: a valid, current credential is required",
+          "public": "Any identity can read it",
+          "global": "The response must not expose the insecure behavior or value"
+        }
+      },
+      "observed": {
+        "text": {
+          "owner": "The API returned the whole resource",
+          "admin": "The API ran the operation without being an administrator",
+          "authenticated": "The API answered without validating the credential as expected",
+          "public": "The API answered",
+          "global": "The response includes the behavior described in the finding"
+        }
+      },
+      "fix": {
+        "API1": "Before returning a resource, check on the server that it belongs to the token's user. Compare the owner identifier with the authenticated user's and answer 404 when they differ, so you do not reveal that it exists.",
+        "API2": "Validate the token's signature, validity and audience on every request. Reject expired or revoked credentials with 401 and do not accept tokens without an expiry.",
+        "API3": "Define an allowed list of fields per operation and drop the rest. Never assign the request body directly to the model: fields such as status or role are only changed by the server.",
+        "API4": "Limit page size, requests per identity and the duration of each one. Answer 429 with Retry-After when the limit is reached.",
+        "API5": "Check the role on the server for every administrative function, not only in the interface. Deny by default and grant access explicitly.",
+        "API8": "Review the server configuration: add the security headers, restrict CORS to known origins and return generic errors without traces or versions.",
+        "API9": "Keep an inventory of the exposed operations and versions. Disable the methods and routes that are not documented."
+      }
     }
   },
   "Stats": {
