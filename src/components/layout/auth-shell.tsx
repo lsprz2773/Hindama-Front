@@ -24,7 +24,7 @@ export function AuthShell({ title, lead, aside, adminBadge, children }: AuthShel
 
   return (
     <main id="main" className="flex min-h-screen items-center justify-center p-4 sm:p-8">
-      <div className="border-line bg-frame flex w-full max-w-[1240px] flex-wrap gap-4 rounded-[36px] border p-4 backdrop-blur-2xl">
+      <div className="animate-page-in border-line bg-frame flex w-full max-w-[1240px] flex-wrap gap-4 rounded-[36px] border p-4 backdrop-blur-2xl">
         <section className="border-line flex min-w-0 flex-[999_1_480px] flex-col justify-between gap-12 rounded-[28px] border bg-[image:var(--hero)] p-6 sm:p-10">
           <div className="flex items-center gap-3">
             <Logo size="lg" label={t("homeLink")} />

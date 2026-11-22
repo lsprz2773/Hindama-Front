@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { PageTransition } from "./page-transition";
 import { OfflineBanner } from "@/components/ui/offline-banner";
 import { Breadcrumb, type Crumb } from "./breadcrumb";
 import { Sidebar, type SidebarProject } from "./sidebar";
@@ -47,7 +48,7 @@ export function AppShell({
           </header>
           <main id="main" className="flex flex-col gap-5">
             <OfflineBanner />
-            {children}
+            <PageTransition>{children}</PageTransition>
           </main>
         </div>
       </div>
