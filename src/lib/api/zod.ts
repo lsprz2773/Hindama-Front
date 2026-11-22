@@ -76,7 +76,8 @@ export function fieldErrors(error: z.ZodError): Record<string, string[]> {
   const fields: Record<string, string[]> = {};
   for (const issue of error.issues) {
     const field = issue.path.map(String).join(".") || "_";
-    const code = issue.message.startsWith("validation.") ? issue.message : FIELD_CODES.format;
+    // Códigos del contrato (`validation.*`, `url.*`…); cualquier otro mensaje cuenta como formato.
+    const code = /^[a-z_]+\.[a-z_]+$/.test(issue.message) ? issue.message : FIELD_CODES.format;
     (fields[field] ??= []).push(code);
   }
   return fields;
