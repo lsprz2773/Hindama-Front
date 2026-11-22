@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { RouteParams } from "@/components/layout/route-params";
 import { pageTitle } from "@/i18n/metadata";
 import { SEED_PROJECTS } from "@/features/projects/seed";
 import { MatrixView } from "@/features/runs/matrix-view";
-import { resolveLocale } from "@/i18n/params";
 
 export function generateStaticParams() {
   return SEED_PROJECTS.flatMap((p) =>
@@ -19,10 +19,10 @@ export async function generateMetadata({
   return pageTitle(params, "matrix");
 }
 
-export default async function Page({
-  params,
-}: PageProps<"/[locale]/projects/[id]/runs/[runId]/matrix">) {
-  const { id, runId } = await params;
-  await resolveLocale(params);
-  return <MatrixView id={id} runId={runId} />;
+export default function Page({ params }: PageProps<"/[locale]/projects/[id]/runs/[runId]/matrix">) {
+  return (
+    <RouteParams params={params}>
+      {({ id, runId }) => <MatrixView id={id} runId={runId} />}
+    </RouteParams>
+  );
 }

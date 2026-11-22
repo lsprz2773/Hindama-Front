@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { RouteParams } from "@/components/layout/route-params";
 import { pageTitle } from "@/i18n/metadata";
 import { SEED_PROJECTS } from "@/features/projects/seed";
 import { RunResultsView } from "@/features/runs/run-results-view";
-import { resolveLocale } from "@/i18n/params";
 
 export function generateStaticParams() {
   return SEED_PROJECTS.flatMap((p) =>
@@ -19,8 +19,10 @@ export async function generateMetadata({
   return pageTitle(params, "runResults");
 }
 
-export default async function Page({ params }: PageProps<"/[locale]/projects/[id]/runs/[runId]">) {
-  const { id, runId } = await params;
-  await resolveLocale(params);
-  return <RunResultsView id={id} runId={runId} />;
+export default function Page({ params }: PageProps<"/[locale]/projects/[id]/runs/[runId]">) {
+  return (
+    <RouteParams params={params}>
+      {({ id, runId }) => <RunResultsView id={id} runId={runId} />}
+    </RouteParams>
+  );
 }
