@@ -442,6 +442,11 @@
       "title": "Servicio no disponible",
       "text": "Una parte de Hindama no responde en este momento. Tus datos están a salvo; vuelve a intentarlo en unos minutos.",
       "action": "Reintentar"
+    },
+    "403analyst": {
+      "title": "Esta sección no es para tu rol",
+      "text": "El panel de administración es solo para administradores. Tu cuenta es de analista.",
+      "action": "Ir a mis proyectos"
     }
   },
   "Status": {
@@ -2102,7 +2107,9 @@
     "bars": {
       "tip": "{name}: {count} fallas"
     },
-    "privacy": "Solo datos agregados y anónimos. Los hallazgos se agrupan por semana y los contadores por día. Desde aquí no se puede abrir ningún proyecto."
+    "privacy": "Solo datos agregados y anónimos. Los hallazgos se agrupan por semana y los contadores por día. Desde aquí no se puede abrir ningún proyecto.",
+    "loading": "Cargando estadísticas",
+    "errorSubject": "las estadísticas"
   },
   "AuditLog": {
     "crumb": "Bitácora",
@@ -2202,7 +2209,9 @@
       "range": "{from}–{to} de {total}",
       "previous": "Anterior",
       "next": "Siguiente"
-    }
+    },
+    "loading": "Cargando la bitácora",
+    "errorSubject": "la bitácora"
   },
   "Offline": {
     "title": "Sin conexión. Reconectando…",

@@ -442,6 +442,11 @@
       "title": "Service unavailable",
       "text": "Part of Hindama isn't responding right now. Your data is safe; try again in a few minutes.",
       "action": "Retry"
+    },
+    "403analyst": {
+      "title": "This section is not for your role",
+      "text": "The administration panel is for administrators only. Your account is an analyst account.",
+      "action": "Go to my projects"
     }
   },
   "Status": {
@@ -2102,7 +2107,9 @@
     "bars": {
       "tip": "{name}: {count} failures"
     },
-    "privacy": "Aggregated, anonymous data only. Findings are grouped by week and counters by day. No project can be opened from here."
+    "privacy": "Aggregated, anonymous data only. Findings are grouped by week and counters by day. No project can be opened from here.",
+    "loading": "Loading statistics",
+    "errorSubject": "the statistics"
   },
   "AuditLog": {
     "crumb": "Audit log",
@@ -2202,7 +2209,9 @@
       "range": "{from}–{to} of {total}",
       "previous": "Previous",
       "next": "Next"
-    }
+    },
+    "loading": "Loading the audit log",
+    "errorSubject": "the audit log"
   },
   "Offline": {
     "title": "Offline. Reconnecting…",
