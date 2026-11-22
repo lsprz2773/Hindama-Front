@@ -97,7 +97,7 @@ function Report({ project, runId }: { project: Project; runId: string }) {
               aria-checked={variant === v}
               onClick={() => setVariant(v)}
               className={cn(
-                "min-h-[42px] cursor-pointer rounded-[11px] px-4 text-[14.5px] font-semibold",
+                "min-h-[42px] cursor-pointer rounded-[11px] px-4 text-[14.5px] font-semibold transition-colors duration-200",
                 variant === v ? "bg-accent text-on-accent" : "text-fg",
               )}
             >
@@ -139,7 +139,7 @@ function Report({ project, runId }: { project: Project; runId: string }) {
                 : t("subtitle.current", { date: stamp, count: runs })}
             </span>
           </div>
-          <dl className="m-0 grid h-fit grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
+          <dl className="stagger m-0 grid h-fit grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
             <dt className="text-muted">{t("generated")}</dt>
             <dd className="m-0">{stamp}</dd>
             <dt className="text-muted">{t("by")}</dt>
@@ -284,7 +284,7 @@ function Report({ project, runId }: { project: Project; runId: string }) {
                   <h3 className="text-xl font-semibold">
                     3.{index + 1} {f.title}
                   </h3>
-                  <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 text-sm">
+                  <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 text-sm">
                     {[
                       [t("findings.module"), tm(`names.${f.module}`)],
                       [t("findings.owasp"), f.owasp],

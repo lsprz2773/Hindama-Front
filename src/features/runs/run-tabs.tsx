@@ -35,7 +35,7 @@ export function RunTabs({
           role="tab"
           aria-selected={tab.key === active}
           className={cn(
-            "inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold no-underline",
+            "inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold no-underline transition-colors duration-200",
             tab.key === active ? "bg-accent text-on-accent" : "text-fg",
           )}
         >

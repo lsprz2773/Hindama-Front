@@ -56,7 +56,7 @@ function Identities({ project }: { project: Project }) {
         <h2 id="identities-requirements" className="text-lg font-semibold">
           {t("requirements.title")}
         </h2>
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3 p-0">
+        <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3 p-0">
           {requirements.map((r) => (
             <li
               key={r.key}
@@ -85,7 +85,7 @@ function Identities({ project }: { project: Project }) {
         <h2 id="identities-list" className="text-lg font-semibold">
           {t("count", { count: identities.length })}
         </h2>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
           {identities.map((identity) => (
             <li
               key={identity.id}

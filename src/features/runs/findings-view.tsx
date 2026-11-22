@@ -252,7 +252,7 @@ function FindingsList({
               <span>{t("cols.status")}</span>
               <span />
             </div>
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
               {visible.map((f) => (
                 <li
                   key={f.id}

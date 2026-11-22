@@ -74,7 +74,7 @@ function FindingDetail({ project, finding }: { project: Project; finding: Findin
           </span>
           <StatusBadge kind="finding" status={finding.status} />
         </div>
-        <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-x-6 gap-y-4">
+        <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-x-6 gap-y-4">
           {[
             [
               t("fields.operation"),
@@ -208,7 +208,7 @@ function FindingDetail({ project, finding }: { project: Project; finding: Findin
           <h2 id="fd-history" className="text-lg font-semibold">
             {t("history.title")}
           </h2>
-          <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
+          <ol className="stagger m-0 flex list-none flex-col gap-2.5 p-0">
             {history.map((h) => (
               <li
                 key={h.run}

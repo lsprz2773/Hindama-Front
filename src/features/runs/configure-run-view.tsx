@@ -86,7 +86,7 @@ function ConfigureRun({ project }: { project: Project }) {
               {t("modules.selected", { count: selected.length })}
             </span>
           </div>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
             {RUN_MODULES.map((m) => {
               const blocked = m.blockedNoAdmin && !hasAdmin;
               const on = !blocked && selected.includes(m.key);
@@ -211,7 +211,7 @@ function ConfigureRun({ project }: { project: Project }) {
           <h2 id="run-checks" className="text-lg font-semibold">
             {t("checks.title")}
           </h2>
-          <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-2.5 p-0">
             {checks.map((c) => (
               <li key={c.text} className="flex items-start gap-2.5 text-sm leading-[1.45]">
                 <Icon

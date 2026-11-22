@@ -168,7 +168,7 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
           </h2>
           {run.number > 1 ? (
             <>
-              <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0">
+              <ul className="stagger m-0 grid list-none grid-cols-2 gap-3 p-0">
                 {comparison.map((c) => (
                   <li
                     key={c.name}
@@ -196,7 +196,7 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
         <h2 id="sv-h" className="text-lg font-semibold">
           {t("bySeverity")}
         </h2>
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 p-0">
+        <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 p-0">
           {SEVERITIES.map((s: Severity, i) => (
             <li key={s} className="bg-panel-2 flex flex-col gap-2 rounded-[18px] px-4 py-3.5">
               <SeverityMeter severity={s} />
@@ -219,7 +219,7 @@ function Results({ project, run }: { project: Project; run: RunSummary }) {
               {t("limits", { rps: 5, concurrency: 2, total: format.number(2000), minutes: 15 })}
             </span>
           </div>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
             {modules.map((m) => {
               const incomplete = isSample && m.key === "objects";
               const note =

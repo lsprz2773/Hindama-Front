@@ -162,7 +162,7 @@ function History({ project }: { project: Project }) {
                   </span>
                   <span
                     className={cn(
-                      "border-accent w-full max-w-[72px] rounded-t border",
+                      "border-accent animate-grow-y w-full max-w-[72px] origin-bottom rounded-t border",
                       r.state === "running" ? "border-dashed bg-transparent" : "bg-accent",
                     )}
                     style={{ height: `${Math.max(4, Math.round((value / max) * 160))}px` }}
@@ -197,7 +197,7 @@ function History({ project }: { project: Project }) {
           <span>{t("cols.changes")}</span>
           <span />
         </div>
-        <ul className="m-0 flex min-w-[1060px] list-none flex-col gap-1.5 p-0">
+        <ul className="stagger m-0 flex min-w-[1060px] list-none flex-col gap-1.5 p-0">
           {rows.map((r) => (
             <li
               key={r.number}

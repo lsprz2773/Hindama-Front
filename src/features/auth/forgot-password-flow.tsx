@@ -173,7 +173,7 @@ export function ForgotPasswordFlow() {
     <AuthShell title={t("heroTitle")} lead={t("heroLead")} aside={stepper}>
       <div className="flex flex-col gap-5">
         {step === 1 ? (
-          <form noValidate onSubmit={sendEmail} className="flex flex-col gap-5">
+          <form noValidate onSubmit={sendEmail} className="animate-fade-in flex flex-col gap-5">
             <Heading title={t("step1.heading")} text={t("step1.text")} />
             <TextField
               label={t("email")}
@@ -191,7 +191,7 @@ export function ForgotPasswordFlow() {
         ) : null}
 
         {step === 2 ? (
-          <form noValidate onSubmit={verifyCode} className="flex flex-col gap-5">
+          <form noValidate onSubmit={verifyCode} className="animate-fade-in flex flex-col gap-5">
             <Heading
               title={t("step2.heading")}
               text={
@@ -254,7 +254,11 @@ export function ForgotPasswordFlow() {
         ) : null}
 
         {step === 3 ? (
-          <form noValidate onSubmit={changePassword} className="flex flex-col gap-5">
+          <form
+            noValidate
+            onSubmit={changePassword}
+            className="animate-fade-in flex flex-col gap-5"
+          >
             <div
               role="status"
               className="border-line bg-panel-2 flex items-center gap-2.5 self-start rounded-full border py-2 pr-3.5 pl-2.5 text-[13.5px] font-semibold"

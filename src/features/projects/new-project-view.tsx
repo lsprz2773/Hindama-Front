@@ -135,7 +135,7 @@ export function NewProjectView() {
           <form
             noValidate
             onSubmit={onSubmit}
-            className="border-line bg-panel flex min-w-0 flex-[999_1_520px] flex-col gap-[22px] rounded-[28px] border p-6 backdrop-blur-lg sm:p-8"
+            className="animate-fade-in border-line bg-panel flex min-w-0 flex-[999_1_520px] flex-col gap-[22px] rounded-[28px] border p-6 backdrop-blur-lg sm:p-8"
           >
             <div className="flex flex-col gap-1.5">
               <h2 className="font-display text-[28px] font-medium tracking-[-0.02em]">
@@ -205,8 +205,9 @@ export function NewProjectView() {
           </form>
         ) : (
           <section
+            key={step}
             aria-labelledby="wizard-step-h"
-            className="border-line bg-panel flex min-w-0 flex-[999_1_520px] flex-col gap-5 rounded-[28px] border p-6 backdrop-blur-lg sm:p-8"
+            className="animate-fade-in border-line bg-panel flex min-w-0 flex-[999_1_520px] flex-col gap-5 rounded-[28px] border p-6 backdrop-blur-lg sm:p-8"
           >
             <h2
               id="wizard-step-h"
@@ -242,7 +243,7 @@ export function NewProjectView() {
         <div className="flex min-w-[260px] flex-[1_1_300px] flex-col gap-5">
           <HelpPanel title={t("help.urlTitle")}>
             <p>{t("help.urlText")}</p>
-            <ul className="!mt-3 !list-none !pl-0">
+            <ul className="stagger !mt-3 !list-none !pl-0">
               {PROHIBITED.map(([key, example]) => (
                 <li key={key} className="flex items-baseline gap-2.5">
                   <span aria-hidden="true" className="text-danger font-bold">

@@ -80,10 +80,10 @@ export function TwoFactorSetup({ mandatory = false }: { mandatory?: boolean }) {
         </div>
       ) : null}
 
-      <ol className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-5 p-0">
+      <ol className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-5 p-0">
         <Step n={1} title={t("step1.title")}>
           <p className="text-muted text-[14.5px] leading-[1.55]">{t("step1.text")}</p>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <ul className="stagger m-0 flex list-none flex-col gap-2 p-0">
             {APPS.map((app) => (
               <li
                 key={app}

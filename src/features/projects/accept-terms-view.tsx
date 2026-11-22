@@ -45,7 +45,7 @@ export function AcceptTermsView() {
         </p>
       </div>
 
-      <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3 p-0">
+      <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3 p-0">
         {RULES.map(({ key, icon }) => (
           <li
             key={key}
