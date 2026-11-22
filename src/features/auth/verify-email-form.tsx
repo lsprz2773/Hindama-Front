@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { CodeInput } from "@/components/ui/code-input";
 import { useToast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
+import { TextField } from "@/components/ui/text-field";
 import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { isEmail } from "@/lib/validation";
 import { formatCountdown, useCountdown } from "@/lib/use-countdown";
 import { usePendingEmail } from "./pending-email";
 import { resendVerificationCode, verifyEmail } from "./service";
@@ -18,7 +21,12 @@ export function VerifyEmailForm() {
   const t = useTranslations("VerifyEmail");
   const router = useRouter();
   const toast = useToast();
-  const email = usePendingEmail();
+  const http = useHttpClient();
+  const pendingEmail = usePendingEmail();
+  // Sin correo en memoria (p. ej. tras recargar) se pide aquí: nunca se guarda en el navegador.
+  const [typedEmail, setTypedEmail] = useState("");
+  const [emailError, setEmailError] = useState<string>();
+  const email = pendingEmail || typedEmail.trim();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -30,16 +38,24 @@ export function VerifyEmailForm() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!complete || pending) return;
+    if (!pendingEmail && !isEmail(typedEmail)) {
+      setEmailError(t("errors.emailInvalid"));
+      return;
+    }
+    setEmailError(undefined);
     setError(undefined);
     setPending(true);
     try {
-      await verifyEmail({ email, code });
+      await verifyEmail(http, { email, code });
       toast.show({ type: "success", title: t("successTitle"), text: t("successText") });
       router.push("/sign-in");
     } catch (e) {
       setPending(false);
       if (e instanceof ApiError && e.status === 429) setError(t("errors.locked"));
-      else if (e instanceof ApiError && e.code === "code.expired") setError(t("errors.expired"));
+      else if (e instanceof ApiError && e.fieldCode("code") === "auth.code_expired")
+        setError(t("errors.expired"));
+      else if (e instanceof ApiError && e.fieldCode("email"))
+        setEmailError(t("errors.emailInvalid"));
       else if (e instanceof ApiError && e.kind === "validation") setError(t("errors.invalid"));
       else
         toast.show({
@@ -53,9 +69,13 @@ export function VerifyEmailForm() {
 
   async function onResend() {
     if (!countdown.done || resending) return;
+    if (!isEmail(email)) {
+      setEmailError(t("errors.emailInvalid"));
+      return;
+    }
     setResending(true);
     try {
-      await resendVerificationCode(email);
+      await resendVerificationCode(http, email);
       setCode("");
       setError(undefined);
       countdown.restart();
@@ -72,11 +92,26 @@ export function VerifyEmailForm() {
       <div className="flex flex-col gap-1.5">
         <h2 className="font-display text-[32px] font-medium tracking-[-0.025em]">{t("heading")}</h2>
         <p className="text-muted text-[15px] leading-[1.5]">
-          {email
-            ? t.rich("subheading", { email, b: (chunks) => <b className="text-fg">{chunks}</b> })
+          {pendingEmail
+            ? t.rich("subheading", {
+                email: pendingEmail,
+                b: (chunks) => <b className="text-fg">{chunks}</b>,
+              })
             : t("subheadingNoEmail")}
         </p>
       </div>
+
+      {!pendingEmail ? (
+        <TextField
+          label={t("email")}
+          type="email"
+          name="email"
+          autoComplete="email"
+          value={typedEmail}
+          onChange={(e) => setTypedEmail(e.target.value)}
+          error={emailError}
+        />
+      ) : null}
 
       <CodeInput
         legend={t("legend")}

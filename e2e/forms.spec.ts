@@ -8,7 +8,7 @@ test.describe("validaciones de formularios", () => {
       await page.goto(path);
       const submit = page.getByRole("button", { name: /^(Verificar|Confirmar)$/ }).last();
       await expect(submit).toBeDisabled();
-      const first = page.getByRole("textbox").first();
+      const first = page.getByRole("textbox", { name: /^(Dígito|Digit) 1/ }).first();
       await first.pressSequentially("a");
       await expect(first).toHaveValue("");
       await expect(submit).toBeDisabled();
@@ -92,6 +92,7 @@ test.describe("validaciones de formularios", () => {
 });
 
 test.describe("títulos de página por idioma", () => {
+  test.use({ role: "admin" });
   const cases: [string, RegExp, RegExp][] = [
     ["/projects/pedidos/history", /^Historial/, /^History/],
     ["/projects/pedidos/findings", /^Hallazgos/, /^Findings/],

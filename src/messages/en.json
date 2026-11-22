@@ -134,7 +134,8 @@
       "rateLimitText": "Wait a few minutes before trying again.",
       "networkTitle": "We couldn't create your account",
       "networkText": "Check your connection and try again.",
-      "retry": "Retry"
+      "retry": "Retry",
+      "nameInvalid": "Enter a name of up to 100 characters, without control characters."
     }
   },
   "VerifyEmail": {
@@ -166,8 +167,10 @@
       "networkTitle": "We couldn't verify the code",
       "networkText": "Check your connection and try again.",
       "resendTitle": "We couldn't resend the code",
-      "retry": "Retry"
-    }
+      "retry": "Retry",
+      "emailInvalid": "Enter the email you signed up with."
+    },
+    "email": "Email"
   },
   "ForgotPassword": {
     "meta": "Recover password",
@@ -203,7 +206,7 @@
       "confirm": "Confirm password",
       "submit": "Change password"
     },
-    "verified": "Code verified",
+    "verified": "Code entered",
     "sending": "Sending…",
     "verifying": "Verifying…",
     "saving": "Saving…",
@@ -221,18 +224,18 @@
       "locked": "Too many attempts. Wait a few minutes before trying again.",
       "passwordRequired": "Choose a password.",
       "passwordWeak": "The password doesn't meet all the requirements yet.",
-      "passwordReused": "Choose a password different from the previous one.",
       "confirmRequired": "Repeat the password.",
       "confirmMismatch": "The passwords don't match.",
       "networkTitle": "We couldn't complete the step",
       "networkText": "Check your connection and try again.",
       "resendTitle": "We couldn't send the code",
-      "retry": "Retry"
+      "retry": "Retry",
+      "passwordRejected": "The password doesn't meet the policy or is one of your last 5. Choose another."
     }
   },
   "Terms": {
     "title": "Terms of use",
-    "badge": "Current version 2026-10-30 · draft pending legal review",
+    "badge": "Current version {version} · draft pending legal review",
     "lead": "These rules apply to everyone who uses Hindama. By creating your account, and before your first project, you confirm that you accept them.",
     "tocLabel": "Contents",
     "tocHeading": "Contents",

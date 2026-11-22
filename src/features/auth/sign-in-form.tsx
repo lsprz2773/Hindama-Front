@@ -1,15 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { ROLE_KEY, writeFlag } from "@/features/account/browser-store";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { PasswordField, TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
+import { signInSchema } from "@/lib/api/schemas/auth";
 import { ApiError } from "@/lib/http";
-import { isEmail } from "@/lib/validation";
+import { useHttpClient } from "@/lib/http/browser";
+import { setPendingEmail } from "./pending-email";
 import { signIn } from "./service";
 
 type Errors = { email?: string; password?: string };
@@ -18,6 +19,7 @@ export function SignInForm() {
   const t = useTranslations("SignIn");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -28,26 +30,36 @@ export function SignInForm() {
     event.preventDefault();
     if (pending) return;
 
+    // Misma validación que el BFF (`signInSchema`); la que cuenta es la del servidor.
+    const parsed = signInSchema.safeParse({ email, password });
     const next: Errors = {};
-    if (!email.trim()) next.email = t("errors.emailRequired");
-    else if (!isEmail(email)) next.email = t("errors.emailInvalid");
-    if (!password) next.password = t("errors.passwordRequired");
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0] as keyof Errors;
+        if (next[field]) continue;
+        if (field === "email") {
+          next.email =
+            issue.message === "validation.required"
+              ? t("errors.emailRequired")
+              : t("errors.emailInvalid");
+        } else if (field === "password") next.password = t("errors.passwordRequired");
+      }
+    }
     setErrors(next);
     setFormError(null);
-    if (next.email || next.password) return;
+    if (!parsed.success) return;
 
     setPending(true);
     try {
-      const result = await signIn({ email: email.trim(), password });
-      if (result.next === "two-factor") router.push("/sign-in/two-factor");
-      else if (result.next === "verify-email") router.push("/sign-up/verify");
-      else {
-        writeFlag(ROLE_KEY, "analyst");
-        router.push("/projects");
-      }
+      const result = await signIn(http, parsed.data);
+      router.push(result.next === "admin" ? "/admin" : "/projects");
     } catch (error) {
       setPending(false);
-      if (error instanceof ApiError && error.kind === "unauthorized") {
+      if (error instanceof ApiError && error.code === "auth.user_not_confirmed") {
+        // Cuenta sin confirmar: lleva a escribir el código (guía §2.4).
+        setPendingEmail(parsed.data.email);
+        router.push("/sign-up/verify");
+      } else if (error instanceof ApiError && error.kind === "unauthorized") {
         // Mensaje genérico: no revela si el correo existe (RF-06).
         setFormError(t("errors.invalidCredentials"));
       } else if (error instanceof ApiError && error.status === 429) {

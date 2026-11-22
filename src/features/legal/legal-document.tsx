@@ -13,7 +13,7 @@ interface LegalDocumentProps {
   title: string;
   lead: string;
   /** Etiqueta de versión y estado («Borrador para revisión legal…»). */
-  badge: string;
+  badge: ReactNode;
   tocLabel: string;
   tocHeading: string;
   sections: LegalSection[];

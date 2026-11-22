@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useMe } from "@/features/account/api";
+import { setHomeNotice } from "@/features/account/notice";
 import { useRouter } from "@/i18n/navigation";
 import { setCsrfToken, useHttpClient } from "@/lib/http/browser";
 
@@ -38,8 +39,10 @@ export function UserMenu() {
   async function signOut() {
     if (signingOut) return;
     setSigningOut(true);
+    let revoked = true;
     try {
-      await http.post("/auth/sign-out");
+      const { data } = await http.post<{ revoked?: unknown }>("/auth/sign-out");
+      revoked = data?.revoked !== false;
     } catch {
       toast.show({ type: "error", title: t("signOutError") });
       setSigningOut(false);
@@ -47,6 +50,7 @@ export function UserMenu() {
     }
     setCsrfToken(undefined);
     queryClient.clear();
+    setHomeNotice(revoked ? null : "local_sign_out");
     router.replace("/");
   }
 

@@ -3,9 +3,9 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { ErrorPanel } from "@/features/errors/error-panel";
+import { errorPanelProps } from "@/features/errors/from-api-error";
 import { ApiError } from "@/lib/http";
 import { Loadable } from "./loadable";
-import { RateLimitedState, UnavailableState } from "./state-view";
 
 interface QueryStateProps<T> {
   query: Pick<UseQueryResult<T>, "status" | "data" | "error" | "refetch">;
@@ -16,10 +16,11 @@ interface QueryStateProps<T> {
 }
 
 /**
- * Carga, error y contenido de una consulta a la API (C-13). El frontend no decide permisos
- * (RNF-08): muestra lo que respondió la API. 403 y 404 con su página (V-12), 429 con la espera
- * de `Retry-After`, 503 con «intenta en unos minutos» y el resto (500, respuesta fuera del
- * contrato, red) con el `request_id` como referencia. Un 401 lo atiende el marco de la sesión.
+ * Carga, error y contenido de una consulta a la API (C-13 y V-12). El frontend no decide
+ * permisos (RNF-08): muestra lo que respondió la API. 403, 404, 429 (con la espera de
+ * `Retry-After`), 500 y 503 (con el `request_id` para reportarlo) usan las páginas de error de
+ * V-12 dentro del marco. Una respuesta fuera del contrato o un fallo de red se tratan como 500.
+ * Un 401 lo atiende el marco de la sesión, que lleva a iniciar sesión.
  */
 export function QueryState<T>({ query, skeleton, subject, children }: QueryStateProps<T>) {
   const retry = () => void query.refetch();
@@ -27,13 +28,8 @@ export function QueryState<T>({ query, skeleton, subject, children }: QueryState
 
   if (query.status === "error" && error) {
     if (error.kind === "unauthorized") return <>{skeleton}</>;
-    if (error.status === 403)
-      return <ErrorPanel code={403} standalone={false} audience="analyst" />;
-    if (error.status === 404) return <ErrorPanel code={404} standalone={false} />;
-    if (error.status === 429) {
-      return <RateLimitedState retryAfter={error.retryAfter ?? 30} onRetry={retry} />;
-    }
-    if (error.status === 503) return <UnavailableState onRetry={retry} />;
+    const panel = errorPanelProps(error);
+    if (panel) return <ErrorPanel {...panel} onRetry={retry} standalone={false} />;
   }
 
   const status =

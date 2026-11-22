@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { mockBff } from "./support/bff";
 
 test.describe("área pública", () => {
   test("V-01 lleva a crear cuenta, iniciar sesión y a los textos legales", async ({ page }) => {
@@ -49,5 +50,41 @@ test.describe("área pública", () => {
     await page.goto("/sign-in");
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name: "Saltar al contenido" })).toBeFocused();
+  });
+
+  test("V-07 con sesión muestra la versión vigente que informa la API", async ({ page }) => {
+    await mockBff(page, "**/api/me", {
+      body: {
+        id: "0192e3a0-1111-7000-8000-000000000001",
+        name: "Ana López",
+        email: "ana@ejemplo.com",
+        role: "analyst",
+        terms: {
+          current_version: "2026-12-01",
+          accepted_version: null,
+          accepted_at: null,
+          acceptance_required: true,
+        },
+      },
+    });
+    await page.goto("/terms");
+    await expect(page.getByText(/Versión vigente 2026-12-01/)).toBeVisible();
+  });
+
+  test.describe("sin sesión", () => {
+    test.use({ signedIn: false });
+    test("V-07 muestra la versión del texto publicado", async ({ page }) => {
+      await page.goto("/terms");
+      await expect(page.getByText(/Versión vigente 2026-10-30/)).toBeVisible();
+    });
+  });
+
+  test("V-01 avisa cuando la sesión solo se cerró en este navegador", async ({ page }) => {
+    await mockBff(page, "**/api/auth/sign-out", { body: { revoked: false } });
+    await page.goto("/projects");
+    await page.getByRole("button", { name: /Ana López/ }).click();
+    await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByText("Cerraste sesión solo en este navegador").first()).toBeVisible();
   });
 });

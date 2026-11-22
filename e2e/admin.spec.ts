@@ -1,4 +1,8 @@
 import { expect, test } from "./fixtures";
+import { meBody, mockBff } from "./support/bff";
+
+// Las pantallas de administración se muestran según el rol que informa `getMe`.
+test.use({ role: "admin" });
 
 test.describe("V-33 estadísticas de uso", () => {
   test("muestra los indicadores agregados y las gráficas del periodo por omisión", async ({
@@ -220,7 +224,7 @@ test.describe("estados de carga, error y permiso del panel", () => {
   });
 
   test("un analista con sesión no entra al panel de administración", async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem("hindama.role", "analyst"));
+    await mockBff(page, "**/api/me", { body: meBody("analyst") }, "GET");
     for (const path of ["/admin", "/admin/audit-log"]) {
       await page.goto(path);
       await expect(page.getByText("Esta sección no es para tu rol")).toBeVisible();
@@ -229,6 +233,8 @@ test.describe("estados de carga, error y permiso del panel", () => {
   });
 
   test("iniciar sesión como analista y luego abrir /admin da 403", async ({ page }) => {
+    await mockBff(page, "**/api/auth/sign-in", { body: { csrf_token: "t", role: "analyst" } });
+    await mockBff(page, "**/api/me", { body: meBody("analyst") }, "GET");
     await page.goto("/sign-in");
     await page.getByLabel("Correo electrónico").fill("luis@ejemplo.mx");
     await page.getByLabel("Contraseña", { exact: true }).fill("Clave-Segura-2026");

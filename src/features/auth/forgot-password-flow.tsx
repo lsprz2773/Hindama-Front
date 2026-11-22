@@ -12,10 +12,11 @@ import { useToast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
 import { isPasswordValid } from "@/lib/password";
 import { formatCountdown, useCountdown } from "@/lib/use-countdown";
 import { isEmail } from "@/lib/validation";
-import { confirmResetCode, requestPasswordReset, resetPassword } from "./service";
+import { requestPasswordReset, resetPassword } from "./service";
 
 type Step = 1 | 2 | 3;
 const STEPS: Step[] = [1, 2, 3];
@@ -28,6 +29,7 @@ export function ForgotPasswordFlow() {
   const t = useTranslations("ForgotPassword");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
   const countdown = useCountdown(RESEND_SECONDS);
 
   const [step, setStep] = useState<Step>(1);
@@ -61,7 +63,7 @@ export function ForgotPasswordFlow() {
     setErrors({});
     setPending(true);
     try {
-      await requestPasswordReset(email.trim());
+      await requestPasswordReset(http, email.trim());
       setCode("");
       countdown.restart();
       setStep(2);
@@ -76,28 +78,17 @@ export function ForgotPasswordFlow() {
   async function verifyCode(event: FormEvent) {
     event.preventDefault();
     if (pending || code.length !== CODE_LENGTH) return;
+    // Cognito no comprueba el código por separado: lo valida junto con la contraseña nueva
+    // (`ConfirmForgotPassword`). Si no es correcto, el paso 3 regresa aquí con el error.
     setErrors({});
-    setPending(true);
-    try {
-      await confirmResetCode({ email: email.trim(), code });
-      setStep(3);
-    } catch (e) {
-      if (e instanceof ApiError && e.code === "code.expired")
-        setErrors({ code: t("errors.codeExpired") });
-      else if (e instanceof ApiError && e.status === 429) setErrors({ code: t("errors.locked") });
-      else if (e instanceof ApiError && e.kind === "validation")
-        setErrors({ code: t("errors.codeInvalid") });
-      else networkToast(() => void verifyCode(event));
-    } finally {
-      setPending(false);
-    }
+    setStep(3);
   }
 
   async function resendCode() {
     if (!countdown.done || resending) return;
     setResending(true);
     try {
-      await requestPasswordReset(email.trim());
+      await requestPasswordReset(http, email.trim());
       setCode("");
       setErrors({});
       countdown.restart();
@@ -122,18 +113,25 @@ export function ForgotPasswordFlow() {
 
     setPending(true);
     try {
-      await resetPassword({ email: email.trim(), code, password });
+      await resetPassword(http, { email: email.trim(), code, password });
       toast.show({ type: "success", title: t("successTitle"), text: t("successText") });
       router.push("/sign-in");
     } catch (e) {
       setPending(false);
-      if (e instanceof ApiError && e.code === "code.expired") {
-        // El código venció mientras tanto: vuelve al paso 2.
+      const codeError = e instanceof ApiError ? e.fieldCode("code") : undefined;
+      if (codeError) {
+        // El código no es correcto o venció: vuelve al paso 2 con el motivo.
         setCode("");
         setStep(2);
-        setErrors({ code: t("errors.codeExpired") });
-      } else if (e instanceof ApiError && e.code === "password.reused") {
-        setErrors({ password: t("errors.passwordReused") });
+        setErrors({
+          code:
+            codeError === "auth.code_expired" ? t("errors.codeExpired") : t("errors.codeInvalid"),
+        });
+      } else if (e instanceof ApiError && e.fieldCode("password")) {
+        // Cognito rechaza la contraseña por su política, incluido repetir una de las últimas 5.
+        setErrors({ password: t("errors.passwordRejected") });
+      } else if (e instanceof ApiError && e.status === 429) {
+        setErrors({ password: t("errors.locked") });
       } else networkToast(() => void changePassword(event));
     }
   }

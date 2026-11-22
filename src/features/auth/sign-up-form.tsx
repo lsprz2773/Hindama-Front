@@ -9,6 +9,7 @@ import { PasswordField, TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
 import { isPasswordValid } from "@/lib/password";
 import { isEmail } from "@/lib/validation";
 import { setPendingEmail } from "./pending-email";
@@ -26,6 +27,7 @@ export function SignUpForm() {
   const t = useTranslations("SignUp");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +43,8 @@ export function SignUpForm() {
 
     const next: Errors = {};
     if (!name.trim()) next.name = t("errors.nameRequired");
+    else if (name.trim().length > 100 || /[\u0000-\u001F\u007F]/.test(name))
+      next.name = t("errors.nameInvalid");
     if (!email.trim()) next.email = t("errors.emailRequired");
     else if (!isEmail(email)) next.email = t("errors.emailInvalid");
     if (!password) next.password = t("errors.passwordRequired");
@@ -54,14 +58,22 @@ export function SignUpForm() {
 
     setPending(true);
     try {
-      await signUp({ name: name.trim(), email: email.trim(), password, acceptedTerms: accepted });
+      // La casilla de términos no viaja a Cognito: la aceptación que cuenta para la API es
+      // `POST /me/terms` (V-14) antes del primer proyecto (RN-12).
+      await signUp(http, { name: name.trim(), email: email.trim(), password });
       setPendingEmail(email.trim());
       router.push("/sign-up/verify");
     } catch (error) {
       setPending(false);
-      if (error instanceof ApiError && error.kind === "conflict") {
+      if (error instanceof ApiError && error.code === "auth.username_exists") {
         // Respuesta genérica: no confirma que el correo ya existe.
         setExists(true);
+      } else if (error instanceof ApiError && error.kind === "validation") {
+        setErrors({
+          name: error.fieldCode("name") ? t("errors.nameInvalid") : undefined,
+          email: error.fieldCode("email") ? t("errors.emailInvalid") : undefined,
+          password: error.fieldCode("password") ? t("errors.passwordWeak") : undefined,
+        });
       } else if (error instanceof ApiError && error.status === 429) {
         toast.show({
           type: "warning",

@@ -66,7 +66,7 @@ describe("inicio de sesión", () => {
         async () => new Response(JSON.stringify({ __type: type }), { status: 400 }),
       );
       const response = await handleSignIn(
-        signInRequest({ email: "a@b.c", password: "x" }),
+        signInRequest({ email: "a@b.co", password: "x" }),
         deps({ cognitoFetch }),
       );
       const body = await response.json();
@@ -81,7 +81,7 @@ describe("inicio de sesión", () => {
   it("rechaza un Origin ajeno antes de llamar a Cognito", async () => {
     const cognitoFetch = vi.fn<FetchLike>();
     const response = await handleSignIn(
-      signInRequest({ email: "a@b.c", password: "x" }, { origin: "https://evil.test" }),
+      signInRequest({ email: "a@b.co", password: "x" }, { origin: "https://evil.test" }),
       deps({ cognitoFetch }),
     );
     expect(response.status).toBe(403);
@@ -110,7 +110,8 @@ describe("token anti-CSRF y cierre de sesión", () => {
       }),
       deps({ cognitoFetch }),
     );
-    expect(response.status).toBe(204);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ revoked: true });
     const [, init] = cognitoFetch.mock.calls[0];
     expect(new Headers(init.headers).get("x-amz-target")).toBe(
       "AWSCognitoIdentityProviderService.RevokeToken",
@@ -135,5 +136,18 @@ describe("token anti-CSRF y cierre de sesión", () => {
     expect(response.status).toBe(403);
     expect(cognitoFetch).not.toHaveBeenCalled();
     expect(cookiesFrom(response)).toEqual([]);
+  });
+
+  it("si Cognito no responde, borra la cookie igual y avisa que fue un cierre local", async () => {
+    const cognitoFetch = vi.fn<FetchLike>(async () => new Response("{}", { status: 500 }));
+    const response = await handleSignOut(
+      new Request(`${ORIGIN}/api/auth/sign-out`, {
+        method: "POST",
+        headers: { cookie: sessionCookie(session()), origin: ORIGIN, "x-csrf-token": "csrf-token" },
+      }),
+      deps({ cognitoFetch }),
+    );
+    expect(await response.json()).toEqual({ revoked: false });
+    expect(cookiesFrom(response)[0]).toMatch(/Max-Age=0/);
   });
 });
