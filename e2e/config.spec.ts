@@ -311,11 +311,17 @@ test.describe("V-19 y V-20 contrato y versiones", () => {
   });
 
   test("política sin contrato pide importarlo primero", async ({ page }) => {
-    await page.goto("/projects/pagos/policy");
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}`,
+      { body: project({ current_contract: null }) },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
     await expect(page.getByText("Primero importa el contrato")).toBeVisible();
     await expect(page.getByRole("link", { name: "Importar contrato" })).toHaveAttribute(
       "href",
-      /\/projects\/pagos\/contract$/,
+      new RegExp(`/projects/${PROJECT_ID}/contract$`),
     );
   });
 
@@ -727,53 +733,147 @@ test.describe("V-23 recursos por identidad", () => {
 });
 
 test.describe("V-24 política de acceso", () => {
-  test("resume el avance y filtra por estado", async ({ page }) => {
-    await page.goto("/projects/pedidos/policy");
-    await expect(page.getByRole("heading", { name: "38 de 42 confirmadas" })).toBeVisible();
-    await expect(
-      page.getByRole("progressbar", { name: "Operaciones confirmadas" }),
-    ).toHaveAttribute("aria-valuenow", "38");
-    await expect(page.getByText("1 regla huérfana")).toBeVisible();
+  const OPERATIONS = `**/api/projects/${PROJECT_ID}/operations**`;
+  const LIST_ORDERS = "0192e3a0-5555-7000-8000-000000000001";
+  const GET_ORDER = "0192e3a0-5555-7000-8000-000000000003";
 
-    await page.getByRole("radio", { name: /Propuestas/ }).click();
-    await expect(page.getByLabel("Plantilla de PATCH /orders/{orderId}")).toBeVisible();
-    await expect(page.getByLabel("Plantilla de POST /orders", { exact: true })).toHaveCount(0);
+  /** Captura las escrituras y deja que el simulador del contrato las responda. */
+  async function capture(page: import("@playwright/test").Page, pattern: string, method: string) {
+    const bodies: unknown[] = [];
+    await page.route(pattern, async (route) => {
+      if (route.request().method() !== method) return route.fallback();
+      bodies.push(route.request().postDataJSON());
+      await route.fallback();
+    });
+    return bodies;
+  }
 
-    await page.getByRole("searchbox", { name: "Buscar ruta" }).fill("zzz");
-    await expect(page.getByText("Nada coincide con tus filtros")).toBeVisible();
+  test("resume el avance con listOperations y filtra por estado", async ({ page }) => {
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    // Ejemplo `OperationPage`: /orders confirmada y /orders/{orderId} propuesta.
+    await expect(page.getByRole("heading", { name: "1 de 2 confirmadas" })).toBeVisible();
+    await expect(page.getByText("Última modificación:")).toBeVisible();
+    await expect(page.getByLabel("Plantilla de GET /orders/{orderId}")).toHaveValue("owner");
+
+    await page.getByRole("radio", { name: "Propuestas · 1" }).click();
+    await expect(page.getByLabel("Plantilla de GET /orders", { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Plantilla de GET /orders/{orderId}")).toBeVisible();
   });
 
-  test("acción en bloque: aplica la plantilla y confirma las filas elegidas", async ({ page }) => {
-    await page.goto("/projects/pedidos/policy");
-    await page.getByRole("checkbox", { name: "Seleccionar PATCH /orders/{orderId}" }).check();
-    await page
-      .getByRole("checkbox", { name: "Seleccionar POST /orders/{orderId}/returns" })
-      .check();
+  test("confirmar una propuesta de propiedad exige el campo propietario", async ({ page }) => {
+    const bodies = await capture(page, `**/api/projects/${PROJECT_ID}/operations/*`, "PATCH");
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    await page.getByRole("button", { name: "Confirmar" }).click();
+    await expect(page.getByText("Falta el campo propietario")).toBeVisible();
+    expect(bodies).toHaveLength(0);
+
+    await page.getByLabel("Campo propietario de GET /orders/{orderId}").fill("userId");
+    await page.getByRole("button", { name: "Confirmar" }).click();
+    await expect(page.getByText("Política guardada")).toBeVisible();
+    expect(bodies).toEqual([{ policy: "owner_only", owner_field: "userId" }]);
+  });
+
+  test("cambiar una plantilla confirmada queda sin guardar hasta guardar la política", async ({
+    page,
+  }) => {
+    const bodies = await capture(page, `**/api/projects/${PROJECT_ID}/operations/*`, "PATCH");
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    const save = page.getByRole("button", { name: "Guardar política" });
+    await expect(save).toBeDisabled();
+    await page.getByLabel("Plantilla de GET /orders", { exact: true }).selectOption("public");
+    await expect(page.getByText("Sin guardar")).toBeVisible();
+    await save.click();
+    await expect(page.getByText("Política guardada")).toBeVisible();
+    expect(bodies).toEqual([{ policy: "public", owner_field: null }]);
+  });
+
+  test("acción en bloque: aplica la plantilla con applyPolicy", async ({ page }) => {
+    const bodies = await capture(page, `**/api/projects/${PROJECT_ID}/policy`, "POST");
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    await page.getByRole("checkbox", { name: "Seleccionar GET /orders", exact: true }).check();
+    await page.getByRole("checkbox", { name: "Seleccionar GET /orders/{orderId}" }).check();
     const toolbar = page.getByRole("toolbar", { name: "Acciones en bloque" });
-    await expect(toolbar).toContainText("2 seleccionadas");
+    await expect(toolbar.getByText("2 seleccionadas")).toBeVisible();
+
+    // Una plantilla de propiedad sin campo propietario no se envía.
+    await toolbar.getByRole("button", { name: "Aplicar y confirmar" }).click();
+    await expect(toolbar.getByRole("alert")).toBeVisible();
+    expect(bodies).toHaveLength(0);
+
     await toolbar.getByLabel("Aplicar plantilla").selectOption("admin");
     await toolbar.getByRole("button", { name: "Aplicar y confirmar" }).click();
-    await expect(page.getByRole("heading", { name: "40 de 42 confirmadas" })).toBeVisible();
-    await page.getByRole("button", { name: "Guardar política" }).click();
-    await expect(page.getByText("Política guardada")).toBeVisible();
+    await expect(page.getByText("Plantilla aplicada a 2 operaciones")).toBeVisible();
+    expect(bodies).toEqual([
+      { operation_ids: [LIST_ORDERS, GET_ORDER], policy: "admin_only", owner_field: null },
+    ]);
   });
 
-  test("una plantilla de propiedad sin campo propietario no se puede guardar", async ({ page }) => {
-    await page.goto("/projects/pedidos/policy");
-    await page.getByLabel("Plantilla de GET /orders", { exact: true }).selectOption("owner");
-    await page.getByRole("button", { name: "Guardar política" }).click();
-    await expect(page.getByText("Falta el campo propietario")).toBeVisible();
-    await page
-      .getByLabel("Campo propietario de GET /orders", { exact: true })
-      .selectOption("userId");
-    await page.getByRole("button", { name: "Guardar política" }).click();
-    await expect(page.getByText("Política guardada")).toBeVisible();
-  });
+  test("una operación retirada se explica y las reglas huérfanas se listan", async ({ page }) => {
+    await mockBff(
+      page,
+      OPERATIONS,
+      {
+        body: {
+          items: [
+            {
+              id: GET_ORDER,
+              method: "DELETE",
+              path: "/orders/export",
+              operation_id: null,
+              summary: null,
+              tags: [],
+              parameters: [],
+              body: null,
+              security: [],
+              retired_at: "2026-11-03T10:05:00Z",
+              suggested_policy: "admin_only",
+              policy: "admin_only",
+              owner_field: null,
+              confirmed_at: "2026-10-27T18:40:00Z",
+              modified_at: "2026-10-27T18:40:00Z",
+              resource_parameters: [],
+              is_login_candidate: false,
+            },
+            {
+              id: LIST_ORDERS,
+              method: "GET",
+              path: "/orders",
+              operation_id: null,
+              summary: null,
+              tags: [],
+              parameters: [],
+              body: null,
+              security: [],
+              retired_at: null,
+              suggested_policy: "authenticated",
+              policy: null,
+              owner_field: null,
+              confirmed_at: null,
+              modified_at: null,
+              resource_parameters: [],
+              is_login_candidate: false,
+            },
+          ],
+          total: 2,
+          page: 1,
+          page_size: 500,
+        },
+      },
+      "GET",
+    );
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/operations/${LIST_ORDERS}`,
+      { status: 409, body: problem(409, "operation.retired") },
+      "PATCH",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/policy`);
+    await expect(page.getByText("1 regla huérfana")).toBeVisible();
+    await expect(page.getByText("DELETE /orders/export")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "0 de 1 confirmadas" })).toBeVisible();
 
-  test("confirmar una propuesta sube el contador", async ({ page }) => {
-    await page.goto("/projects/pedidos/policy");
-    await page.getByRole("button", { name: "Confirmar" }).first().click();
-    await expect(page.getByRole("heading", { name: "39 de 42 confirmadas" })).toBeVisible();
+    await page.getByRole("button", { name: "Confirmar" }).click();
+    await expect(page.getByText("ya no está en el contrato vigente")).toBeVisible();
   });
 });
 

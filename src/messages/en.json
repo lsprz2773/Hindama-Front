@@ -1572,12 +1572,11 @@
       "title": "{confirmed} of {total} confirmed",
       "label": "Confirmed operations",
       "text": "{count, plural, one {The unconfirmed proposal isn't used} other {The # unconfirmed proposals aren't used}} in Object access or Function access.",
-      "modified": "Last modified: Luis Selvas, 27 Oct 2026, 18:40."
+      "modified": "Last modified: {date}."
     },
     "orphan": {
       "title": "{count, plural, one {# orphan rule} other {# orphan rules}}",
-      "text": "<code>DELETE /orders/export</code> is no longer in contract v2.4.0 and still has a policy. It isn't used in tests: you can remove it. Ownership templates need an owner field to be saved.",
-      "remove": "Remove rule"
+      "text": "They are no longer in the current contract and still have a policy. They are not used in tests:"
     },
     "operations": "Operations",
     "filters": {
@@ -1586,25 +1585,25 @@
       "proposed": "Proposed · {count}",
       "confirmed": "Confirmed · {count}"
     },
-    "search": "Search path",
     "bulk": {
       "label": "Bulk actions",
       "selected": "{count, plural, one {# selected} other {# selected}}",
       "apply": "Apply template",
-      "button": "Apply and confirm"
+      "button": "Apply and confirm",
+      "owner": "Owner field",
+      "done": "{count, plural, one {Template applied to # operation} other {Template applied to # operations}}"
     },
     "select": "Select {method} {path}",
     "templateOf": "Template of {method} {path}",
     "ownerOf": "Owner field of {method} {path}",
-    "noOwner": "Choose the owner field",
     "notApplicable": "Not applicable",
-    "bearer": "bearer",
     "status": {
       "confirmed": "Confirmed",
-      "proposed": "Proposed"
+      "proposed": "Proposed",
+      "changed": "Unsaved"
     },
     "confirm": "Confirm",
-    "showing": "Showing {shown} of {total} routes ·",
+    "showing": "Showing {shown} of {total} operations ·",
     "viewContract": "View the contract",
     "save": "Save policy",
     "saved": "Policy saved",
@@ -1619,8 +1618,17 @@
     },
     "errors": {
       "ownerTitle": "The owner field is missing",
-      "ownerText": "Ownership templates need an owner field to be saved."
-    }
+      "ownerText": "Ownership templates need an owner field: a path parameter (userId) or a response field (owner.id).",
+      "retired": "An operation is no longer in the current contract. Reload the page.",
+      "notFound": "An operation no longer exists. Reload the page.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The policy could not be saved",
+      "reference": "Reference: {id}"
+    },
+    "ownerPlaceholder": "userId or owner.id",
+    "noTemplate": "Choose a template",
+    "noSecurity": "No security",
+    "subject": "the operations"
   },
   "ConfigureRun": {
     "title": "New run",

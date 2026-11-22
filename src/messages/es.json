@@ -1572,12 +1572,11 @@
       "title": "{confirmed} de {total} confirmadas",
       "label": "Operaciones confirmadas",
       "text": "{count, plural, one {La propuesta sin confirmar no se usa} other {Las # propuestas sin confirmar no se usan}} en Acceso a objetos ni Acceso a funciones.",
-      "modified": "Última modificación: Luis Selvas, 27 oct 2026, 18:40."
+      "modified": "Última modificación: {date}."
     },
     "orphan": {
       "title": "{count, plural, one {# regla huérfana} other {# reglas huérfanas}}",
-      "text": "<code>DELETE /orders/export</code> ya no está en el contrato v2.4.0 y aún tiene política. No se usa en las pruebas: puedes quitarla. Las plantillas de propiedad necesitan un campo propietario para guardarse.",
-      "remove": "Quitar regla"
+      "text": "Ya no están en el contrato vigente y aún tienen política. No se usan en las pruebas:"
     },
     "operations": "Operaciones",
     "filters": {
@@ -1586,25 +1585,25 @@
       "proposed": "Propuestas · {count}",
       "confirmed": "Confirmadas · {count}"
     },
-    "search": "Buscar ruta",
     "bulk": {
       "label": "Acciones en bloque",
       "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
       "apply": "Aplicar plantilla",
-      "button": "Aplicar y confirmar"
+      "button": "Aplicar y confirmar",
+      "owner": "Campo propietario",
+      "done": "{count, plural, one {Plantilla aplicada a # operación} other {Plantilla aplicada a # operaciones}}"
     },
     "select": "Seleccionar {method} {path}",
     "templateOf": "Plantilla de {method} {path}",
     "ownerOf": "Campo propietario de {method} {path}",
-    "noOwner": "Elige el campo propietario",
     "notApplicable": "No aplica",
-    "bearer": "bearer",
     "status": {
       "confirmed": "Confirmada",
-      "proposed": "Propuesta"
+      "proposed": "Propuesta",
+      "changed": "Sin guardar"
     },
     "confirm": "Confirmar",
-    "showing": "Mostrando {shown} de {total} rutas ·",
+    "showing": "Mostrando {shown} de {total} operaciones ·",
     "viewContract": "Ver el contrato",
     "save": "Guardar política",
     "saved": "Política guardada",
@@ -1619,8 +1618,17 @@
     },
     "errors": {
       "ownerTitle": "Falta el campo propietario",
-      "ownerText": "Las plantillas de propiedad necesitan un campo propietario para guardarse."
-    }
+      "ownerText": "Las plantillas de propiedad necesitan un campo propietario: un parámetro de ruta (userId) o un campo de la respuesta (owner.id).",
+      "retired": "Una operación ya no está en el contrato vigente. Recarga la página.",
+      "notFound": "Una operación ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo guardar la política",
+      "reference": "Referencia: {id}"
+    },
+    "ownerPlaceholder": "userId u owner.id",
+    "noTemplate": "Elige una plantilla",
+    "noSecurity": "Sin seguridad",
+    "subject": "las operaciones"
   },
   "ConfigureRun": {
     "title": "Nueva ejecución",
