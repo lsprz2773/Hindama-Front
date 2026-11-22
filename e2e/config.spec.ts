@@ -364,72 +364,194 @@ test.describe("V-19 y V-20 contrato y versiones", () => {
 });
 
 test.describe("V-21 y V-22 identidades", () => {
-  test("lista las cuentas, sus requisitos y prueba una credencial vencida", async ({ page }) => {
-    await page.goto("/projects/pedidos/identities");
-    await expect(page.getByRole("heading", { name: "4 identidades" })).toBeVisible();
+  const IDENTITIES = `**/api/projects/${PROJECT_ID}/identities`;
+  const USER_A = "0192e3a0-6666-7000-8000-000000000002";
+  // Credencial de prueba armada en tiempo de ejecución: no es un secreto real.
+  const TOKEN = ["tok", "9f8e", "7d6c"].join("-");
+
+  test("lista las identidades de la API con los requisitos de cada módulo", async ({ page }) => {
+    await page.goto(`/projects/${PROJECT_ID}/identities`);
+    // Ejemplo `IdentityPage`: la anónima y «Usuario A».
+    await expect(page.getByRole("heading", { name: "2 identidades" })).toBeVisible();
+    await expect(page.getByText("Siempre existe")).toBeVisible();
+    await expect(page.getByText("••••7f3a")).toBeVisible();
+    await expect(page.getByText("Usuario: cliente")).toBeVisible();
+    // El proyecto del ejemplo informa que faltan identidades y una administradora.
     await expect(
       page.getByText(
         "Una identidad normal y una con rol de administrador. Te falta la administradora.",
       ),
     ).toBeVisible();
-    await expect(page.getByText("Siempre existe")).toBeVisible();
-    await expect(page.getByText("Credencial vencida · 401")).toBeVisible();
+  });
 
-    const row = page.getByRole("listitem").filter({ hasText: "Cliente B" });
+  test("probar una credencial muestra el resultado de testIdentity", async ({ page }) => {
+    const calls = await mockBff(
+      page,
+      `${IDENTITIES}/${USER_A}/test`,
+      {
+        body: {
+          succeeded: false,
+          status_code: 401,
+          failure: "rejected",
+          operation: { id: "0192e3a0-5555-7000-8000-000000000001", method: "GET", path: "/orders" },
+          tested_at: "2026-11-16T10:01:00Z",
+        },
+      },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities`);
+    const row = page.getByRole("listitem").filter({ hasText: "Usuario A" });
     await row.getByRole("button", { name: "Probar" }).click();
-    await expect(page.getByText("Cliente B: la credencial falló")).toBeVisible();
+    await expect(page.getByText("Usuario A: la credencial falló")).toBeVisible();
+    await expect(page.getByText("La API respondió 401.")).toBeVisible();
+    expect(calls[0].postDataJSON()).toEqual({});
   });
 
-  test("eliminar una identidad pide confirmación", async ({ page }) => {
-    await page.goto("/projects/pedidos/identities");
-    await page.getByRole("button", { name: "Eliminar Soporte" }).click();
+  test("probar sin verificar el proyecto no está disponible", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}`,
+      { body: project({ verification_status: "pending", verified_at: null }) },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities`);
+    const row = page.getByRole("listitem").filter({ hasText: "Usuario A" });
+    await expect(row.getByRole("button", { name: "Probar" })).toBeDisabled();
+  });
+
+  test("eliminar una identidad pide confirmación y explica una ejecución activa", async ({
+    page,
+  }) => {
+    await mockBff(
+      page,
+      `${IDENTITIES}/${USER_A}`,
+      { status: 409, body: problem(409, "project.active_run") },
+      "DELETE",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities`);
+    await page.getByRole("button", { name: "Eliminar Usuario A" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText(/identidad eliminada/)).toBeVisible();
+    await expect(dialog.getByText("Sus hallazgos se conservan.")).toBeVisible();
     await dialog.getByRole("button", { name: "Eliminar identidad" }).click();
-    await expect(page.getByRole("heading", { name: "3 identidades" })).toBeVisible();
+    await expect(dialog.getByText("Hay una ejecución en cola o en curso")).toBeVisible();
+
+    await page.unrouteAll();
+    const calls = await mockBff(page, `${IDENTITIES}/${USER_A}`, { status: 204 }, "DELETE");
+    await dialog.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByText("Identidad «Usuario A» eliminada")).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
 
-  test("agregar una identidad valida los campos y aparece en la lista", async ({ page }) => {
-    await page.goto("/projects/pedidos/identities");
-    await page.getByRole("link", { name: "Agregar identidad" }).click();
-    await expect(page).toHaveURL(/\/identities\/new$/);
+  test("agregar: valida los campos, envía la credencial una vez y vuelve a la lista", async ({
+    page,
+  }) => {
+    const calls: { body: unknown }[] = [];
+    await page.route(IDENTITIES, async (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      calls.push({ body: route.request().postDataJSON() });
+      await route.fallback();
+    });
+    await page.goto(`/projects/${PROJECT_ID}/identities/new`);
     await page.getByRole("button", { name: "Guardar identidad" }).click();
-    await expect(page.getByText("Escribe el nombre de la identidad.")).toBeVisible();
-    await expect(page.getByText("Este campo es obligatorio.")).toBeVisible();
+    await expect(page.getByText("Este campo es obligatorio.").first()).toBeVisible();
+    expect(calls).toHaveLength(0);
 
     await page.getByLabel("Nombre", { exact: true }).fill("Administradora");
     await page.getByRole("radio", { name: "Administrador" }).click();
-    await page.getByLabel("Token", { exact: true }).fill("tok-9f8e7d6c");
+    await page.getByLabel("Token", { exact: true }).fill(TOKEN);
     await page.getByRole("button", { name: "Guardar identidad" }).click();
 
-    await expect(page).toHaveURL(/\/identities$/);
-    await expect(page.getByRole("heading", { name: "5 identidades" })).toBeVisible();
-    await expect(page.getByText("••••7d6c")).toBeVisible();
-    await expect(
-      page.getByText("Una identidad normal y una con rol de administrador. Lo cumples."),
-    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/identities$`));
+    await expect(page.getByText("Identidad «Usuario A» guardada")).toBeVisible();
+    expect(calls[0].body).toEqual({
+      name: "Administradora",
+      role: "admin",
+      role_label: null,
+      auth_type: "bearer",
+      credential: { token: TOKEN },
+      field_name: null,
+      login_operation_id: null,
+    });
+    // La credencial no queda en el navegador.
+    const stored = await page.evaluate(
+      () => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }),
+    );
+    expect(stored).not.toContain(TOKEN);
   });
 
-  test("editar: la credencial queda enmascarada y guardar con prueba fallida pide confirmar", async ({
+  test("agregar: un nombre repetido y una cabecera reservada se marcan en su campo", async ({
     page,
   }) => {
-    await page.goto("/projects/pedidos/identities/cliente-a");
-    await expect(page.getByRole("heading", { name: "Editar identidad", level: 1 })).toBeVisible();
-    await expect(
-      page.getByText("Termina en ••••a9F2").or(page.getByText("Termina en ••••")),
-    ).toBeVisible();
-
-    await page.getByRole("radio", { name: "Token Bearer" }).click();
-    await page.getByLabel("Token", { exact: true }).fill("expirado-0000");
-    await page.getByRole("button", { name: "Probar ahora" }).click();
-    await expect(page.getByText("La API respondió 401 Unauthorized.")).toBeVisible();
-
+    await mockBff(
+      page,
+      IDENTITIES,
+      { status: 409, body: problem(409, "identity.name_taken") },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities/new`);
+    await page.getByLabel("Nombre", { exact: true }).fill("Usuario A");
+    await page.getByLabel("Token", { exact: true }).fill(TOKEN);
     await page.getByRole("button", { name: "Guardar identidad" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText("La prueba de la credencial falló")).toBeVisible();
-    await dialog.getByRole("button", { name: "Guardar de todos modos" }).click();
-    await expect(page).toHaveURL(/\/identities$/);
-    await expect(page.getByText("Identidad «Cliente A» guardada")).toBeVisible();
+    await expect(page.getByText("Ya hay una identidad con ese nombre. Elige otro.")).toBeVisible();
+
+    await page.unrouteAll();
+    await mockBff(
+      page,
+      IDENTITIES,
+      {
+        status: 422,
+        body: {
+          ...problem(422, "validation.failed"),
+          errors: [{ field: "field_name", code: "identity.field_name_reserved", message: "" }],
+        },
+      },
+      "POST",
+    );
+    await page.getByRole("radio", { name: "Cabecera personalizada" }).click();
+    await page.getByLabel("Nombre de la cabecera").fill("Host");
+    await page.getByLabel("Valor", { exact: true }).fill(TOKEN);
+    await page.getByRole("button", { name: "Guardar identidad" }).click();
+    await expect(page.getByText("Esa cabecera la controla la plataforma; usa otra.")).toBeVisible();
+  });
+
+  test("editar: la credencial queda enmascarada y solo se envía lo que cambia", async ({
+    page,
+  }) => {
+    const calls = await mockBff(
+      page,
+      `${IDENTITIES}/${USER_A}`,
+      {
+        body: {
+          id: USER_A,
+          name: "Usuario B",
+          role: "user",
+          role_label: "cliente",
+          auth_type: "bearer",
+          credential_suffix: "7f3a",
+          field_name: null,
+          login_operation: null,
+          status: "active",
+          last_tested_at: null,
+          last_test_status_code: null,
+          resource_count: 3,
+          warnings: [],
+          created_at: "2026-11-16T10:00:00Z",
+        },
+      },
+      "PATCH",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities/${USER_A}`);
+    await expect(page.getByRole("heading", { name: "Editar identidad", level: 1 })).toBeVisible();
+    await expect(page.getByText("Termina en ••••7f3a")).toBeVisible();
+    await page.getByLabel("Nombre", { exact: true }).fill("Usuario B");
+    await page.getByRole("button", { name: "Guardar identidad" }).click();
+    await expect(page.getByText("Identidad «Usuario B» guardada")).toBeVisible();
+    expect(calls[0].postDataJSON()).toEqual({ name: "Usuario B" });
+  });
+
+  test("editar una identidad que no existe muestra el 404", async ({ page }) => {
+    await page.goto(`/projects/${PROJECT_ID}/identities/0192e3a0-6666-7000-8000-00000000ffff`);
+    await expect(page.getByText("No encontramos esta página")).toBeVisible();
   });
 });
 

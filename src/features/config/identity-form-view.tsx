@@ -2,155 +2,216 @@
 
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
-import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { FormSkeleton } from "@/components/skeletons/page-skeletons";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { HelpPanel } from "@/components/ui/help-panel";
 import { Icon } from "@/components/ui/icon";
+import { QueryState } from "@/components/ui/query-state";
 import { inputClass, TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { useRouter } from "@/i18n/navigation";
+import {
+  identityCreateSchema,
+  identityUpdateSchema,
+  type CreatableAuthType,
+  type Credential,
+  type Identity,
+  type IdentityRole,
+  type IdentityTest,
+} from "@/lib/api/schemas/identities";
+import type { Project } from "@/lib/api/schemas/projects";
+import { fieldErrors } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
 import { ProjectShell } from "@/features/projects/project-shell";
-import type { Project } from "@/features/projects/store";
-import type { AuthForm, Identity, IdentityRole } from "./data";
-import { identityId, useIdentities } from "./identities";
+import {
+  createIdentity,
+  testIdentity,
+  updateIdentity,
+  useAfterIdentities,
+  useIdentities,
+  useOperations,
+} from "./api";
 
-const FORMS: AuthForm[] = ["login", "bearer", "cookie", "header"];
+const FORMS: CreatableAuthType[] = ["login", "bearer", "cookie", "header"];
 const ROLES: IdentityRole[] = ["admin", "user", "other"];
-const OPERATIONS = ["GET /orders", "GET /orders/{orderId}", "GET /users/me"];
 
-/** Campos de cada forma de autenticación; `secret` se guarda cifrado y solo se ve su final. */
-type FieldKey =
-  | "user"
-  | "password"
-  | "endpoint"
-  | "token"
-  | "cookieName"
-  | "cookieValue"
-  | "headerName"
-  | "headerValue";
-
-const FIELDS: Record<AuthForm, { key: FieldKey; secret?: boolean }[]> = {
-  login: [{ key: "user" }, { key: "password", secret: true }, { key: "endpoint" }],
-  bearer: [{ key: "token", secret: true }],
-  cookie: [{ key: "cookieName" }, { key: "cookieValue", secret: true }],
-  header: [{ key: "headerName" }, { key: "headerValue", secret: true }],
+/** Campos de la credencial de cada forma; los secretos nunca se muestran ni se guardan aquí. */
+type SecretKey = "username" | "password" | "token" | "value";
+const SECRETS: Record<CreatableAuthType, SecretKey[]> = {
+  login: ["username", "password"],
+  bearer: ["token"],
+  cookie: ["value"],
+  header: ["value"],
 };
 
-/** Nombre válido de cabecera o cookie (RFC 9110, «token»): sin espacios ni separadores. */
-const TOKEN = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/;
+/** Código de error (de Zod o de la API) → clave de texto del formulario. */
+const FIELD_MESSAGES: Record<string, string> = {
+  "validation.required": "fieldRequired",
+  "validation.length": "length",
+  "validation.format": "format",
+  "identity.name_taken": "nameTaken",
+  "identity.credential_mismatch": "fieldRequired",
+  "identity.credential_required": "fieldRequired",
+  "identity.field_name_required": "fieldRequired",
+  "identity.field_name_reserved": "fieldNameReserved",
+  "identity.login_operation_required": "loginOperation",
+};
 
-type TestResult = { ok: boolean } | null;
+function credentialFor(auth: CreatableAuthType, values: Record<SecretKey, string>): Credential {
+  if (auth === "login") return { username: values.username, password: values.password };
+  if (auth === "bearer") return { token: values.token };
+  return { value: values.value };
+}
+
+const EMPTY: Record<SecretKey, string> = { username: "", password: "", token: "", value: "" };
 
 function IdentityForm({ project, identity }: { project: Project; identity?: Identity }) {
   const t = useTranslations("IdentityForm");
   const router = useRouter();
   const toast = useToast();
-  const { identities, save } = useIdentities(project.id);
+  const http = useHttpClient();
+  const afterChange = useAfterIdentities(project.id);
   const editing = Boolean(identity);
   const base = `/projects/${project.id}/identities`;
+  const initialAuth: CreatableAuthType =
+    identity && identity.auth_type !== "none" ? identity.auth_type : "bearer";
 
   const [name, setName] = useState(identity?.name ?? "");
   const [role, setRole] = useState<IdentityRole>(identity?.role ?? "user");
-  const [roleNote, setRoleNote] = useState(identity?.roleNote ?? "");
-  const [auth, setAuth] = useState<AuthForm>(
-    identity && identity.auth !== "none" ? identity.auth : "bearer",
-  );
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [replacing, setReplacing] = useState<Record<string, boolean>>({});
-  const [operation, setOperation] = useState(OPERATIONS[0]);
-  const [result, setResult] = useState<TestResult>(null);
-  const [testing, setTesting] = useState(false);
+  const [roleLabel, setRoleLabel] = useState(identity?.role_label ?? "");
+  const [auth, setAuth] = useState<CreatableAuthType>(initialAuth);
+  const [fieldName, setFieldName] = useState(identity?.field_name ?? "");
+  const [loginOperation, setLoginOperation] = useState(identity?.login_operation?.id ?? "");
+  // La credencial vive solo en memoria mientras se escribe; se envía una vez y se descarta.
+  const [secrets, setSecrets] = useState<Record<SecretKey, string>>(EMPTY);
+  const [replacing, setReplacing] = useState(!editing);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [confirmFailed, setConfirmFailed] = useState(false);
+  const [general, setGeneral] = useState<string>();
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState<IdentityTest | null>(null);
 
-  const keepsSecret = editing && identity?.auth === auth;
-  const fields = FIELDS[auth];
+  const operations = useOperations(project.id, { pageSize: 500 });
+  const loginCandidates = (operations.data?.items ?? []).filter(
+    (o) => o.is_login_candidate || o.id === loginOperation,
+  );
+  // Cambiar la forma exige una credencial nueva (`identity.credential_required`).
+  const sendsCredential = replacing || auth !== initialAuth;
 
-  function validate() {
+  const message = (code: string | undefined) =>
+    t(`errors.${(code && FIELD_MESSAGES[code]) || "format"}` as never);
+
+  function mapFields(fields: Record<string, readonly string[]>) {
     const next: Record<string, string> = {};
-    const trimmed = name.trim();
-    if (!trimmed) next.name = t("errors.nameRequired");
-    else if (trimmed.length > 60) next.name = t("errors.nameTooLong");
-    else if (
-      identities.some(
-        (i) => i.id !== identity?.id && i.name.toLowerCase() === trimmed.toLowerCase(),
-      )
-    )
-      next.name = t("errors.nameTaken");
-    for (const field of fields) {
-      const hidden = field.secret && keepsSecret && !replacing[field.key];
-      const value = values[field.key]?.trim() ?? "";
-      if (hidden) continue;
-      if (!value) next[field.key] = t("errors.fieldRequired");
-      else if (field.key === "endpoint" && !/^(\/|https?:\/\/)\S+$/i.test(value))
-        next[field.key] = t("errors.endpoint");
-      else if ((field.key === "headerName" || field.key === "cookieName") && !TOKEN.test(value))
-        next[field.key] = t("errors.tokenName");
+    for (const [field, codes] of Object.entries(fields)) {
+      const key = field.startsWith("credential")
+        ? (field.split(".")[1] ?? SECRETS[auth][0])
+        : field;
+      next[key] ??= message(codes[0]);
     }
-    setErrors(next);
-    return Object.keys(next).length === 0;
+    return next;
+  }
+
+  function payload() {
+    const credential = sendsCredential ? credentialFor(auth, secrets) : undefined;
+    const usesField = auth === "cookie" || auth === "header";
+    const common = {
+      name,
+      role,
+      role_label: roleLabel,
+      auth_type: auth,
+      field_name: usesField ? fieldName : null,
+      login_operation_id: auth === "login" ? loginOperation || null : null,
+    };
+    if (!identity) {
+      return identityCreateSchema.safeParse({ ...common, credential });
+    }
+    // Solo los campos que cambiaron.
+    const changes: Record<string, unknown> = {};
+    if (name.trim() !== identity.name) changes.name = name;
+    if (role !== identity.role) changes.role = role;
+    if ((common.role_label ?? "") !== (identity.role_label ?? ""))
+      changes.role_label = common.role_label;
+    if (auth !== initialAuth) changes.auth_type = auth;
+    if (credential) changes.credential = credential;
+    if ((common.field_name ?? "") !== (identity.field_name ?? ""))
+      changes.field_name = common.field_name;
+    if ((common.login_operation_id ?? "") !== (identity.login_operation?.id ?? "")) {
+      changes.login_operation_id = common.login_operation_id;
+    }
+    return identityUpdateSchema.safeParse(changes);
+  }
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    setGeneral(undefined);
+    const parsed = payload();
+    if (!parsed.success) {
+      const fields = fieldErrors(parsed.error);
+      if (identity && fields._) return router.push(base); // sin cambios
+      return setErrors(mapFields(fields));
+    }
+    setErrors({});
+    setSaving(true);
+    try {
+      const saved = identity
+        ? await updateIdentity(http, project.id, identity.id, parsed.data)
+        : await createIdentity(http, project.id, parsed.data as never);
+      setSecrets(EMPTY);
+      afterChange();
+      toast.show({ type: "success", title: t("saved", { name: saved.name }) });
+      router.push(base);
+    } catch (error) {
+      if (!(error instanceof ApiError)) throw error;
+      if (error.code === "identity.name_taken") setErrors({ name: t("errors.nameTaken") });
+      else if (error.code === "identity.limit_reached") setGeneral(t("errors.limitReached"));
+      else if (error.status === 422) setErrors(mapFields(error.fields));
+      else if (error.status === 429) setGeneral(t("errors.rateLimited"));
+      else
+        setGeneral(
+          error.requestId ? t("errors.reference", { id: error.requestId }) : t("errors.failed"),
+        );
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function runTest() {
+    if (!identity || testing) return;
     setTesting(true);
-    await new Promise((resolve) => setTimeout(resolve, 700)); // TODO(api): probar la credencial
-    const replaced = fields.some((f) => f.secret && replacing[f.key]);
-    const expired = identity?.status === "expiredCredential" && !replaced;
-    const typedExpired = fields.some(
-      (f) => f.secret && values[f.key]?.toLowerCase().includes("expirado"),
-    );
-    setResult({ ok: !(expired || typedExpired) });
-    setTesting(false);
-  }
-
-  function persist() {
-    const secretField = fields.find((f) => f.secret);
-    const typed = secretField ? values[secretField.key] : "";
-    const next: Identity = {
-      id:
-        identity?.id ??
-        identityId(
-          name,
-          identities.map((i) => i.id),
-        ),
-      name: name.trim(),
-      role,
-      roleNote: role === "other" ? roleNote.trim() || undefined : undefined,
-      auth,
-      last4: typed ? typed.slice(-4) : (identity?.last4 ?? null),
-      status: result
-        ? result.ok
-          ? "active"
-          : "expiredCredential"
-        : (identity?.status ?? "untested"),
-      testedAgo: result?.ok ? "0 min" : undefined,
-      resources: identity?.resources ?? 0,
-    };
-    save(next);
-    toast.show({ type: "success", title: t("saved", { name: next.name }) });
-    router.push(base);
-  }
-
-  function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!validate()) return;
-    // Guardar con una prueba fallida pide confirmación explícita (catálogo de modales).
-    if (result && !result.ok) setConfirmFailed(true);
-    else persist();
+    setResult(null);
+    try {
+      const outcome = await testIdentity(http, project.id, identity.id);
+      setResult(outcome);
+      afterChange();
+    } catch (error) {
+      setGeneral(
+        error instanceof ApiError && error.code === "project.not_verified"
+          ? t("errors.notVerified")
+          : error instanceof ApiError && error.code === "identity.no_test_operation"
+            ? t("errors.noTestOperation")
+            : t("errors.failed"),
+      );
+    } finally {
+      setTesting(false);
+    }
   }
 
   return (
     <div className="flex flex-wrap items-start gap-5">
       <form
         noValidate
-        onSubmit={onSubmit}
+        onSubmit={(e) => void onSubmit(e)}
         className="border-line bg-panel flex min-w-0 flex-[999_1_600px] flex-col gap-6 rounded-[28px] border p-6 backdrop-blur-lg sm:p-8"
       >
         <TextField
           label={t("name")}
           value={name}
+          maxLength={100}
           onChange={(e) => setName(e.target.value)}
           error={errors.name}
         />
@@ -180,13 +241,13 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
               </button>
             ))}
           </div>
-          {role === "other" ? (
-            <TextField
-              label={t("role.otherName")}
-              value={roleNote}
-              onChange={(e) => setRoleNote(e.target.value)}
-            />
-          ) : null}
+          <TextField
+            label={t("role.labelName")}
+            value={roleLabel}
+            maxLength={100}
+            onChange={(e) => setRoleLabel(e.target.value)}
+            error={errors.role_label}
+          />
           <span className="text-muted text-[13.5px]">{t("role.hint")}</span>
         </div>
 
@@ -204,10 +265,8 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
                 aria-checked={auth === f}
                 onClick={() => {
                   setAuth(f);
-                  setValues({});
-                  setReplacing({});
+                  setSecrets(EMPTY);
                   setErrors({});
-                  setResult(null);
                 }}
                 className={cn(
                   "bg-panel-2 flex cursor-pointer flex-col gap-1 rounded-[18px] border-2 px-4 py-3.5 text-left",
@@ -222,40 +281,70 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
         </fieldset>
 
         <div className="border-line bg-panel-2 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 rounded-[20px] border p-5">
-          {fields.map((field) => {
-            const masked = field.secret && keepsSecret && !replacing[field.key];
-            const id = `identity-${field.key}`;
-            return (
-              <div key={field.key} className="flex flex-col gap-2">
-                {masked ? (
-                  <>
-                    <span className="text-sm font-semibold">{t(`fields.${field.key}`)}</span>
-                    <div className="flex items-center gap-2">
-                      <code className="border-line bg-code-bg flex-1 rounded-2xl border px-4 py-3.5 font-mono text-[15px]">
-                        {t("endsIn", { last4: identity?.last4 ?? "" })}
-                      </code>
-                      <Button
-                        variant="secondary"
-                        onClick={() => setReplacing((r) => ({ ...r, [field.key]: true }))}
-                      >
-                        {t("replace")}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <TextField
-                    id={id}
-                    label={t(`fields.${field.key}`)}
-                    type={field.secret ? "password" : "text"}
-                    autoComplete="off"
-                    value={values[field.key] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
-                    error={errors[field.key]}
-                  />
-                )}
+          {auth === "cookie" || auth === "header" ? (
+            <TextField
+              id="identity-field-name"
+              label={t(`fields.${auth}Name`)}
+              value={fieldName}
+              maxLength={100}
+              autoComplete="off"
+              onChange={(e) => setFieldName(e.target.value)}
+              error={errors.field_name}
+            />
+          ) : null}
+          {sendsCredential ? (
+            SECRETS[auth].map((key) => (
+              <TextField
+                key={key}
+                id={`identity-${key}`}
+                label={t(`fields.${key}`)}
+                type={key === "username" ? "text" : "password"}
+                autoComplete="off"
+                maxLength={4096}
+                value={secrets[key]}
+                onChange={(e) => setSecrets((v) => ({ ...v, [key]: e.target.value }))}
+                error={errors[key]}
+              />
+            ))
+          ) : (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-semibold">{t("fields.credential")}</span>
+              <div className="flex items-center gap-2">
+                <code className="border-line bg-code-bg flex-1 rounded-2xl border px-4 py-3.5 font-mono text-[15px]">
+                  {t("endsIn", { last4: identity?.credential_suffix ?? "" })}
+                </code>
+                <Button variant="secondary" onClick={() => setReplacing(true)}>
+                  {t("replace")}
+                </Button>
               </div>
-            );
-          })}
+            </div>
+          )}
+          {auth === "login" ? (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="identity-login-op" className="text-sm font-semibold">
+                {t("fields.loginOperation")}
+              </label>
+              <select
+                id="identity-login-op"
+                value={loginOperation}
+                onChange={(e) => setLoginOperation(e.target.value)}
+                aria-invalid={errors.login_operation_id ? true : undefined}
+                className={cn(inputClass, "font-mono text-sm")}
+              >
+                <option value="">{t("fields.chooseOperation")}</option>
+                {loginCandidates.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.method} {o.path}
+                  </option>
+                ))}
+              </select>
+              {errors.login_operation_id ? (
+                <span role="alert" className="text-danger text-[13px]">
+                  {errors.login_operation_id}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
           {auth === "login" ? (
             <span className="text-muted col-span-full text-[13.5px] leading-[1.5]">
               {t("loginNote")}
@@ -263,51 +352,57 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
           ) : null}
         </div>
 
-        <div className="border-line bg-panel-2 flex flex-col gap-3 rounded-[20px] border p-5">
-          <b className="text-[15px]">{t("test.title")}</b>
-          <div className="flex flex-wrap items-end gap-2.5">
-            <div className="flex min-w-[260px] flex-[1_1_260px] flex-col gap-2">
-              <label htmlFor="identity-op" className="text-muted text-[13.5px]">
-                {t("test.operation")}
-              </label>
-              <select
-                id="identity-op"
-                value={operation}
-                onChange={(e) => setOperation(e.target.value)}
-                className={cn(inputClass, "font-mono text-sm")}
-              >
-                {OPERATIONS.map((o) => (
-                  <option key={o}>{o}</option>
-                ))}
-              </select>
-            </div>
-            <Button variant="secondary" onClick={() => void runTest()} loading={testing}>
+        {identity ? (
+          <div className="border-line bg-panel-2 flex flex-col gap-3 rounded-[20px] border p-5">
+            <b className="text-[15px]">{t("test.title")}</b>
+            <span className="text-muted text-[13.5px]">{t("test.savedOnly")}</span>
+            <Button
+              variant="secondary"
+              className="self-start"
+              onClick={() => void runTest()}
+              loading={testing}
+              disabled={testing || project.verification_status !== "verified"}
+            >
               {testing ? null : <Icon name="refresh" size={16} />}
               {testing ? t("test.testing") : t("test.run")}
             </Button>
-          </div>
-          {result ? (
-            <div role="status" className="flex items-start gap-2.5 text-sm leading-[1.5]">
-              <Icon
-                name={result.ok ? "check" : "alert"}
-                className={result.ok ? "text-success" : "text-danger"}
-                strokeWidth={2.4}
-              />
-              <span>
-                <b>{result.ok ? t("test.ok") : t("test.failed")}</b>{" "}
-                <span className="text-muted">
-                  {result.ok ? t("test.okText") : t("test.failedText")}
+            {result ? (
+              <div role="status" className="flex items-start gap-2.5 text-sm leading-[1.5]">
+                <Icon
+                  name={result.succeeded ? "check" : "alert"}
+                  className={result.succeeded ? "text-success" : "text-danger"}
+                  strokeWidth={2.4}
+                />
+                <span>
+                  <b>{t("test.answered", { code: result.status_code ?? "—" })}</b>{" "}
+                  <span className="text-muted">
+                    {result.succeeded
+                      ? t("test.okText", {
+                          method: result.operation.method,
+                          path: result.operation.path,
+                        })
+                      : t(`test.failure.${result.failure ?? "rejected"}`)}
+                  </span>
                 </span>
-              </span>
-            </div>
-          ) : null}
-        </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {general ? (
+          <p role="alert" className="flex items-start gap-2 text-[13.5px]">
+            <Icon name="alertCircle" size={16} className="text-danger mt-0.5" />
+            {general}
+          </p>
+        ) : null}
 
         <div className="border-line flex flex-wrap justify-end gap-3 border-t pt-1.5">
           <ButtonLink href={base} variant="secondary">
             {t("cancel")}
           </ButtonLink>
-          <Button type="submit">{t("save")}</Button>
+          <Button type="submit" loading={saving} disabled={saving}>
+            {t("save")}
+          </Button>
         </div>
       </form>
 
@@ -332,21 +427,11 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
           </ul>
         </HelpPanel>
       </aside>
-
-      <ConfirmDialog
-        open={confirmFailed}
-        onOpenChange={setConfirmFailed}
-        title={t("failedDialog.title")}
-        description={t("failedDialog.text")}
-        confirmLabel={t("failedDialog.confirm")}
-        cancelLabel={t("failedDialog.cancel")}
-        onConfirm={async () => persist()}
-      />
     </div>
   );
 }
 
-/** V-22. Agregar, editar y probar una identidad (credenciales cifradas, solo se ven los últimos 4). */
+/** V-22. Agregar, editar y probar una identidad (la credencial solo viaja de ida; se ve su final). */
 export function IdentityFormView({ id, identityId: editId }: { id: string; identityId?: string }) {
   const t = useTranslations("IdentityForm");
   const list = useTranslations("Identities");
@@ -355,18 +440,36 @@ export function IdentityFormView({ id, identityId: editId }: { id: string; ident
       id={id}
       trail={[
         { label: list("crumb"), href: `/projects/${id}/identities` },
-        { label: editId ? editId : t("newCrumb") },
+        { label: editId ? t("editCrumb") : t("newCrumb") },
       ]}
       title={editId ? t("editTitle") : t("newTitle")}
-    >
-      {(project) => <IdentityLoader project={project} editId={editId} />}
-    </ProjectShell>
+      render={(project) =>
+        editId ? (
+          <IdentityLoader project={project} editId={editId} />
+        ) : (
+          <IdentityForm project={project} />
+        )
+      }
+    />
   );
 }
 
-function IdentityLoader({ project, editId }: { project: Project; editId?: string }) {
-  const { identities } = useIdentities(project.id);
-  const identity = editId ? identities.find((i) => i.id === editId) : undefined;
-  if (editId && !identity) return <ErrorPanel code={404} standalone={false} />;
-  return <IdentityForm key={identity?.id ?? "new"} project={project} identity={identity} />;
+/** El contrato no tiene `getIdentity`: la identidad se toma de `listIdentities`. */
+function IdentityLoader({ project, editId }: { project: Project; editId: string }) {
+  const list = useTranslations("Identities");
+  const query = useIdentities(project.id);
+  return (
+    <QueryState query={query} subject={list("subject")} skeleton={<FormSkeleton />}>
+      {(data) => {
+        const identity = data.items.find((i) => i.id === editId);
+        // La anónima no se edita (`identity.anonymous`).
+        if (!identity || identity.auth_type === "none") {
+          return (
+            <ErrorPanel code={404} standalone={false} href={`/projects/${project.id}/identities`} />
+          );
+        }
+        return <IdentityForm key={identity.id} project={project} identity={identity} />;
+      }}
+    </QueryState>
+  );
 }
