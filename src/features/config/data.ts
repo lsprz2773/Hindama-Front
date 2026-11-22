@@ -3,119 +3,6 @@
  * TODO(api): se reemplazan por las respuestas de la API; los tipos son el contrato esperado.
  */
 
-
-export interface Operation {
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  path: string;
-  summary: string;
-  params: string;
-  security: "bearer" | "public";
-}
-
-export const SAMPLE_OPERATIONS: Operation[] = [
-  {
-    method: "GET",
-    path: "/orders",
-    summary: "Lista los pedidos del usuario",
-    params: "3 consulta",
-    security: "bearer",
-  },
-  {
-    method: "POST",
-    path: "/orders",
-    summary: "Crea un pedido",
-    params: "Cuerpo",
-    security: "bearer",
-  },
-  {
-    method: "GET",
-    path: "/orders/{orderId}",
-    summary: "Obtiene un pedido",
-    params: "1 ruta · 1 consulta",
-    security: "bearer",
-  },
-  {
-    method: "PATCH",
-    path: "/orders/{orderId}",
-    summary: "Actualiza la dirección",
-    params: "1 ruta · cuerpo",
-    security: "bearer",
-  },
-  {
-    method: "DELETE",
-    path: "/orders/{orderId}",
-    summary: "Cancela un pedido",
-    params: "1 ruta",
-    security: "bearer",
-  },
-  {
-    method: "GET",
-    path: "/orders/{orderId}/invoice",
-    summary: "Descarga la factura",
-    params: "1 ruta",
-    security: "bearer",
-  },
-  {
-    method: "GET",
-    path: "/admin/orders",
-    summary: "Todos los pedidos",
-    params: "4 consulta",
-    security: "bearer",
-  },
-  {
-    method: "PUT",
-    path: "/admin/orders/{orderId}/status",
-    summary: "Cambia el estado",
-    params: "1 ruta · cuerpo",
-    security: "bearer",
-  },
-  {
-    method: "GET",
-    path: "/health",
-    summary: "Estado del servicio",
-    params: "Ninguno",
-    security: "public",
-  },
-];
-
-export interface ContractVersion {
-  name: string;
-  date: string;
-  origin: string;
-  operations: number;
-}
-
-export const CONTRACT_VERSIONS: ContractVersion[] = [
-  { name: "v2.4.0", date: "2026-10-21", origin: "pedidos-v2.4.yaml", operations: 42 },
-  { name: "v2.3.1", date: "2026-10-09", origin: "URL", operations: 40 },
-  { name: "v2.2.0", date: "2026-10-01", origin: "file", operations: 37 },
-];
-
-export interface Change {
-  kind: "added" | "modified" | "removed";
-  method: Operation["method"];
-  path: string;
-  detail?: string;
-}
-
-export const CHANGES_VS_V231: Change[] = [
-  { kind: "added", method: "GET", path: "/orders/{orderId}/tracking" },
-  { kind: "added", method: "POST", path: "/orders/{orderId}/returns" },
-  { kind: "added", method: "GET", path: "/admin/returns" },
-  { kind: "modified", method: "PATCH", path: "/orders/{orderId}", detail: "patch" },
-  { kind: "modified", method: "GET", path: "/orders", detail: "list" },
-  { kind: "modified", method: "DELETE", path: "/orders/{orderId}", detail: "delete" },
-  { kind: "modified", method: "GET", path: "/health", detail: "health" },
-  { kind: "removed", method: "GET", path: "/orders/export" },
-];
-
-export const CHANGES_VS_V220: Change[] = [
-  ...CHANGES_VS_V231,
-  { kind: "added", method: "GET", path: "/orders/{orderId}/events" },
-  { kind: "added", method: "PUT", path: "/orders/{orderId}/address" },
-  { kind: "removed", method: "DELETE", path: "/orders/bulk" },
-];
-
 export type AuthForm = "login" | "bearer" | "cookie" | "header";
 export type IdentityRole = "admin" | "user" | "other";
 
@@ -222,7 +109,7 @@ export type PolicyTemplate = "public" | "authenticated" | "owner" | "ownerOrAdmi
 
 export interface PolicyRow {
   id: string;
-  method: Operation["method"];
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
   template: PolicyTemplate;
   ownerField: string | null;

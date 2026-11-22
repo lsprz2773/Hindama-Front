@@ -1178,12 +1178,11 @@
     "title": "OpenAPI contract",
     "history": "Version history",
     "current": "Current version · imported on {date}",
-    "meta": "YAML format · source: file · OpenAPI 3.1.0 · fingerprint 9f3c…a1b7",
+    "meta": "{format} format · source: {source} · OpenAPI {openapi} · fingerprint {hash}",
     "summary": {
       "openapi": "OpenAPI",
       "operations": "Operations",
-      "schemas": "Schemas",
-      "security": "Security scheme"
+      "version": "Current version"
     },
     "empty": {
       "title": "No contract yet",
@@ -1210,44 +1209,71 @@
       "title": "{count} operations",
       "filterLabel": "Filter by method",
       "all": "All",
-      "search": "Search operation",
-      "searchPlaceholder": "Search path or summary",
       "security": {
-        "bearer": "bearer",
         "public": "public"
       },
       "detail": "Details of {method} {path}",
       "params": "Parameters",
-      "paramPath": "path · string (uuid)",
-      "paramQuery": "query · string, optional",
-      "responses": "Responses",
-      "r401": "Unauthenticated",
-      "r404": "Doesn't exist",
       "declaredSecurity": "Declared security",
       "seePolicy": "See in the access policy",
       "none": "No operation matches.",
-      "showing": "Showing {shown} of {total}"
+      "showing": "Showing {shown} of {total}",
+      "subject": "the operations",
+      "paramCount": "{count, plural, =0 {no parameters} one {# parameter} other {# parameters}}",
+      "noParams": "No parameters.",
+      "param": "{location} · {type}{required, select, yes {} other {, optional}}",
+      "location": {
+        "path": "path",
+        "query": "query",
+        "header": "header",
+        "cookie": "cookie"
+      },
+      "body": "Body",
+      "noBody": "No body.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "API key",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "other"
+      },
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
     },
     "errors": {
       "type": "The file must be .json, .yaml or .yml.",
       "size": "The file exceeds 5 MB.",
       "noFile": "Choose a contract file.",
-      "url": "Enter a full contract URL."
-    }
+      "url": "Enter a full contract URL.",
+      "invalid": "The document isn't valid OpenAPI. Check the locations listed.",
+      "unsupported": "Only OpenAPI 3.0 and 3.1 contracts are accepted.",
+      "unreachable": "We couldn't download the contract from that URL.",
+      "notAllowed": "That URL points to a disallowed address.",
+      "failed": "We couldn't import the contract.",
+      "rateLimited": "Too many imports in a row. Wait a moment.",
+      "reference": "Reference: {id}"
+    },
+    "source": {
+      "file": "file",
+      "url": "URL"
+    },
+    "untitled": "Untitled contract",
+    "subject": "the contract version",
+    "unchanged": "The document is identical to the current version; no new version was created."
   },
   "ContractVersions": {
     "crumb": "Versions",
     "title": "Contract versions",
     "count": "{count, plural, one {# version} other {# versions}}",
     "current": "Current",
-    "comparing": "Comparing",
     "originUrl": "URL",
     "originFile": "File",
-    "originFileNamed": "File {name}",
     "operations": "{count} operations",
     "warningsOf": "Warnings for {version}",
     "back": "Back to the current version",
-    "diffTitle": "{from} vs {to}",
+    "diffTitle": "{from} vs. {to}",
     "summary": {
       "added": "{count, plural, one {Added} other {Added}}",
       "modified": "{count, plural, one {Modified} other {Modified}}",
@@ -1264,12 +1290,23 @@
       "modified": "Modified",
       "removed": "Removed"
     },
-    "details": {
-      "patch": "Body: new “status” field (string, enum). Security unchanged.",
-      "list": "New query parameter “createdAfter”. The 200 response adds “nextCursor”.",
-      "delete": "Now responds 409 if the order has already shipped.",
-      "health": "The security scheme was removed: it is now public."
-    }
+    "name": "Version {number}",
+    "viewing": "Viewing",
+    "subject": "the contract versions",
+    "versionSubject": "the version",
+    "first": {
+      "title": "First version",
+      "text": "Version {number} is the first one imported: there's no other to compare it with."
+    },
+    "noChanges": "No changes in the operations.",
+    "empty": {
+      "title": "No contract yet",
+      "text": "Import a contract to see its versions.",
+      "action": "Import contract"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Identities": {
     "crumb": "Identities",

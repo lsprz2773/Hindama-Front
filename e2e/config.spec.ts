@@ -20,6 +20,24 @@ const PENDING_VERIFICATION = {
   },
 };
 
+/** Ejemplo `ContractVersion` del contrato. */
+const CONTRACT_V2 = {
+  id: "0192e3a0-3333-7000-8000-000000000002",
+  number: 2,
+  source: "url",
+  openapi_version: "3.0.3",
+  operation_count: 18,
+  imported_at: "2026-11-03T10:05:00Z",
+  source_url: "https://raw.githubusercontent.com/tienda-ejemplo/api/main/openapi.yaml",
+  file_name: null,
+  format: "yaml",
+  api_title: "API de pedidos",
+  sha256: "9b74c9897bac770ffc029102a200c5de0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+  is_current: true,
+  warnings: [],
+  changes: null,
+};
+
 /** El proyecto del ejemplo, aún sin verificar. */
 const newPending = () => project({ verification_status: "pending", verified_at: null });
 
@@ -136,8 +154,19 @@ test.describe("V-18 verificación de propiedad", () => {
 });
 
 test.describe("V-19 y V-20 contrato y versiones", () => {
+  const CONTRACTS = `**/api/projects/${PROJECT_ID}/contracts`;
+  const noContract = (page: Parameters<typeof mockBff>[0]) =>
+    mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}`,
+      { body: project({ current_contract: null, last_run: null }) },
+      "GET",
+    );
+
   test("sin contrato: valida el archivo y la URL antes de importar", async ({ page }) => {
-    await page.goto("/projects/pagos/contract");
+    await noContract(page);
+    const calls = await mockBff(page, CONTRACTS, { status: 500, body: {} }, "POST");
+    await page.goto(`/projects/${PROJECT_ID}/contract`);
     await expect(page.getByText("Aún no hay contrato")).toBeVisible();
     await page.getByRole("button", { name: "Importar y comparar" }).click();
     await expect(page.getByText("Elige un archivo de contrato.")).toBeVisible();
@@ -150,33 +179,135 @@ test.describe("V-19 y V-20 contrato y versiones", () => {
     await page.getByRole("tab", { name: "Desde URL" }).click();
     await page.getByRole("button", { name: "Importar y comparar" }).click();
     await expect(page.getByText("Escribe una URL completa del contrato.")).toBeVisible();
+    await page.getByLabel("URL del contrato").fill("file:///etc/passwd");
+    await page.getByRole("button", { name: "Importar y comparar" }).click();
+    await expect(page.getByText("Escribe una URL completa del contrato.")).toBeVisible();
+    expect(calls).toHaveLength(0);
   });
 
-  test("importa un contrato y permite revisar avisos y operaciones", async ({ page }) => {
-    await page.goto("/projects/pagos/contract");
+  test("importa un archivo con importContract y muestra los avisos de la versión", async ({
+    page,
+  }) => {
+    const requests: string[] = [];
+    page.on("request", (r) => {
+      if (r.url().endsWith(`/api/projects/${PROJECT_ID}/contracts`) && r.method() === "POST") {
+        requests.push(r.headers()["content-type"] ?? "");
+      }
+    });
+    // Prism responde el 200 («idéntico»); la versión nueva es el 201 con el ejemplo del contrato.
+    await mockBff(page, CONTRACTS, { status: 201, body: CONTRACT_V2 }, "POST");
+    await page.goto(`/projects/${PROJECT_ID}/contract`);
+    // Ejemplo `ContractVersion`: la versión vigente, con dos avisos.
+    await expect(page.getByRole("heading", { name: "API de pedidos", level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2 avisos de esta versión" })).toBeVisible();
+    await expect(
+      page.getByText("El contrato declara servidores distintos a tu URL base").first(),
+    ).toBeVisible();
+
     await page.locator("#contract-file").setInputFiles(YAML);
     await expect(page.getByText("pedidos-v2.4.yaml").first()).toBeVisible();
     await page.getByRole("button", { name: "Importar y comparar" }).click();
-
     await expect(page.getByText("Contrato importado")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "3 avisos de esta versión" })).toBeVisible();
-    await expect(page.getByText("Un elemento del contrato no se pudo interpretar")).toBeVisible();
-    await expect(page.getByText("/paths/~1orders~1{orderId}/get/parameters/2")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "42 operaciones" })).toBeVisible();
+    expect(requests[0]).toMatch(/^multipart\/form-data; boundary=/);
+  });
 
+  test("un documento inválido muestra la ubicación de cada error", async ({ page }) => {
+    await mockBff(
+      page,
+      CONTRACTS,
+      {
+        status: 422,
+        body: {
+          ...problem(422, "contract.invalid"),
+          errors: [{ field: "/paths/~1orders/get", code: "contract.invalid", message: "" }],
+        },
+      },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/contract`);
+    await page.locator("#contract-file").setInputFiles(YAML);
+    await page.getByRole("button", { name: "Importar y comparar" }).click();
+    await expect(page.getByText("El documento no es un OpenAPI válido.")).toBeVisible();
+    await expect(page.getByText("/paths/~1orders/get")).toBeVisible();
+  });
+
+  for (const [code, text] of [
+    ["contract.unsupported_version", "Solo se aceptan contratos OpenAPI 3.0 y 3.1."],
+    ["contract.url_unreachable", "No pudimos descargar el contrato desde esa URL."],
+    ["contract.url_not_allowed", "Esa URL apunta a una dirección no permitida."],
+  ]) {
+    test(`importar por URL: ${code}`, async ({ page }) => {
+      await mockBff(page, CONTRACTS, { status: 422, body: problem(422, code) }, "POST");
+      await page.goto(`/projects/${PROJECT_ID}/contract`);
+      await page.getByRole("tab", { name: "Desde URL" }).click();
+      await page.getByLabel("URL del contrato").fill("https://docs.tienda.mx/openapi.yaml");
+      await page.getByRole("button", { name: "Importar y comparar" }).click();
+      await expect(page.getByText(text)).toBeVisible();
+    });
+  }
+
+  test("un documento idéntico no crea versión y lo avisa", async ({ page }) => {
+    await mockBff(
+      page,
+      CONTRACTS,
+      {
+        status: 200,
+        body: {
+          ...CONTRACT_V2,
+          warnings: [{ code: "contract.unchanged", message: "", location: null }],
+        },
+      },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/contract`);
+    await page.locator("#contract-file").setInputFiles(YAML);
+    await page.getByRole("button", { name: "Importar y comparar" }).click();
+    await expect(page.getByText("Esta versión es idéntica a la anterior")).toBeVisible();
+  });
+
+  test("las operaciones salen de listOperations y el método filtra en la API", async ({ page }) => {
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/operations?*`,
+      {
+        body: {
+          items: [
+            {
+              id: "0192e3a0-5555-7000-8000-000000000003",
+              method: "GET",
+              path: "/orders/{orderId}",
+              operation_id: "getOrder",
+              summary: "Obtiene un pedido",
+              tags: ["orders"],
+              parameters: [{ name: "orderId", location: "path", required: true, type: "string" }],
+              body: null,
+              security: [{ scheme: "bearerAuth", type: "http_bearer" }],
+              retired_at: null,
+              suggested_policy: "owner_only",
+              policy: null,
+              owner_field: null,
+              confirmed_at: null,
+              modified_at: null,
+              resource_parameters: [],
+              is_login_candidate: false,
+            },
+          ],
+          total: 18,
+          page: 1,
+          page_size: 100,
+        },
+      },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/contract`);
+    await expect(page.getByRole("heading", { name: "18 operaciones" })).toBeVisible();
+    await page.getByRole("button", { name: "Detalle de GET /orders/{orderId}" }).click();
+    await expect(page.getByText("bearerAuth (HTTP bearer)")).toBeVisible();
+    await expect(page.getByText("ruta · string")).toBeVisible();
     await page.getByRole("button", { name: "DELETE", exact: true }).click();
-    await expect(page.getByText("Cancela un pedido")).toBeVisible();
-    await expect(page.getByText("Crea un pedido")).toHaveCount(0);
-    await page.getByRole("button", { name: "Todos" }).click();
-    await page.getByRole("searchbox", { name: "Buscar operación" }).fill("factura");
-    await expect(page.getByText("Descarga la factura")).toBeVisible();
-    await page.getByRole("button", { name: "Detalle de GET /orders/{orderId}/invoice" }).click();
-    await expect(page.getByText("bearerAuth (HTTP, JWT)")).toBeVisible();
-
-    // La política deja de estar vacía una vez que hay contrato.
-    await page.goto("/projects/pagos/policy");
-    await expect(page.getByRole("heading", { name: "Política de acceso", level: 1 })).toBeVisible();
-    await expect(page.getByText("Primero importa el contrato")).toHaveCount(0);
+    await expect
+      .poll(() => calls.map((c) => new URL(c.url()).searchParams.get("method")))
+      .toContain("DELETE");
   });
 
   test("política sin contrato pide importarlo primero", async ({ page }) => {
@@ -188,21 +319,47 @@ test.describe("V-19 y V-20 contrato y versiones", () => {
     );
   });
 
-  test("versiones: compara contra otra versión y enlaza a la política", async ({ page }) => {
-    await page.goto("/projects/pedidos/contract/versions");
-    await expect(page.getByRole("heading", { name: "v2.4.0 frente a v2.3.1" })).toBeVisible();
-    await expect(
-      page.getByText("GET /orders/{orderId}/tracking".replace("GET ", "")),
-    ).toBeVisible();
-    await expect(page.getByText("Se quitó el esquema de seguridad")).toBeVisible();
-
-    await page.getByRole("button", { name: /v2\.2\.0/ }).click();
-    await expect(page.getByRole("heading", { name: "v2.4.0 frente a v2.2.0" })).toBeVisible();
+  test("versiones: lista las de la API y muestra los cambios frente a la anterior", async ({
+    page,
+  }) => {
+    await page.goto(`/projects/${PROJECT_ID}/contract/versions`);
+    await expect(page.getByRole("heading", { name: "2 versiones" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "v2 frente a v1" })).toBeVisible();
+    await expect(page.getByText("/orders/{orderId}").first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Ir a la política" })).toHaveAttribute(
       "href",
       /\/policy$/,
     );
     await expect(page.getByRole("link", { name: "Volver a la versión actual" })).toBeVisible();
+  });
+
+  test("versiones: la primera no tiene con qué compararse", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/contracts/*`,
+      {
+        body: {
+          id: "0192e3a0-3333-7000-8000-000000000001",
+          number: 1,
+          source: "file",
+          openapi_version: "3.0.3",
+          operation_count: 17,
+          imported_at: "2026-11-02T15:10:00Z",
+          source_url: null,
+          file_name: "pedidos.yaml",
+          format: "yaml",
+          api_title: "API de pedidos",
+          sha256: "ab".repeat(32),
+          is_current: false,
+          warnings: [],
+          changes: null,
+        },
+      },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/contract/versions`);
+    await page.getByRole("button", { name: /Versión 1/ }).click();
+    await expect(page.getByText("La versión 1 es la primera importada")).toBeVisible();
   });
 });
 

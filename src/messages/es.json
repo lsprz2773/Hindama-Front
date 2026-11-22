@@ -1178,12 +1178,11 @@
     "title": "Contrato OpenAPI",
     "history": "Historial de versiones",
     "current": "Versión actual · importada el {date}",
-    "meta": "Formato YAML · origen: archivo · OpenAPI 3.1.0 · huella 9f3c…a1b7",
+    "meta": "Formato {format} · origen: {source} · OpenAPI {openapi} · huella {hash}",
     "summary": {
       "openapi": "OpenAPI",
       "operations": "Operaciones",
-      "schemas": "Esquemas",
-      "security": "Esquema de seguridad"
+      "version": "Versión vigente"
     },
     "empty": {
       "title": "Aún no hay contrato",
@@ -1210,40 +1209,67 @@
       "title": "{count} operaciones",
       "filterLabel": "Filtrar por método",
       "all": "Todos",
-      "search": "Buscar operación",
-      "searchPlaceholder": "Buscar ruta o resumen",
       "security": {
-        "bearer": "bearer",
         "public": "pública"
       },
       "detail": "Detalle de {method} {path}",
       "params": "Parámetros",
-      "paramPath": "ruta · string (uuid)",
-      "paramQuery": "consulta · string, opcional",
-      "responses": "Respuestas",
-      "r401": "Sin autenticar",
-      "r404": "No existe",
       "declaredSecurity": "Seguridad declarada",
       "seePolicy": "Ver en la política de acceso",
       "none": "Ninguna operación coincide.",
-      "showing": "Mostrando {shown} de {total}"
+      "showing": "Mostrando {shown} de {total}",
+      "subject": "las operaciones",
+      "paramCount": "{count, plural, =0 {sin parámetros} one {# parámetro} other {# parámetros}}",
+      "noParams": "Sin parámetros.",
+      "param": "{location} · {type}{required, select, yes {} other {, opcional}}",
+      "location": {
+        "path": "ruta",
+        "query": "consulta",
+        "header": "cabecera",
+        "cookie": "cookie"
+      },
+      "body": "Cuerpo",
+      "noBody": "Sin cuerpo.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "clave de API",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "otro"
+      },
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
     },
     "errors": {
       "type": "El archivo debe ser .json, .yaml o .yml.",
       "size": "El archivo supera los 5 MB.",
       "noFile": "Elige un archivo de contrato.",
-      "url": "Escribe una URL completa del contrato."
-    }
+      "url": "Escribe una URL completa del contrato.",
+      "invalid": "El documento no es un OpenAPI válido. Revisa las ubicaciones señaladas.",
+      "unsupported": "Solo se aceptan contratos OpenAPI 3.0 y 3.1.",
+      "unreachable": "No pudimos descargar el contrato desde esa URL.",
+      "notAllowed": "Esa URL apunta a una dirección no permitida.",
+      "failed": "No pudimos importar el contrato.",
+      "rateLimited": "Demasiadas importaciones seguidas. Espera un momento.",
+      "reference": "Referencia: {id}"
+    },
+    "source": {
+      "file": "archivo",
+      "url": "URL"
+    },
+    "untitled": "Contrato sin título",
+    "subject": "la versión del contrato",
+    "unchanged": "El documento es idéntico a la versión vigente; no se creó otra."
   },
   "ContractVersions": {
     "crumb": "Versiones",
     "title": "Versiones del contrato",
     "count": "{count, plural, one {# versión} other {# versiones}}",
     "current": "Actual",
-    "comparing": "Comparando",
     "originUrl": "URL",
     "originFile": "Archivo",
-    "originFileNamed": "Archivo {name}",
     "operations": "{count} operaciones",
     "warningsOf": "Avisos de {version}",
     "back": "Volver a la versión actual",
@@ -1264,12 +1290,23 @@
       "modified": "Modificada",
       "removed": "Eliminada"
     },
-    "details": {
-      "patch": "Cuerpo: nuevo campo «status» (string, enum). Seguridad sin cambios.",
-      "list": "Nuevo parámetro de consulta «createdAfter». Respuesta 200 agrega «nextCursor».",
-      "delete": "Ahora responde 409 si el pedido ya se envió.",
-      "health": "Se quitó el esquema de seguridad: ahora es pública."
-    }
+    "name": "Versión {number}",
+    "viewing": "Viendo",
+    "subject": "las versiones del contrato",
+    "versionSubject": "la versión",
+    "first": {
+      "title": "Primera versión",
+      "text": "La versión {number} es la primera importada: no hay otra con la cual compararla."
+    },
+    "noChanges": "Sin cambios en las operaciones.",
+    "empty": {
+      "title": "Aún no hay contrato",
+      "text": "Importa un contrato para ver sus versiones.",
+      "action": "Importar contrato"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Identities": {
     "crumb": "Identidades",
