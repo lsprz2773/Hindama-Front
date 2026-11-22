@@ -110,7 +110,10 @@ function IdentityForm({ project, identity }: { project: Project; identity?: Iden
       const key = field.startsWith("credential")
         ? (field.split(".")[1] ?? SECRETS[auth][0])
         : field;
-      next[key] ??= message(codes[0]);
+      next[key] ??=
+        key === "name" && codes[0] === "validation.required"
+          ? t("errors.nameRequired")
+          : message(codes[0]);
     }
     return next;
   }
