@@ -10,7 +10,12 @@ import { useToast } from "@/components/ui/toast";
 import { useIsClient } from "@/features/account/browser-store";
 import { SESSION_STUB } from "@/features/account/service";
 import { ErrorPanel } from "@/features/errors/error-panel";
+import { useProject as useApiProject } from "@/features/projects/api";
+import { toLegacyProject } from "@/features/projects/project-shell";
 import { hostOf, useProject, type Project } from "@/features/projects/store";
+import { DashboardSkeleton } from "@/components/skeletons/page-skeletons";
+import { QueryState } from "@/components/ui/query-state";
+import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX } from "./data";
 import { isOpen, useFindings } from "./findings-store";
@@ -328,9 +333,30 @@ function Report({ project, runId }: { project: Project; runId: string }) {
 
 /** V-32. Reporte imprimible de una ejecución o del estado actual; se guarda como PDF desde el navegador (§9.2). */
 export function ReportView({ id, runId }: { id: string; runId: string }) {
-  const t = useTranslations("Report");
+  // TODO(api): el reporte se conecta en la fase 6; mientras, un proyecto real (UUID) usa sus
+  // datos de `getProject` con el resto de ejemplo, como las demás vistas sin conectar.
+  if (isUuid(id)) return <ApiReportView id={id} runId={runId} />;
+  return <LegacyReportView id={id} runId={runId} />;
+}
+
+function ApiReportView({ id, runId }: { id: string; runId: string }) {
+  const tn = useTranslations("ProjectNav");
+  const query = useApiProject(id);
+  return (
+    <QueryState query={query} subject={tn("subject")} skeleton={<DashboardSkeleton />}>
+      {(project) => <ReportBody id={id} runId={runId} project={toLegacyProject(project)} />}
+    </QueryState>
+  );
+}
+
+function LegacyReportView({ id, runId }: { id: string; runId: string }) {
   const project = useProject(id);
   if (!project) return <ErrorPanel code={404} />;
+  return <ReportBody id={id} runId={runId} project={project} />;
+}
+
+function ReportBody({ id, runId, project }: { id: string; runId: string; project: Project }) {
+  const t = useTranslations("Report");
   if (!project.report)
     return (
       <div className="mx-auto max-w-[720px] p-6">
