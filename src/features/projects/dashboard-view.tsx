@@ -11,20 +11,13 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Link } from "@/i18n/navigation";
 import type { ModuleAvailability, Project } from "@/lib/api/schemas/projects";
 import { cn } from "@/lib/cn";
+import { MODULE_VIEW } from "@/features/runs/modules";
+import { RerunButton } from "@/features/runs/rerun-button";
 import { hasActiveRun, ProjectShell } from "./project-shell";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
 
-/** Módulo del contrato → clave de textos y código OWASP de la vista. */
-const MODULES = {
-  authentication: { key: "auth", code: "API2" },
-  configuration: { key: "config", code: "API8" },
-  object_access: { key: "objects", code: "API1" },
-  function_access: { key: "functions", code: "API5" },
-  property_access: { key: "properties", code: "API3" },
-  resource_consumption: { key: "resources", code: "API4" },
-  sql_injection: { key: "sql", code: "SQL" },
-} as const;
+const MODULES = MODULE_VIEW;
 
 type Missing = ModuleAvailability["missing"][number];
 
@@ -173,12 +166,14 @@ function Dashboard({ project }: { project: Project }) {
               href={`${base}/runs/current`}
             />
           ) : (
-            // TODO(api): «Repetir última ejecución» (`rerunRun`) se conecta con las ejecuciones (fase 5).
             <div className="flex flex-wrap gap-3">
               <ButtonLink href={`${base}/runs/new`} size="lg">
                 <Icon name="play" size={16} />
                 {t("fullTest")}
               </ButtonLink>
+              {run ? (
+                <RerunButton project={project} run={run} label={t("repeat")} variant="secondary" />
+              ) : null}
             </div>
           )}
 

@@ -1038,7 +1038,8 @@
       "emptyTitle": "No results yet",
       "emptyText": "Verify ownership and run your first test to see each module here.",
       "ran": "Included in the last run"
-    }
+    },
+    "repeat": "Repeat last run"
   },
   "ProjectSettings": {
     "crumb": "Settings",
@@ -1638,8 +1639,6 @@
       "title": "Test modules",
       "lead": "Choose which OWASP API Top 10 categories to test in this run.",
       "selected": "{count, plural, =0 {None selected} other {# selected}}",
-      "noAdmin": "Requires an administrator identity",
-      "addIdentity": "Add identity",
       "notes": {
         "auth": "Tokens, sessions and credentials",
         "config": "Headers, CORS and error messages",
@@ -1649,7 +1648,23 @@
         "resources": "Loads the server with repeated requests",
         "sql": "Sends injection payloads; modifies test data"
       },
-      "risk": "Risk"
+      "risk": "Risk",
+      "missing": {
+        "project_not_verified": "Requires verifying host ownership",
+        "no_contract": "Requires importing the contract",
+        "insufficient_identities": "Requires at least two identities",
+        "no_admin_identity": "Requires an admin identity",
+        "no_resources": "Requires resources assigned to identities",
+        "policy_unconfirmed": "Requires confirming the access policy"
+      },
+      "fix": {
+        "project_not_verified": "Verify",
+        "no_contract": "Import contract",
+        "insufficient_identities": "Add identity",
+        "no_admin_identity": "Add identity",
+        "no_resources": "Assign resources",
+        "policy_unconfirmed": "Review policy"
+      }
     },
     "risk": {
       "medium": "Medium risk",
@@ -1671,11 +1686,11 @@
       "verified": "The base URL is verified",
       "noActive": "No other run is active",
       "https": "The URL uses HTTPS",
-      "policy": "The cleanup policy is confirmed"
+      "policy": "The access policy is confirmed"
     },
     "run": "{count, plural, =0 {Run tests} one {Run # module} other {Run # modules}}",
     "starting": "Starting…",
-    "started": "Run started",
+    "started": "Run #{number} queued",
     "confirmFirst": "Confirm every risk module to run.",
     "readOnly": {
       "title": "What Hindama does",
@@ -1686,6 +1701,13 @@
       "goVerify": "Go to verification",
       "active": "A run is already in progress.",
       "viewRun": "View the run"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "moduleUnavailable": "A module no longer meets its requirements. Check the list and try again.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be started",
+      "reference": "Reference: {id}"
     }
   },
   "RunProgress": {
@@ -2338,5 +2360,22 @@
     "list": "Loading the list",
     "detail": "Loading the details",
     "chart": "Loading the chart"
+  },
+  "Rerun": {
+    "started": "Run #{number} queued",
+    "confirm": {
+      "title": "Repeat run #{number}",
+      "text": "It includes modules that change test data or load the server. Confirmation is required for every run.",
+      "heading": "Risky modules",
+      "button": "Confirm and repeat"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "notVerified": "Verify the host's ownership before running.",
+      "moduleUnavailable": "A module of the run no longer meets its requirements. Check the project.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be repeated",
+      "reference": "Reference: {id}"
+    }
   }
 }

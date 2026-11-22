@@ -1038,7 +1038,8 @@
       "emptyTitle": "Aún no hay resultados",
       "emptyText": "Verifica la propiedad y ejecuta tu primera prueba para ver cada módulo aquí.",
       "ran": "Incluido en la última ejecución"
-    }
+    },
+    "repeat": "Repetir última ejecución"
   },
   "ProjectSettings": {
     "crumb": "Ajustes",
@@ -1638,8 +1639,6 @@
       "title": "Módulos de prueba",
       "lead": "Elige qué categorías de OWASP API Top 10 se probarán en esta ejecución.",
       "selected": "{count, plural, =0 {Ninguno seleccionado} one {# seleccionado} other {# seleccionados}}",
-      "noAdmin": "Requiere una identidad administradora",
-      "addIdentity": "Agregar identidad",
       "notes": {
         "auth": "Tokens, sesiones y credenciales",
         "config": "Cabeceras, CORS y mensajes de error",
@@ -1649,7 +1648,23 @@
         "resources": "Carga el servidor con peticiones repetidas",
         "sql": "Envía cargas de inyección; modifica datos de prueba"
       },
-      "risk": "Riesgo"
+      "risk": "Riesgo",
+      "missing": {
+        "project_not_verified": "Requiere verificar la propiedad del host",
+        "no_contract": "Requiere importar el contrato",
+        "insufficient_identities": "Requiere al menos dos identidades",
+        "no_admin_identity": "Requiere una identidad administradora",
+        "no_resources": "Requiere recursos asignados a las identidades",
+        "policy_unconfirmed": "Requiere confirmar la política de acceso"
+      },
+      "fix": {
+        "project_not_verified": "Verificar",
+        "no_contract": "Importar contrato",
+        "insufficient_identities": "Agregar identidad",
+        "no_admin_identity": "Agregar identidad",
+        "no_resources": "Asignar recursos",
+        "policy_unconfirmed": "Revisar política"
+      }
     },
     "risk": {
       "medium": "Riesgo medio",
@@ -1671,11 +1686,11 @@
       "verified": "La URL base está verificada",
       "noActive": "No hay otra ejecución activa",
       "https": "La URL usa HTTPS",
-      "policy": "La política de limpieza está confirmada"
+      "policy": "La política de acceso está confirmada"
     },
     "run": "{count, plural, =0 {Ejecutar pruebas} one {Ejecutar # módulo} other {Ejecutar # módulos}}",
     "starting": "Iniciando…",
-    "started": "Ejecución iniciada",
+    "started": "Ejecución n.º {number} en cola",
     "confirmFirst": "Confirma cada módulo de riesgo para poder ejecutar.",
     "readOnly": {
       "title": "Qué hace Hindama",
@@ -1686,6 +1701,13 @@
       "goVerify": "Ir a verificación",
       "active": "Ya hay una ejecución en curso.",
       "viewRun": "Ver la ejecución"
+    },
+    "errors": {
+      "activeRun": "Ya hay una ejecución en cola o en curso.",
+      "moduleUnavailable": "Un módulo ya no cumple sus requisitos. Revisa la lista y vuelve a intentarlo.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo iniciar la ejecución",
+      "reference": "Referencia: {id}"
     }
   },
   "RunProgress": {
@@ -2338,5 +2360,22 @@
     "list": "Cargando la lista",
     "detail": "Cargando el detalle",
     "chart": "Cargando la gráfica"
+  },
+  "Rerun": {
+    "started": "Ejecución n.º {number} en cola",
+    "confirm": {
+      "title": "Repetir la ejecución n.º {number}",
+      "text": "Incluye módulos que modifican datos de prueba o cargan el servidor. La confirmación se pide en cada ejecución.",
+      "heading": "Módulos de riesgo",
+      "button": "Confirmar y repetir"
+    },
+    "errors": {
+      "activeRun": "Ya hay una ejecución en cola o en curso.",
+      "notVerified": "Verifica la propiedad del host antes de ejecutar.",
+      "moduleUnavailable": "Un módulo de la ejecución ya no cumple sus requisitos. Revisa el proyecto.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo repetir la ejecución",
+      "reference": "Referencia: {id}"
+    }
   }
 }

@@ -1,28 +1,40 @@
 import { expect, test } from "./fixtures";
+import { mockBff, problem } from "./support/bff";
+import { project, PROJECT_ID } from "./support/projects";
+import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "./support/runs";
+
+const PROJECT = `**/api/projects/${PROJECT_ID}`;
+const BASE = `/projects/${PROJECT_ID}`;
 
 test.describe("V-25 configurar una ejecución", () => {
-  test("arranca con los módulos por omisión y bloquea el de administrador con su motivo", async ({
+  test("parte de los módulos disponibles de bajo riesgo y explica los bloqueados", async ({
     page,
   }) => {
-    await page.goto("/projects/pedidos/runs/new");
+    await page.goto(`${BASE}/runs/new`);
     await expect(page.getByRole("heading", { name: "Nueva ejecución", level: 1 })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Autenticación/ })).toBeChecked();
-    await expect(page.getByRole("checkbox", { name: /Acceso a objetos/ })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: /Configuración/ })).toBeChecked();
     await expect(page.getByRole("checkbox", { name: /Propiedades/ })).not.toBeChecked();
-    const functions = page.getByRole("checkbox", { name: /Acceso a funciones/ });
-    await expect(functions).toBeDisabled();
-    await expect(page.getByText("Requiere una identidad administradora").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Agregar identidad" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ejecutar 3 módulos" })).toBeEnabled();
+    await expect(page.getByRole("checkbox", { name: /Inyección SQL/ })).not.toBeChecked();
+    // `ModuleAvailability.missing` del proyecto: el primer requisito que falta y dónde resolverlo.
+    await expect(page.getByRole("checkbox", { name: /Acceso a objetos/ })).toBeDisabled();
+    await expect(page.getByRole("checkbox", { name: /Acceso a funciones/ })).toBeDisabled();
+    await expect(page.getByText("Requiere al menos dos identidades")).toBeVisible();
+    await expect(page.getByText("Requiere una identidad administradora")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Agregar identidad" }).first()).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/identities/new$`),
+    );
+    await expect(page.getByRole("button", { name: "Ejecutar 2 módulos" })).toBeEnabled();
   });
 
   test("un módulo de riesgo exige confirmación antes de poder ejecutar", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/new");
-    await page.getByRole("checkbox", { name: /Propiedades/ }).check();
+    await page.goto(`${BASE}/runs/new`);
+    await page.getByRole("checkbox", { name: /^Propiedades/ }).check();
     await expect(
       page.getByRole("heading", { name: /Activaste módulos que modifican datos/ }),
     ).toBeVisible();
-    const run = page.getByRole("button", { name: "Ejecutar 4 módulos" });
+    const run = page.getByRole("button", { name: "Ejecutar 3 módulos" });
     await expect(run).toBeDisabled();
     await expect(
       page.getByText("Confirma cada módulo de riesgo para poder ejecutar."),
@@ -37,37 +49,194 @@ test.describe("V-25 configurar una ejecución", () => {
   });
 
   test("un límite fuera de rango lo avisa y bloquea la ejecución", async ({ page }) => {
-    await page.goto("/projects/pedidos/runs/new");
+    await page.goto(`${BASE}/runs/new`);
     const rps = page.getByLabel("Peticiones por segundo");
+    await expect(rps).toHaveValue("5");
+    await expect(page.getByLabel("Peticiones en total")).toHaveValue("5000");
     await rps.fill("99");
     await expect(page.getByText("Escribe un número entero entre 1 y 20.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ejecutar 3 módulos" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Ejecutar 2 módulos" })).toBeDisabled();
     await rps.fill("8");
-    await expect(page.getByRole("button", { name: "Ejecutar 3 módulos" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Ejecutar 2 módulos" })).toBeEnabled();
   });
 
-  test("ejecutar abre la vista en curso y deja el proyecto con una ejecución activa", async ({
+  test("ejecutar envía los módulos, los límites y la confirmación, y abre la vista en curso", async ({
     page,
   }) => {
-    await page.goto("/projects/pedidos/runs/new");
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    const calls = await mockBff(
+      page,
+      `${PROJECT}/runs`,
+      { status: 202, body: runningRun({ status: "queued" }) },
+      "POST",
+    );
+    // El simulador siempre responde el `last_run` de su ejemplo; tras crear, el proyecto real
+    // trae la nueva ejecución como la última.
+    await page.route(PROJECT, (route) =>
+      route.request().method() === "GET" && calls.length > 0
+        ? route.fulfill({ json: project({ last_run: runningSummary({ status: "queued" }) }) })
+        : route.fallback(),
+    );
+    await page.goto(`${BASE}/runs/new`);
+    await page.getByRole("checkbox", { name: /^Inyección SQL/ }).check();
+    await page.getByRole("checkbox", { name: /Confirmar Inyección SQL/ }).check();
+    await page.getByLabel("Peticiones por segundo").fill("8");
     await page.getByRole("button", { name: "Ejecutar 3 módulos" }).click();
-    await expect(page).toHaveURL(/\/projects\/pedidos\/runs\/current$/);
+
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
+    expect(calls).toHaveLength(1);
+    expect(calls[0].postDataJSON()).toEqual({
+      modules: ["authentication", "configuration", "sql_injection"],
+      limits: {
+        requests_per_second: 8,
+        concurrency: 2,
+        max_requests: 5000,
+        max_duration_minutes: 30,
+      },
+      confirm_risk: true,
+    });
+    await expect(page.getByText("Ejecución n.º 3 en cola")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Ejecución en curso", level: 1 })).toBeVisible();
     await expect(page.getByRole("progressbar", { name: "Avance de la ejecución" })).toBeVisible();
+  });
 
-    // Con una ejecución activa no se puede configurar otra.
-    await page.goto("/projects/pedidos/runs/new");
+  test("sin módulos de riesgo no envía la confirmación", async ({ page }) => {
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    const calls = await mockBff(
+      page,
+      `${PROJECT}/runs`,
+      { status: 202, body: runningRun({ status: "queued" }) },
+      "POST",
+    );
+    await page.goto(`${BASE}/runs/new`);
+    await page.getByRole("button", { name: "Ejecutar 2 módulos" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
+    expect(calls[0].postDataJSON()).not.toHaveProperty("confirm_risk");
+  });
+
+  test("un módulo que dejó de estar disponible se avisa sin salir de la vista", async ({
+    page,
+  }) => {
+    await mockBff(
+      page,
+      `${PROJECT}/runs`,
+      {
+        status: 422,
+        body: problem(422, "run.module_unavailable", [
+          { field: "modules.0", code: "run.module_unavailable" },
+        ]),
+      },
+      "POST",
+    );
+    await page.goto(`${BASE}/runs/new`);
+    await page.getByRole("button", { name: "Ejecutar 2 módulos" }).click();
+    await expect(
+      page.getByText(
+        "Un módulo ya no cumple sus requisitos. Revisa la lista y vuelve a intentarlo.",
+      ),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/new$`));
+    await expect(page.getByRole("button", { name: "Ejecutar 2 módulos" })).toBeEnabled();
+  });
+
+  test("un error del servidor muestra la referencia", async ({ page }) => {
+    await mockBff(
+      page,
+      `${PROJECT}/runs`,
+      { status: 500, body: problem(500, "internal.error") },
+      "POST",
+    );
+    await page.goto(`${BASE}/runs/new`);
+    await page.getByRole("button", { name: "Ejecutar 2 módulos" }).click();
+    await expect(page.getByText("No se pudo iniciar la ejecución")).toBeVisible();
+    await expect(page.getByText("Referencia: req-e2e-500")).toBeVisible();
+  });
+
+  test("con una ejecución activa no se puede configurar otra", async ({ page }) => {
+    await mockBff(page, PROJECT, { body: project({ last_run: runningSummary() }) }, "GET");
+    await page.goto(`${BASE}/runs/new`);
     await expect(page.getByText("Ya hay una ejecución en curso.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ver la ejecución" })).toBeVisible();
+    await page.getByRole("link", { name: "Ver la ejecución" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
   });
 
   test("un proyecto sin verificar explica por qué no se puede ejecutar", async ({ page }) => {
-    await page.goto("/projects/pagos/runs/new");
+    await mockBff(
+      page,
+      PROJECT,
+      { body: project({ verification_status: "pending", verified_at: null }) },
+      "GET",
+    );
+    await page.goto(`${BASE}/runs/new`);
     await expect(
       page.getByText("Verifica la URL base del proyecto antes de ejecutar."),
     ).toBeVisible();
     await page.getByRole("link", { name: "Ir a verificación" }).click();
-    await expect(page).toHaveURL(/\/projects\/pagos\/verification$/);
+    await expect(page).toHaveURL(new RegExp(`${BASE}/verification$`));
+  });
+});
+
+test.describe("V-16 repetir la última ejecución", () => {
+  test("sin módulos de riesgo la repite sin confirmación", async ({ page }) => {
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/*/rerun`,
+      { status: 202, body: runningRun({ status: "queued" }) },
+      "POST",
+    );
+    await page.goto(BASE);
+    await page.getByRole("button", { name: "Repetir última ejecución" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
+    expect(calls[0].url()).toContain("/runs/0192e3a0-4444-7000-8000-000000000001/rerun");
+    expect(calls[0].postDataJSON()).toEqual({});
+  });
+
+  test("con módulos de riesgo pide confirmarlos otra vez", async ({ page }) => {
+    await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
+    await mockBff(
+      page,
+      PROJECT,
+      {
+        body: project({
+          last_run: runningSummary({
+            id: "0192e3a0-4444-7000-8000-000000000001",
+            number: 1,
+            status: "completed",
+            end_reason: "normal",
+            finished_at: "2026-11-17T09:14:37Z",
+          }),
+        }),
+      },
+      "GET",
+    );
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/*/rerun`,
+      { status: 202, body: runningRun({ status: "queued" }) },
+      "POST",
+    );
+    await page.goto(BASE);
+    await page.getByRole("button", { name: "Repetir última ejecución" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Repetir la ejecución n.º 1")).toBeVisible();
+    await expect(dialog.getByText("Inyección SQL")).toBeVisible();
+    await dialog.getByRole("button", { name: "Confirmar y repetir" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/runs/current$`));
+    expect(calls[0].postDataJSON()).toEqual({ confirm_risk: true });
+  });
+
+  test("con otra ejecución activa lo avisa", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/*/rerun`,
+      { status: 409, body: problem(409, "project.active_run") },
+      "POST",
+    );
+    await page.goto(BASE);
+    await page.getByRole("button", { name: "Repetir última ejecución" }).click();
+    await expect(page.getByText("Ya hay una ejecución en cola o en curso.")).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${BASE}$`));
   });
 });
 
