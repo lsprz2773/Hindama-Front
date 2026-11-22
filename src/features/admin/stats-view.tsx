@@ -2,12 +2,15 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
+import { ROLE_KEY, useFlag } from "@/features/account/browser-store";
+import { ErrorPanel } from "@/features/errors/error-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { EmptyState } from "@/components/ui/state-view";
+import { EmptyState, ListSkeleton, LoadErrorState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { cn } from "@/lib/cn";
+import { useSimulatedLoad } from "./use-simulated-load";
 import { ADMIN_STUB, STATS, STATS_END, type StatsPeriod, type StatsSet } from "./data";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
@@ -115,7 +118,7 @@ function Bars({
 }
 
 /** V-33. Estadísticas de uso: solo datos agregados y anónimos, nunca una API ni un analista (RF-78 a RF-80). */
-export function StatsView() {
+function StatsViewInner() {
   const t = useTranslations("Stats");
   const tm = useTranslations("Dashboard.modules");
   const format = useFormatter();
@@ -123,6 +126,7 @@ export function StatsView() {
   const [from, setFrom] = useState("2026-10-01");
   const [to, setTo] = useState(STATS_END);
 
+  const load = useSimulatedLoad(`${period}|${from}|${to}`);
   const rangeInvalid = period === "custom" && (!from || !to || from > to || to > STATS_END);
   const days = period === "custom" ? 30 : Number(period);
   const start =
@@ -222,7 +226,11 @@ export function StatsView() {
         </div>
       ) : null}
 
-      {rangeInvalid ? null : empty ? (
+      {rangeInvalid ? null : load.status === "loading" ? (
+        <ListSkeleton label={t("loading")} rows={5} />
+      ) : load.status === "error" ? (
+        <LoadErrorState subject={t("errorSubject")} reference="5C2E-18AB" onRetry={load.retry} />
+      ) : empty ? (
         <EmptyState title={t("empty.title")} text={t("empty.text")} />
       ) : (
         <>
@@ -284,5 +292,15 @@ export function StatsView() {
 
       <p className="text-muted text-[13.5px] leading-[1.55]">{t("privacy")}</p>
     </AppShell>
+  );
+}
+
+/** Solo para administradores: un analista con sesión ve el 403 (RNF-05). */
+export function StatsView() {
+  const role = useFlag(ROLE_KEY);
+  return role === "analyst" ? (
+    <ErrorPanel code={403} audience="analyst" href="/projects" />
+  ) : (
+    <StatsViewInner />
   );
 }

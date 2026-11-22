@@ -2,10 +2,12 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
+import { ROLE_KEY, useFlag } from "@/features/account/browser-store";
+import { ErrorPanel } from "@/features/errors/error-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { EmptyState } from "@/components/ui/state-view";
+import { EmptyState, ListSkeleton, LoadErrorState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
@@ -19,6 +21,7 @@ import {
   type AuditAction,
   type AuditRecord,
 } from "./data";
+import { useSimulatedLoad } from "./use-simulated-load";
 
 const PAGE_SIZE = 10;
 const GRID =
@@ -78,7 +81,7 @@ function Field({
 }
 
 /** V-34. Bitácora de auditoría: solo lectura, sin credenciales ni textos libres (RF-81 a RF-84). */
-export function AuditLogView() {
+function AuditLogViewInner() {
   const t = useTranslations("AuditLog");
   const format = useFormatter();
   const toast = useToast();
@@ -86,6 +89,7 @@ export function AuditLogView() {
   const [page, setPage] = useState(0);
   const [openId, setOpenId] = useState<string | null>(null);
 
+  const load = useSimulatedLoad(JSON.stringify({ ...filters }));
   const rangeInvalid = Boolean(filters.from && filters.to && filters.from > filters.to);
   const hostFp = filters.host.trim() ? hostFingerprint(filters.host) : "";
   const visible = rangeInvalid
@@ -266,7 +270,11 @@ export function AuditLogView() {
           </span>
         </div>
 
-        {visible.length === 0 ? (
+        {load.status === "loading" ? (
+          <ListSkeleton label={t("loading")} rows={6} />
+        ) : load.status === "error" ? (
+          <LoadErrorState subject={t("errorSubject")} reference="9D41-70F3" onRetry={load.retry} />
+        ) : visible.length === 0 ? (
           <EmptyState
             title={rangeInvalid ? t("empty.invalidTitle") : t("empty.title")}
             text={rangeInvalid ? t("empty.invalidText") : t("empty.text")}
@@ -400,5 +408,15 @@ export function AuditLogView() {
         )}
       </section>
     </AppShell>
+  );
+}
+
+/** Solo para administradores: un analista con sesión ve el 403 (RNF-05). */
+export function AuditLogView() {
+  const role = useFlag(ROLE_KEY);
+  return role === "analyst" ? (
+    <ErrorPanel code={403} audience="analyst" href="/projects" />
+  ) : (
+    <AuditLogViewInner />
   );
 }
