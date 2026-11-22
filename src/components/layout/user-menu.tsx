@@ -1,10 +1,16 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
+import { useState } from "react";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
+import { useMe } from "@/features/account/api";
 import { useRouter } from "@/i18n/navigation";
+import { setCsrfToken, useHttpClient } from "@/lib/http/browser";
 
 function initials(name: string) {
   return name
@@ -15,10 +21,47 @@ function initials(name: string) {
     .join("");
 }
 
-/** Menú de usuario de la cabecera: perfil, idioma y cerrar sesión. */
-export function UserMenu({ name }: { name: string }) {
+/**
+ * Menú de usuario de la cabecera (C-01): el nombre sale de `GET /me`; cerrar sesión llama al
+ * BFF, que revoca el refresh token en Cognito y borra la cookie (RF-04).
+ */
+export function UserMenu() {
   const t = useTranslations("UserMenu");
   const router = useRouter();
+  const http = useHttpClient();
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const me = useMe();
+  const [signingOut, setSigningOut] = useState(false);
+  const name = me.data?.name ?? "";
+
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await http.post("/auth/sign-out");
+    } catch {
+      toast.show({ type: "error", title: t("signOutError") });
+      setSigningOut(false);
+      return;
+    }
+    setCsrfToken(undefined);
+    queryClient.clear();
+    router.replace("/");
+  }
+
+  if (!me.data) {
+    return (
+      <span
+        aria-busy="true"
+        aria-label={t("loading")}
+        className="border-line bg-panel flex min-h-12 items-center gap-2.5 rounded-full border py-1 pr-3.5 pl-1"
+      >
+        <Skeleton className="size-10 rounded-full" />
+        <Skeleton className="h-4 w-24" />
+      </span>
+    );
+  }
 
   return (
     <DropdownMenu.Root>
@@ -51,7 +94,8 @@ export function UserMenu({ name }: { name: string }) {
           </div>
           <DropdownMenu.Separator className="bg-line my-1 h-px" />
           <DropdownMenu.Item
-            onSelect={() => router.push("/sign-in")}
+            disabled={signingOut}
+            onSelect={() => void signOut()}
             className="data-[highlighted]:bg-selected flex min-h-11 cursor-pointer items-center gap-3 rounded-[14px] px-3 text-[14.5px] outline-none"
           >
             <Icon name="logout" size={18} />

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError, createHttpClient, CSRF_HEADER, parseRetryAfter } from ".";
 
@@ -101,7 +102,11 @@ describe("cliente HTTP central", () => {
     [500, "server"],
     [503, "server"],
   ])("traduce el estado %i al tipo %s", async (status, kind) => {
-    const client = createHttpClient({ getLocale: () => "es", fetchImpl: respond(status, {}) });
+    const client = createHttpClient({
+      getLocale: () => "es",
+      fetchImpl: respond(status, {}),
+      getRetries: 0,
+    });
     await expect(client.get("/x")).rejects.toMatchObject({ status, kind });
   });
 
@@ -162,7 +167,11 @@ describe("cliente HTTP central", () => {
       request_id: "0192e3b1-0000-7000-8000-000000000500",
       errors: [],
     };
-    const client = createHttpClient({ getLocale: () => "es", fetchImpl: respond(500, body) });
+    const client = createHttpClient({
+      getLocale: () => "es",
+      fetchImpl: respond(500, body),
+      getRetries: 0,
+    });
 
     const error = (await client.get("/x").catch((e: unknown) => e)) as ApiError;
 
@@ -220,7 +229,7 @@ describe("cliente HTTP central", () => {
     );
 
     await expect(
-      createHttpClient({ getLocale: () => "es", fetchImpl: tooMany }).get("/x"),
+      createHttpClient({ getLocale: () => "es", fetchImpl: tooMany, getRetries: 0 }).get("/x"),
     ).rejects.toMatchObject({ kind: "rate_limited", retryAfter: 42, code: "rate_limit.exceeded" });
     await expect(
       createHttpClient({ getLocale: () => "es", fetchImpl: notAllowed }).post("/x"),
@@ -238,7 +247,123 @@ describe("cliente HTTP central", () => {
     const fetchImpl = vi.fn(async () => {
       throw new TypeError("fetch failed");
     });
-    const client = createHttpClient({ getLocale: () => "es", fetchImpl });
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl, getRetries: 0 });
     await expect(client.get("/x")).rejects.toMatchObject({ kind: "network", status: 0 });
+  });
+
+  it("reintenta un GET ante un 503 con espera creciente y luego responde", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response("{}", { status: 503 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 503 }))
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const sleep = vi.fn(async () => {});
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl, sleep });
+
+    const result = await client.get("/projects");
+
+    expect(result.data).toEqual({ ok: true });
+    expect(sleep.mock.calls.map((c) => (c as unknown[])[0])).toEqual([500, 1000]);
+  });
+
+  it("respeta Retry-After al reintentar un GET con 429", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ code: "rate_limit.exceeded" }), {
+          status: 429,
+          headers: { "Retry-After": "3" },
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const sleep = vi.fn(async () => {});
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl, sleep });
+
+    await client.get("/x");
+
+    expect(sleep).toHaveBeenCalledWith(3000, undefined);
+  });
+
+  it("nunca reintenta una petición que modifica datos", async () => {
+    const fetchImpl = respond(503, {});
+    const sleep = vi.fn(async () => {});
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl, sleep });
+
+    await expect(client.post("/projects", { body: {} })).rejects.toMatchObject({ status: 503 });
+    await expect(client.delete("/projects/x")).rejects.toMatchObject({ status: 503 });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it("no reintenta errores definitivos (404, 422)", async () => {
+    const fetchImpl = respond(404, { code: "resource.not_found" });
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl, sleep: async () => {} });
+    await expect(client.get("/x")).rejects.toMatchObject({ kind: "not_found" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("corta la petición al agotar el tiempo máximo", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("t", "TimeoutError")),
+          );
+        }),
+    );
+    const client = createHttpClient({
+      getLocale: () => "es",
+      fetchImpl,
+      timeoutMs: 20,
+      getRetries: 0,
+    });
+    await expect(client.get("/x")).rejects.toMatchObject({
+      kind: "network",
+      code: "request.timeout",
+    });
+  });
+
+  it("propaga la cancelación de la vista sin reintentar", async () => {
+    const controller = new AbortController();
+    const fetchImpl = vi.fn<typeof fetch>(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("a", "AbortError")),
+          );
+        }),
+    );
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl });
+    const pending = client.get("/x", { signal: controller.signal });
+    controller.abort();
+    await expect(pending).rejects.toBeDefined();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("repite el parámetro de un filtro con varios valores", async () => {
+    const fetchImpl = respond(200, {});
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl });
+    await client.get("/f", { query: { status: ["new", "persistent"], page: 1 } });
+    expect(fetchImpl.mock.calls[0][0]).toBe("/api/f?status=new&status=persistent&page=1");
+  });
+
+  it("rechaza una respuesta que no cumple el esquema y no la entrega", async () => {
+    const schema = z.object({ id: z.string() });
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl: respond(200, { id: 1 }) });
+    await expect(client.read("/x", schema)).rejects.toMatchObject({
+      kind: "invalid_response",
+      code: "response.invalid",
+    });
+  });
+
+  it("descarta los campos que el esquema no conoce", async () => {
+    const schema = z.object({ id: z.string() });
+    const client = createHttpClient({
+      getLocale: () => "es",
+      fetchImpl: respond(200, { id: "a", extra: "<script>" }),
+    });
+    const { data } = await client.read("/x", schema);
+    expect(data).toEqual({ id: "a" });
   });
 });

@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import type { Crumb } from "@/components/layout/breadcrumb";
 import type { SidebarProject } from "@/components/layout/sidebar";
 import { ErrorPanel } from "@/features/errors/error-panel";
-import { SESSION_STUB } from "@/features/account/service";
 import { useProject, type Project } from "./store";
 
 /** Texto de las notas de la barra lateral y bloqueos según el estado del proyecto. */
@@ -98,7 +97,6 @@ function ProjectShellInner({
   return (
     <AppShell
       role="analyst"
-      userName={SESSION_STUB.name}
       project={nav}
       breadcrumb={crumbs}
       title={typeof title === "function" ? title(project) : title}

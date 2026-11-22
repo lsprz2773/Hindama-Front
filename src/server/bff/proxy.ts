@@ -19,9 +19,28 @@ export const API_TIMEOUT_MS = 35_000;
 /** Cabeceras de la respuesta de la API que llegan al navegador. */
 const PASS_HEADERS = ["content-type", "retry-after", "allow", "x-request-id"];
 
+export interface PreparedRequest {
+  /** Cuerpo ya validado que se reenvía a la API (no el que mandó el navegador). */
+  body?: BodyInit;
+  contentType?: string;
+  /** Consulta ya validada, con `?` o vacía. */
+  search: string;
+}
+
 export interface ProxyOptions {
   /** Stream SSE (ADR-006): sin búfer, sin tiempo máximo y cerrado junto con el navegador. */
   stream?: boolean;
+  /**
+   * Valida la petición después de comprobar la sesión y el CSRF, y antes de llamar a la API.
+   * Devuelve lo que se reenvía o una respuesta de error. Sin él, se reenvía el cuerpo y la
+   * consulta tal cual (solo lo usa el relevo SSE, que no tiene cuerpo).
+   */
+  prepare?: (request: Request) => Promise<PreparedRequest | Response>;
+  /**
+   * Valida y limpia la respuesta correcta de la API antes de entregarla. Si no cumple el
+   * contrato, el navegador recibe un error y nunca los datos.
+   */
+  transform?: (data: unknown) => { ok: true; data: unknown } | { ok: false };
 }
 
 /**
@@ -63,8 +82,21 @@ export async function proxyToApi(
     }
   }
 
-  const body =
-    request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
+  let prepared: PreparedRequest;
+  if (options.prepare) {
+    const result = await options.prepare(request);
+    if (result instanceof Response) return finish(result);
+    prepared = result;
+  } else {
+    prepared = {
+      body:
+        request.method === "GET" || request.method === "HEAD"
+          ? undefined
+          : await request.arrayBuffer(),
+      contentType: request.headers.get("content-type") ?? undefined,
+      search: new URL(request.url).search,
+    };
+  }
   const requestId = newRequestId();
 
   try {
@@ -72,11 +104,11 @@ export async function proxyToApi(
       session = await renew(session, deps, collector, cookies);
     }
 
-    let upstream = await send(request, apiPath, session, body, requestId, deps, options);
+    let upstream = await send(request, apiPath, session, prepared, requestId, deps, options);
     if (upstream.status === 401) {
       await upstream.body?.cancel();
       session = await renew(session, deps, collector, cookies);
-      upstream = await send(request, apiPath, session, body, requestId, deps, options);
+      upstream = await send(request, apiPath, session, prepared, requestId, deps, options);
       if (upstream.status === 401) {
         await upstream.body?.cancel();
         clearSession(collector, cookies);
@@ -129,13 +161,14 @@ function send(
   request: Request,
   apiPath: string,
   session: Session,
-  body: ArrayBuffer | undefined,
+  prepared: PreparedRequest,
   requestId: string,
   deps: BffDeps,
   options: ProxyOptions,
 ): Promise<Response> {
-  const incoming = new URL(request.url);
-  const url = `${deps.config.apiUrl}${apiPath}${incoming.search}`;
+  const { body, contentType } = prepared;
+  // La base sale de la configuración del servidor; la ruta, del route handler (nunca del navegador).
+  const url = `${deps.config.apiUrl}${apiPath}${prepared.search}`;
   const headers = new Headers({
     Authorization: `Bearer ${session.accessToken}`,
     "X-Request-Id": requestId,
@@ -145,7 +178,6 @@ function send(
   if (language) headers.set("Accept-Language", language);
   const ip = clientIp(request.headers);
   if (ip) headers.set("X-Hindama-Client-IP", ip);
-  const contentType = request.headers.get("content-type");
   if (body !== undefined && contentType) headers.set("Content-Type", contentType);
   const lastEventId = request.headers.get("last-event-id");
   if (options.stream && lastEventId) headers.set("Last-Event-ID", lastEventId);
@@ -199,7 +231,20 @@ async function toBrowserResponse(
   }
 
   const empty = upstream.status === 204 || upstream.status === 304;
-  return new Response(empty ? null : upstream.body, { status: upstream.status, headers });
+  if (empty) return new Response(null, { status: upstream.status, headers });
+  if (options.transform) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(await upstream.text());
+    } catch {
+      return problem(502, "response.invalid", { requestId });
+    }
+    const result = options.transform(parsed);
+    if (!result.ok) return problem(502, "response.invalid", { requestId });
+    headers.set("Content-Type", "application/json");
+    return new Response(JSON.stringify(result.data), { status: upstream.status, headers });
+  }
+  return new Response(upstream.body, { status: upstream.status, headers });
 }
 
 /** `Location` de la API (`/projects/…`) → ruta equivalente del BFF (`/api/projects/…`). */

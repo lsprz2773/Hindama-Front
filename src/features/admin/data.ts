@@ -3,7 +3,6 @@
  * TODO(api): se reemplazan por las respuestas de la API; los tipos son el contrato esperado.
  * El panel solo recibe datos agregados y anónimos: nunca identifica analistas ni APIs.
  */
-export const ADMIN_STUB = { name: "Ana Rivera", email: "ana@ejemplo.mx" } as const;
 
 /** «Hoy» del ejemplo: los periodos terminan aquí. */
 export const STATS_END = "2026-10-30";

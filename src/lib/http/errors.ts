@@ -21,7 +21,8 @@ export type ApiErrorKind =
   | "validation" // 400 / 422
   | "rate_limited" // 429: trae la cabecera `Retry-After`
   | "server" // 5xx
-  | "network" // sin respuesta
+  | "network" // sin respuesta o tiempo agotado
+  | "invalid_response" // la respuesta no cumple el contrato: no se muestra
   | "unknown";
 
 export function kindFromStatus(status: number): ApiErrorKind {

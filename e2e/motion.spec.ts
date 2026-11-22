@@ -72,7 +72,7 @@ test.describe("animaciones", () => {
 
   test("los menús se abren con animación", async ({ page }) => {
     await page.goto("/projects");
-    await page.getByRole("button", { name: /Luis Selvas/ }).click();
+    await page.getByRole("button", { name: /Ana López/ }).click();
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
     expect(await menu.evaluate((el) => getComputedStyle(el).animationName)).toBe("menu-in");
@@ -96,7 +96,7 @@ test.describe("animaciones", () => {
       .first()
       .evaluate((el) => parseFloat(getComputedStyle(el).animationDuration));
     expect(duration).toBeLessThan(0.001);
-    await page.getByRole("button", { name: /Luis Selvas/ }).click();
+    await page.getByRole("button", { name: /Ana López/ }).click();
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
     expect(

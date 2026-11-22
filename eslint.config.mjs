@@ -22,6 +22,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
+    // Tipos generados desde el contrato (`npm run contract:types`).
+    "src/lib/api/schema.d.ts",
   ]),
 ]);
 

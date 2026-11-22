@@ -10,7 +10,6 @@ export default async function ShellPage({ params }: PageProps<"/[locale]/design-
   return (
     <AppShell
       role="analyst"
-      userName="Luis Selvas"
       project={{
         id: "demo",
         name: "API de Pedidos",

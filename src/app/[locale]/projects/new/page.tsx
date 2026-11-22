@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
-import { SESSION_STUB } from "@/features/account/service";
 import { NewProjectView } from "@/features/projects/new-project-view";
 import { resolveLocale } from "@/i18n/params";
 
@@ -19,7 +18,6 @@ export default async function NewProjectPage({ params }: PageProps<"/[locale]/pr
   return (
     <AppShell
       role="analyst"
-      userName={SESSION_STUB.name}
       title={p("newProject")}
       breadcrumb={[{ label: p("title"), href: "/projects" }, { label: p("newProject") }]}
     >
