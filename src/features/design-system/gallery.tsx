@@ -75,7 +75,7 @@ function LoadableDemo() {
             aria-pressed={status === value}
             onClick={() => setStatus(value)}
           >
-            {value}
+            Consulta {value}
           </Button>
         ))}
       </div>
