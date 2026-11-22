@@ -191,3 +191,4 @@ Cuando dos documentos no coinciden, el frontend sigue el contrato y lo anota aqu
 - **V-12.** `QueryState` pinta `ErrorPanel` (sin el marco público) para 403, 404, 429, 500 y 503 dentro de cualquier vista conectada, con el `request_id` como referencia en 500 y 503.
 - **Códigos nuevos del BFF** (no están en `hindama-docs`): `auth.username_exists` (409), y como código de campo en `422 validation.failed`: `auth.invalid_password` (campo `password`), `auth.code_mismatch` y `auth.code_expired` (campo `code`). Conviene documentarlos.
 - **Sin conectar (bloqueadas):** V-05 y V-10 (MFA), V-35 y V-11 (administradores), C-14 (baja de cuenta) y C-17 (cambiar contraseña). Si Cognito pide un reto de MFA al iniciar sesión, el BFF responde `auth.failed`.
+- **Rol en el navegador.** El inicio de sesión ya no guarda el rol en `sessionStorage`. Las pantallas de administración (simuladas, sin contrato) eligen qué mostrar con el rol de `getMe`; los permisos los sigue aplicando la API.
