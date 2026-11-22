@@ -555,69 +555,131 @@ test.describe("V-28 matriz", () => {
 });
 
 test.describe("V-29 hallazgos", () => {
-  test("por omisión lista los abiertos ordenados por severidad", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
+  const FINDINGS = new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`);
+  const params = (url: string) => new URL(url).searchParams;
+
+  test("por omisión pide los abiertos y los lista con su clasificación", async ({ page }) => {
+    const first = page.waitForRequest((r) => FINDINGS.test(r.url()));
+    await page.goto(`${BASE}/findings`);
+    expect(params((await first).url()).getAll("status")).toEqual([
+      "new",
+      "persistent",
+      "regression",
+    ]);
     await expect(page.getByRole("heading", { name: "Hallazgos", level: 1 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "9 hallazgos abiertos" })).toBeVisible();
-    await expect(page.getByText("Mostrando 9 de 15")).toBeVisible();
-    const first = page
-      .getByRole("list")
-      .filter({ hasText: "Un usuario puede leer pedidos" })
-      .first();
-    await expect(first).toBeVisible();
+    await expect(
+      page.getByText("Estado actual del proyecto, con los resultados de la ejecución n.º 1."),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2 hallazgos abiertos" })).toBeVisible();
+    await expect(page.getByText("Mostrando 2 de 2")).toBeVisible();
+    const row = page
+      .getByRole("listitem")
+      .filter({ hasText: "Acceso a un objeto de otra identidad" });
+    await expect(row).toContainText("API1:2023");
+    await expect(row).toContainText("CWE-639");
+    await expect(row).toContainText("Cliente B");
+    await expect(row).toContainText("Persistente");
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "Falta la cabecera Strict-Transport-Security" }),
+    ).toContainText("Toda la API");
     await expect(
       page.getByRole("button", { name: /Quitar filtro «Estado: abiertos»/ }),
     ).toBeVisible();
   });
 
-  test("filtra por severidad y por módulo y limpia los filtros", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
-    await page.getByLabel("Severidad").selectOption("high");
-    await expect(page.getByRole("heading", { name: "3 hallazgos abiertos" })).toBeVisible();
-    await page.getByLabel("Módulo").selectOption("auth");
-    await expect(page.getByRole("heading", { name: "1 hallazgo abierto" })).toBeVisible();
-    await expect(page.getByText("El token vencido sigue siendo aceptado")).toBeVisible();
+  test("los filtros de severidad, módulo y estado se piden a la API", async ({ page }) => {
+    await page.goto(`${BASE}/findings`);
+    await expect(page.getByRole("heading", { name: "2 hallazgos abiertos" })).toBeVisible();
 
+    const bySeverity = page.waitForRequest(
+      (r) => FINDINGS.test(r.url()) && r.url().includes("severity=high"),
+    );
+    await page.getByLabel("Severidad").selectOption("high");
+    await bySeverity;
+    const byModule = page.waitForRequest(
+      (r) => FINDINGS.test(r.url()) && r.url().includes("module=object_access"),
+    );
+    await page.getByLabel("Módulo").selectOption({ label: "Acceso a objetos" });
+    await byModule;
+    const byStatus = page.waitForRequest(
+      (r) => FINDINGS.test(r.url()) && params(r.url()).getAll("status").join() === "accepted_risk",
+    );
+    await page.getByLabel("Estado", { exact: true }).selectOption("accepted_risk");
+    await byStatus;
+
+    const cleared = page.waitForRequest(
+      (r) =>
+        FINDINGS.test(r.url()) && !r.url().includes("status=") && !r.url().includes("severity="),
+    );
     await page.getByRole("button", { name: "Limpiar filtros" }).click();
-    await expect(page.getByRole("heading", { name: "15 hallazgos" })).toBeVisible();
+    await cleared;
+    await expect(page.getByRole("heading", { name: "2 hallazgos", exact: true })).toBeVisible();
   });
 
-  test("el motivo de descarte muestra los descartados", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
-    await page.getByLabel("Motivo de descarte").selectOption("false_positive");
-    await expect(page.locator("#f-est")).toHaveValue("acceptedRisk");
-    await expect(page.getByText("Falta la cabecera X-Content-Type-Options")).toBeVisible();
-    await expect(page.getByText("El servidor anuncia su versión")).toHaveCount(0);
+  test("desde una ejecución filtra por ella y el filtro se puede quitar", async ({ page }) => {
+    await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/runs/${RUN_ID}`,
+      { body: completedRun() },
+      "GET",
+    );
+    const first = page.waitForRequest((r) => FINDINGS.test(r.url()));
+    await page.goto(`${BASE}/findings?run=${RUN_ID}`);
+    expect(params((await first).url()).get("run_id")).toBe(RUN_ID);
+    await expect(page.getByText("Ejecución n.º 3")).toBeVisible();
+    const all = page.waitForRequest((r) => FINDINGS.test(r.url()) && !r.url().includes("run_id="));
+    await page.getByRole("button", { name: "Quitar filtro «Ejecución»" }).click();
+    await all;
+  });
+
+  test("un id de ejecución inválido en la dirección se ignora", async ({ page }) => {
+    const first = page.waitForRequest((r) => FINDINGS.test(r.url()));
+    await page.goto(`${BASE}/findings?run=3`);
+    expect(params((await first).url()).get("run_id")).toBeNull();
   });
 
   test("sin coincidencias ofrece limpiar", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
-    await page.getByLabel("Severidad").selectOption("critical");
-    await page.getByLabel("Módulo").selectOption("auth");
+    await page.route(FINDINGS, (route) =>
+      route.fulfill({ json: { items: [], total: 0, page: 1, page_size: 20 } }),
+    );
+    await page.goto(`${BASE}/findings`);
     await expect(page.getByText("Nada coincide con tus filtros")).toBeVisible();
     await page.getByRole("button", { name: "Limpiar filtros", exact: true }).last().click();
-    await expect(page.getByText("Nada coincide con tus filtros")).toHaveCount(0);
+    await expect(page.getByText("Este proyecto no tiene hallazgos.")).toBeVisible();
   });
 
-  test("exportar incluye solo los filtrados", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
-    await page.getByLabel("Severidad").selectOption("high");
-    await page.getByRole("button", { name: "Exportar a Excel" }).click();
-    await expect(page.getByText("Se exportaron 3 hallazgos.")).toBeVisible();
+  test("pagina de 20 en 20", async ({ page }) => {
+    let last = "";
+    await page.route(FINDINGS, (route) => {
+      last = route.request().url();
+      const current = Number(params(last).get("page") ?? "1");
+      return route.fulfill({
+        json: { items: [finding()], total: 45, page: current, page_size: 20 },
+      });
+    });
+    await page.goto(`${BASE}/findings`);
+    await expect(page.getByText("Página 1 de 3")).toBeVisible();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+    await expect(page.getByText("Página 2 de 3")).toBeVisible();
+    expect(params(last).get("page")).toBe("2");
+    expect(params(last).get("page_size")).toBe("20");
   });
 
-  test("un proyecto sin hallazgos invita a ejecutar", async ({ page }) => {
-    await page.goto("/projects/pagos/findings");
+  test("un proyecto sin ejecuciones invita a ejecutar", async ({ page }) => {
+    await mockBff(page, PROJECT, { body: project({ last_run: null }) }, "GET");
+    await page.goto(`${BASE}/findings`);
     await expect(page.getByText("Aún no hay hallazgos")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Exportar a Excel" })).toBeDisabled();
+    await expect(page.getByText("Aún no hay ejecuciones en este proyecto.")).toBeVisible();
   });
 
   test("abrir un hallazgo lleva a su detalle", async ({ page }) => {
-    await page.goto("/projects/pedidos/findings");
+    await page.goto(`${BASE}/findings`);
     await page
-      .getByRole("link", { name: "Un usuario puede leer pedidos de otro usuario", exact: true })
+      .getByRole("link", { name: "Acceso a un objeto de otra identidad", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/findings\/f01$/);
+    await expect(page).toHaveURL(
+      new RegExp(`${BASE}/findings/0192e3a0-8888-7000-8000-000000000001$`),
+    );
   });
 });
 

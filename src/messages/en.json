@@ -1904,9 +1904,6 @@
     "title": "Findings",
     "subtitle": "Current state of the project, with the results of run no. {number}.",
     "subtitleNone": "There are no runs in this project yet.",
-    "export": "Export to Excel",
-    "exported": "Export ready",
-    "exportedText": "{count, plural, one {# finding was exported.} other {# findings were exported.}} It only includes the filtered ones.",
     "empty": {
       "title": "There are no findings yet",
       "text": "Run the tests to see here what we find in your API.",
@@ -1917,7 +1914,6 @@
       "module": "Module",
       "severity": "Severity",
       "status": "Status",
-      "reason": "Dismissal reason",
       "allModules": "All modules",
       "allSeverities": "All",
       "all": "All",
@@ -1926,19 +1922,16 @@
     "status": {
       "open": "Open"
     },
-    "reason": {
-      "all": "Accepted risk and false positive",
-      "accepted": "Accepted risk",
-      "false_positive": "False positive"
-    },
     "chips": {
       "status": "Status: {value}",
       "module": "Module: {value}",
       "severity": "Severity: {value}",
-      "reason": "Reason: {value}",
-      "remove": "Remove filter “{filter}”"
+      "remove": "Remove filter “{filter}”",
+      "run": "Run #{number}",
+      "runLoading": "Run",
+      "runText": "Run"
     },
-    "showing": "Showing {shown} of {total} · sorted by severity · “Export to Excel” includes only the filtered ones",
+    "showing": "Showing {shown} of {total} · sorted by severity",
     "openCount": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
     "count": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
     "cols": {
@@ -1949,7 +1942,13 @@
       "classification": "Classification",
       "status": "Status"
     },
-    "open": "Open {title}"
+    "open": "Open {title}",
+    "subject": "the findings",
+    "none": "This project has no findings.",
+    "identityDeleted": "{name} (deleted)",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "FindingDetail": {
     "globalOperation": "Entire API",

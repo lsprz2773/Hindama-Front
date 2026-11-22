@@ -1904,9 +1904,6 @@
     "title": "Hallazgos",
     "subtitle": "Estado actual del proyecto, con los resultados de la ejecución n.º {number}.",
     "subtitleNone": "Aún no hay ejecuciones en este proyecto.",
-    "export": "Exportar a Excel",
-    "exported": "Exportación lista",
-    "exportedText": "{count, plural, one {Se exportó # hallazgo.} other {Se exportaron # hallazgos.}} Solo incluye los filtrados.",
     "empty": {
       "title": "Aún no hay hallazgos",
       "text": "Ejecuta las pruebas para ver aquí lo que encontremos en tu API.",
@@ -1917,7 +1914,6 @@
       "module": "Módulo",
       "severity": "Severidad",
       "status": "Estado",
-      "reason": "Motivo de descarte",
       "allModules": "Todos los módulos",
       "allSeverities": "Todas",
       "all": "Todos",
@@ -1926,19 +1922,16 @@
     "status": {
       "open": "Abiertos"
     },
-    "reason": {
-      "all": "Riesgo aceptado y falso positivo",
-      "accepted": "Riesgo aceptado",
-      "false_positive": "Falso positivo"
-    },
     "chips": {
       "status": "Estado: {value}",
       "module": "Módulo: {value}",
       "severity": "Severidad: {value}",
-      "reason": "Motivo: {value}",
-      "remove": "Quitar filtro «{filter}»"
+      "remove": "Quitar filtro «{filter}»",
+      "run": "Ejecución n.º {number}",
+      "runLoading": "Ejecución",
+      "runText": "Ejecución"
     },
-    "showing": "Mostrando {shown} de {total} · ordenados por severidad · «Exportar a Excel» incluye solo los filtrados",
+    "showing": "Mostrando {shown} de {total} · ordenados por severidad",
     "openCount": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
     "count": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
     "cols": {
@@ -1949,7 +1942,13 @@
       "classification": "Clasificación",
       "status": "Estado"
     },
-    "open": "Abrir {title}"
+    "open": "Abrir {title}",
+    "subject": "los hallazgos",
+    "none": "Este proyecto no tiene hallazgos.",
+    "identityDeleted": "{name} (eliminada)",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "FindingDetail": {
     "globalOperation": "Toda la API",
