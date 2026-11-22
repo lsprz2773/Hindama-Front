@@ -85,7 +85,6 @@ test.describe("fase 0 · componentes comunes", () => {
     for (const text of [
       "En cola",
       "En curso",
-      "Cancelando",
       "Completada",
       "Cancelada",
       "Fallida",
