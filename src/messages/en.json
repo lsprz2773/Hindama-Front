@@ -2202,5 +2202,12 @@
     "report": "Report",
     "settings": "Project settings",
     "verification": "Ownership verification"
+  },
+  "Loading": {
+    "label": "Loading…",
+    "page": "Loading the page",
+    "list": "Loading the list",
+    "detail": "Loading the details",
+    "chart": "Loading the chart"
   }
 }

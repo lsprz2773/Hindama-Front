@@ -2202,5 +2202,12 @@
     "report": "Reporte",
     "settings": "Ajustes del proyecto",
     "verification": "Verificación de propiedad"
+  },
+  "Loading": {
+    "label": "Cargando…",
+    "page": "Cargando la página",
+    "list": "Cargando la lista",
+    "detail": "Cargando el detalle",
+    "chart": "Cargando la gráfica"
   }
 }
