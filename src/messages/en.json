@@ -1142,6 +1142,18 @@
       "notFound": {
         "title": "We couldn't verify: we couldn't find the file",
         "how": "check that the address opens the file in the browser."
+      },
+      "txtMissing": {
+        "title": "Verification failed: we couldn't find the TXT record",
+        "how": "check the record name and value; if you just created it, wait for it to propagate."
+      },
+      "connectionError": {
+        "title": "Verification failed: we couldn't connect to the host",
+        "how": "make sure the host is reachable from the internet and try again."
+      },
+      "destinationNotAllowed": {
+        "title": "Verification failed: the host resolves to a disallowed address",
+        "how": "use a public host; internal or private addresses are blocked and logged."
       }
     },
     "help": {
@@ -1155,19 +1167,22 @@
       "common3": "Missing DNS record",
       "common4": "Connection error with the host",
       "common5": "The host resolves to a disallowed address: it is blocked and recorded in the log"
-    }
+    },
+    "subject": "the verification",
+    "rateLimited": "Too many attempts. Wait a moment and verify again.",
+    "failed": "We couldn't verify right now",
+    "reference": "Reference: {id}"
   },
   "Contract": {
     "crumb": "Contract",
     "title": "OpenAPI contract",
     "history": "Version history",
     "current": "Current version · imported on {date}",
-    "meta": "YAML format · source: file · OpenAPI 3.1.0 · fingerprint 9f3c…a1b7",
+    "meta": "{format} format · source: {source} · OpenAPI {openapi} · fingerprint {hash}",
     "summary": {
       "openapi": "OpenAPI",
       "operations": "Operations",
-      "schemas": "Schemas",
-      "security": "Security scheme"
+      "version": "Current version"
     },
     "empty": {
       "title": "No contract yet",
@@ -1194,44 +1209,71 @@
       "title": "{count} operations",
       "filterLabel": "Filter by method",
       "all": "All",
-      "search": "Search operation",
-      "searchPlaceholder": "Search path or summary",
       "security": {
-        "bearer": "bearer",
         "public": "public"
       },
       "detail": "Details of {method} {path}",
       "params": "Parameters",
-      "paramPath": "path · string (uuid)",
-      "paramQuery": "query · string, optional",
-      "responses": "Responses",
-      "r401": "Unauthenticated",
-      "r404": "Doesn't exist",
       "declaredSecurity": "Declared security",
       "seePolicy": "See in the access policy",
       "none": "No operation matches.",
-      "showing": "Showing {shown} of {total}"
+      "showing": "Showing {shown} of {total}",
+      "subject": "the operations",
+      "paramCount": "{count, plural, =0 {no parameters} one {# parameter} other {# parameters}}",
+      "noParams": "No parameters.",
+      "param": "{location} · {type}{required, select, yes {} other {, optional}}",
+      "location": {
+        "path": "path",
+        "query": "query",
+        "header": "header",
+        "cookie": "cookie"
+      },
+      "body": "Body",
+      "noBody": "No body.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "API key",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "other"
+      },
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
     },
     "errors": {
       "type": "The file must be .json, .yaml or .yml.",
       "size": "The file exceeds 5 MB.",
       "noFile": "Choose a contract file.",
-      "url": "Enter a full contract URL."
-    }
+      "url": "Enter a full contract URL.",
+      "invalid": "The document isn't valid OpenAPI. Check the locations listed.",
+      "unsupported": "Only OpenAPI 3.0 and 3.1 contracts are accepted.",
+      "unreachable": "We couldn't download the contract from that URL.",
+      "notAllowed": "That URL points to a disallowed address.",
+      "failed": "We couldn't import the contract.",
+      "rateLimited": "Too many imports in a row. Wait a moment.",
+      "reference": "Reference: {id}"
+    },
+    "source": {
+      "file": "file",
+      "url": "URL"
+    },
+    "untitled": "Untitled contract",
+    "subject": "the contract version",
+    "unchanged": "The document is identical to the current version; no new version was created."
   },
   "ContractVersions": {
     "crumb": "Versions",
     "title": "Contract versions",
     "count": "{count, plural, one {# version} other {# versions}}",
     "current": "Current",
-    "comparing": "Comparing",
     "originUrl": "URL",
     "originFile": "File",
-    "originFileNamed": "File {name}",
     "operations": "{count} operations",
     "warningsOf": "Warnings for {version}",
     "back": "Back to the current version",
-    "diffTitle": "{from} vs {to}",
+    "diffTitle": "{from} vs. {to}",
     "summary": {
       "added": "{count, plural, one {Added} other {Added}}",
       "modified": "{count, plural, one {Modified} other {Modified}}",
@@ -1248,12 +1290,23 @@
       "modified": "Modified",
       "removed": "Removed"
     },
-    "details": {
-      "patch": "Body: new “status” field (string, enum). Security unchanged.",
-      "list": "New query parameter “createdAfter”. The 200 response adds “nextCursor”.",
-      "delete": "Now responds 409 if the order has already shipped.",
-      "health": "The security scheme was removed: it is now public."
-    }
+    "name": "Version {number}",
+    "viewing": "Viewing",
+    "subject": "the contract versions",
+    "versionSubject": "the version",
+    "first": {
+      "title": "First version",
+      "text": "Version {number} is the first one imported: there's no other to compare it with."
+    },
+    "noChanges": "No changes in the operations.",
+    "empty": {
+      "title": "No contract yet",
+      "text": "Import a contract to see its versions.",
+      "action": "Import contract"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Identities": {
     "crumb": "Identities",
@@ -1278,7 +1331,8 @@
       "admin": "Administrator",
       "user": "User",
       "other": "Other",
-      "otherNamed": "Other: {name}"
+      "anonymous": "Unauthenticated",
+      "named": "{role}: {name}"
     },
     "auth": {
       "none": "Sends no credentials",
@@ -1289,10 +1343,9 @@
     },
     "status": {
       "active": "Active",
-      "expiredCredential": "Credential expired · 401",
+      "expiredCredential": "Credential expired",
       "untested": "Not tested"
     },
-    "testedAgo": "tested {time} ago",
     "noResources": "0 · no resources",
     "alwaysExists": "Always exists",
     "edit": "Edit",
@@ -1300,7 +1353,13 @@
       "button": "Test",
       "okTitle": "{name}: the credential works",
       "failedTitle": "{name}: the credential failed",
-      "failedText": "The API responded 401 Unauthorized. Replace it and test again."
+      "okText": "The API answered {code} on {path}.",
+      "failure": {
+        "rejected": "The API answered {code}. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
     },
     "delete": {
       "label": "Delete {name}",
@@ -1308,11 +1367,21 @@
       "text": "This action can't be undone.",
       "heading": "What happens",
       "item1": "Its credential and resources are deleted.",
-      "item2": "Its open findings move to “Resolved” with the reason “identity deleted”.",
+      "item2": "Its findings are kept.",
       "confirm": "Delete identity",
       "done": "Identity “{name}” deleted"
     },
-    "deleteNote": "When you delete an identity, its open findings move to “Resolved” with the reason “identity deleted”."
+    "deleteNote": "Deleting an identity removes its credential and its resources; its findings are kept.",
+    "subject": "the identities",
+    "tested": "tested {time}",
+    "errors": {
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't complete the action.",
+      "reference": "Reference: {id}"
+    }
   },
   "IdentityForm": {
     "newCrumb": "New",
@@ -1324,8 +1393,8 @@
       "admin": "Administrator",
       "user": "User",
       "other": "Other",
-      "otherName": "Role name",
-      "hint": "The role this account has in your API. It is used to compare against the policy."
+      "hint": "The role this account has in your API. It is used to compare against the policy.",
+      "labelName": "Role name in your API (optional)"
     },
     "auth": {
       "label": "Authentication method",
@@ -1347,37 +1416,36 @@
       }
     },
     "fields": {
-      "user": "Username",
       "password": "Password",
-      "endpoint": "Login endpoint",
       "token": "Token",
       "cookieName": "Cookie name",
-      "cookieValue": "Value",
       "headerName": "Header name",
-      "headerValue": "Value"
+      "username": "Username",
+      "value": "Value",
+      "credential": "Credential",
+      "loginOperation": "Login operation",
+      "chooseOperation": "Choose the login operation"
     },
     "endsIn": "Ends in ••••{last4}",
     "replace": "Replace",
     "loginNote": "During the run we obtain and renew the token automatically.",
     "test": {
       "title": "Test credential",
-      "operation": "Protected operation",
       "run": "Test now",
       "testing": "Testing…",
-      "ok": "The API responded 200 OK.",
-      "okText": "The credential works.",
-      "failed": "The API responded 401 Unauthorized.",
-      "failedText": "The token seems expired. Replace it and test again. We never show the credential in results."
+      "okText": "The credential works with {method} {path}.",
+      "savedOnly": "Test the saved credential against a protected GET operation chosen by the system.",
+      "answered": "The API answered {code}.",
+      "failure": {
+        "rejected": "The operation didn't answer 2xx. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
     },
     "cancel": "Cancel",
     "save": "Save identity",
     "saved": "Identity “{name}” saved",
-    "failedDialog": {
-      "title": "The credential test failed",
-      "text": "The last test responded 401. If you save it like this, modules that use this identity will skip their operations.",
-      "confirm": "Save anyway",
-      "cancel": "Back to editing"
-    },
     "help": {
       "encryptedTitle": "Your credentials are encrypted",
       "encryptedText": "We store them with AES-256-GCM. After saving you'll only see the last 4 characters, and in evidence and reports they appear masked.",
@@ -1390,22 +1458,24 @@
     "errors": {
       "nameRequired": "Enter the identity's name.",
       "fieldRequired": "This field is required.",
-      "nameTooLong": "Use a name of up to 60 characters.",
       "nameTaken": "An identity with that name already exists. Choose another.",
-      "endpoint": "Enter a path that starts with / or a full URL with https://.",
-      "tokenName": "Use only letters, numbers and the symbols - _ . (no spaces)."
-    }
+      "length": "The text is too long.",
+      "format": "The value has characters that aren't allowed.",
+      "fieldNameReserved": "The platform controls that header; use another one.",
+      "loginOperation": "Choose the login operation.",
+      "limitReached": "This project already has 20 identities, counting the anonymous one.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't save the identity.",
+      "reference": "We couldn't save the identity. Reference: {id}",
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with."
+    },
+    "editCrumb": "Edit"
   },
   "Resources": {
     "crumb": "Resources",
     "title": "Resources by identity",
     "lead": "Say which objects in your API belong to each identity. That way Object access can check whether one identity reaches another's.",
-    "kinds": {
-      "order": "Order",
-      "user": "User",
-      "address": "Address",
-      "none": "Not a user's"
-    },
     "origin": {
       "discovered": "Discovered",
       "manual": "Added by hand"
@@ -1417,18 +1487,24 @@
     "confirm": "Confirm",
     "params": {
       "title": "1. Resource identifiers",
-      "lead": "Path parameters we detected in the contract. Uncheck those that don't identify an owned object.",
+      "lead": "Path parameters of the current contract. Check the ones that identify an owned object and enter its type.",
       "empty": "Import a contract to detect identifiers.",
-      "isId": "{param} is an identifier"
+      "isId": "{param} is an identifier",
+      "none": "The current contract has no operations with path parameters.",
+      "subject": "the operations",
+      "type": "Resource type of {param}",
+      "typePlaceholder": "order",
+      "save": "Save",
+      "discard": "Discard",
+      "saved": "Identifiers of {path} saved",
+      "partial": "Showing {shown} of {total} operations."
     },
     "discover": {
       "title": "2. Discover resources",
       "text": "We call, as each identity, only the listing GET operations, such as <code>GET /orders</code>, and propose what we find.",
       "button": "Discover resources",
-      "running": "Searching…",
-      "found": "Found",
-      "toConfirm": "To confirm",
-      "done": "{count, plural, one {One new resource found} other {# new resources found}}"
+      "unavailable": "Automatic discovery is not available yet. Meanwhile, add resources by hand.",
+      "registered": "Registered resources"
     },
     "review": {
       "title": "3. Review each identity's resources",
@@ -1441,27 +1517,38 @@
     },
     "empty": {
       "title": "{name} has no resources",
-      "text": "Object access won't be able to test this identity. Discover resources again or add them by hand."
+      "text": "Object access cannot test this identity. Add its resources by hand."
     },
     "add": {
       "kind": "Type",
       "value": "Identifier",
-      "button": "Add to {name}"
+      "button": "Add to {name}",
+      "done": "Resource added to {name}"
     },
     "delete": {
       "label": "Delete {value}",
       "title": "Delete the resource",
       "text": "“{value}” will be removed from this identity. Nothing is deleted in your API.",
-      "confirm": "Delete resource"
+      "confirm": "Delete resource",
+      "done": "“{value}” deleted"
     },
     "errors": {
-      "valueRequired": "Enter the resource's identifier."
+      "valueRequired": "Enter the resource's identifier.",
+      "typeRequired": "Enter the resource type.",
+      "valueInvalid": "The identifier allows up to 500 characters, with no control characters.",
+      "ownedByOther": "That resource already belongs to another identity. An object has one owner.",
+      "identityNotFound": "The identity no longer exists. Reload the page.",
+      "anonymousOwner": "The anonymous identity has no resources.",
+      "notFound": "The resource no longer exists. Reload the page.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The action could not be completed",
+      "reference": "Reference: {id}"
     },
-    "locked": {
-      "title": "Available after verification",
-      "text": "Resources are discovered by calling your API, so you must first verify the host's ownership.",
-      "action": "Go to verification"
-    }
+    "subject": "the resources",
+    "identitiesSubject": "the identities",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Policy": {
     "crumb": "Policy",
@@ -1485,12 +1572,11 @@
       "title": "{confirmed} of {total} confirmed",
       "label": "Confirmed operations",
       "text": "{count, plural, one {The unconfirmed proposal isn't used} other {The # unconfirmed proposals aren't used}} in Object access or Function access.",
-      "modified": "Last modified: Luis Selvas, 27 Oct 2026, 18:40."
+      "modified": "Last modified: {date}."
     },
     "orphan": {
       "title": "{count, plural, one {# orphan rule} other {# orphan rules}}",
-      "text": "<code>DELETE /orders/export</code> is no longer in contract v2.4.0 and still has a policy. It isn't used in tests: you can remove it. Ownership templates need an owner field to be saved.",
-      "remove": "Remove rule"
+      "text": "They are no longer in the current contract and still have a policy. They are not used in tests:"
     },
     "operations": "Operations",
     "filters": {
@@ -1499,25 +1585,25 @@
       "proposed": "Proposed · {count}",
       "confirmed": "Confirmed · {count}"
     },
-    "search": "Search path",
     "bulk": {
       "label": "Bulk actions",
       "selected": "{count, plural, one {# selected} other {# selected}}",
       "apply": "Apply template",
-      "button": "Apply and confirm"
+      "button": "Apply and confirm",
+      "owner": "Owner field",
+      "done": "{count, plural, one {Template applied to # operation} other {Template applied to # operations}}"
     },
     "select": "Select {method} {path}",
     "templateOf": "Template of {method} {path}",
     "ownerOf": "Owner field of {method} {path}",
-    "noOwner": "Choose the owner field",
     "notApplicable": "Not applicable",
-    "bearer": "bearer",
     "status": {
       "confirmed": "Confirmed",
-      "proposed": "Proposed"
+      "proposed": "Proposed",
+      "changed": "Unsaved"
     },
     "confirm": "Confirm",
-    "showing": "Showing {shown} of {total} routes ·",
+    "showing": "Showing {shown} of {total} operations ·",
     "viewContract": "View the contract",
     "save": "Save policy",
     "saved": "Policy saved",
@@ -1532,8 +1618,17 @@
     },
     "errors": {
       "ownerTitle": "The owner field is missing",
-      "ownerText": "Ownership templates need an owner field to be saved."
-    }
+      "ownerText": "Ownership templates need an owner field: a path parameter (userId) or a response field (owner.id).",
+      "retired": "An operation is no longer in the current contract. Reload the page.",
+      "notFound": "An operation no longer exists. Reload the page.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The policy could not be saved",
+      "reference": "Reference: {id}"
+    },
+    "ownerPlaceholder": "userId or owner.id",
+    "noTemplate": "Choose a template",
+    "noSecurity": "No security",
+    "subject": "the operations"
   },
   "ConfigureRun": {
     "title": "New run",

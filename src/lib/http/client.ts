@@ -120,6 +120,7 @@ export function toApiError(status: number, body: unknown, headers?: Headers): Ap
     detail: asString(problem.detail),
     fields,
     general,
+    found: asString(problem.found)?.slice(0, 200),
     retryAfter: status === 429 ? parseRetryAfter(headers?.get("Retry-After") ?? null) : undefined,
     allow:
       status === 405 && allow
@@ -174,7 +175,9 @@ export function createHttpClient(options: HttpClientOptions) {
       "Accept-Language": options.getLocale(),
       ...headers,
     };
-    if (body !== undefined) finalHeaders["Content-Type"] = "application/json";
+    // Un `FormData` (importContract) lleva su propio `Content-Type` con el separador.
+    const multipart = typeof FormData !== "undefined" && body instanceof FormData;
+    if (body !== undefined && !multipart) finalHeaders["Content-Type"] = "application/json";
     if (method !== "GET") {
       const token = await options.getCsrfToken?.();
       if (token) finalHeaders[CSRF_HEADER] = token;
@@ -186,7 +189,7 @@ export function createHttpClient(options: HttpClientOptions) {
       response = await doFetch(buildUrl(baseUrl, path, query), {
         method,
         headers: finalHeaders,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
         credentials: "same-origin",
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });

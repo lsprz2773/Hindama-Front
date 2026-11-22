@@ -153,7 +153,7 @@ assertType<Equal<ProjectCreate, Schemas["ProjectCreate"]>>();
 assertType<Equal<ProjectUpdate, Schemas["ProjectUpdate"]>>();
 
 /** Entero de la consulta (llega como texto) con sus límites del contrato. */
-function queryInt(min: number, max: number) {
+export function queryInt(min: number, max: number) {
   return z.coerce
     .number({ error: FIELD_CODES.format })
     .int({ message: FIELD_CODES.format })

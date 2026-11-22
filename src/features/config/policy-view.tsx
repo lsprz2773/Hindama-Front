@@ -1,119 +1,206 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
-import { Banner } from "@/components/ui/banner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useFormatter, useTranslations } from "next-intl";
+import { useState } from "react";
 import { UnsavedChangesGuard } from "@/components/dialogs/unsaved-changes-guard";
+import { TablePageSkeleton } from "@/components/skeletons/page-skeletons";
+import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { MethodBadge } from "@/components/ui/method-badge";
+import { QueryState } from "@/components/ui/query-state";
 import { EmptyState, NoResultsState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
 import { Link } from "@/i18n/navigation";
+import type { Operation, OperationPage } from "@/lib/api/schemas/contracts";
+import type { Project } from "@/lib/api/schemas/projects";
 import { cn } from "@/lib/cn";
+import { policyAdapter, type PolicyTemplate } from "@/lib/contract/policies";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { projectKey } from "@/features/projects/api";
 import { ProjectShell } from "@/features/projects/project-shell";
-import type { Project } from "@/features/projects/store";
-import {
-  POLICY_CONFIRMED_OUTSIDE_SAMPLE,
-  POLICY_TOTAL,
-  SEED_POLICY,
-  type PolicyRow,
-  type PolicyTemplate,
-} from "./data";
-import { useSessionState } from "./use-session-state";
+import { applyPolicy, operationsKey, updateOperation, useOperations } from "./api";
 
 const TEMPLATES: PolicyTemplate[] = ["public", "authenticated", "owner", "ownerOrAdmin", "admin"];
 const NEEDS_OWNER: PolicyTemplate[] = ["owner", "ownerOrAdmin"];
-const OWNER_FIELDS = ["orderId → userId", "userId"];
+/** `listOperations` admite 500 por página; con eso cabe casi cualquier contrato. */
+const PAGE_SIZE = 500;
 type Filter = "all" | "proposed" | "confirmed";
 
-function usePolicyDraft(projectId: string) {
-  const t = useTranslations("Policy");
-  const toast = useToast();
-  const [saved, setSaved] = useSessionState<PolicyRow[]>(
-    `hindama.policy.${projectId}`,
-    SEED_POLICY,
-  );
-  const [draft, setDraft] = useState<PolicyRow[]>(saved);
-  const [invalid, setInvalid] = useState<string[]>([]);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+type Translate = ReturnType<typeof useTranslations<"Policy">>;
 
-  function save() {
-    // Las plantillas de propiedad necesitan un campo propietario para guardarse.
-    const missing = draft
-      .filter((r) => NEEDS_OWNER.includes(r.template) && !r.ownerField)
-      .map((r) => r.id);
-    setInvalid(missing);
-    if (missing.length > 0) {
+interface RowDraft {
+  template: PolicyTemplate | null;
+  owner: string;
+}
+
+/** Lo que muestra una fila sin cambios: la plantilla confirmada o, si no hay, la propuesta. */
+function initialOf(op: Operation): RowDraft {
+  const policy = op.policy ?? op.suggested_policy;
+  return { template: policy ? policyAdapter.fromApi(policy) : null, owner: op.owner_field ?? "" };
+}
+
+/** Error de guardar la política → texto (los códigos los da la API). */
+function actionError(error: unknown, t: Translate) {
+  if (error instanceof ApiError) {
+    if (error.code === "policy.owner_field_required")
+      return { title: t("errors.ownerTitle"), text: t("errors.ownerText") };
+    if (error.code === "operation.retired") return { title: t("errors.retired") };
+    if (error.code === "operation.not_found" || error.status === 404)
+      return { title: t("errors.notFound") };
+    if (error.status === 429) return { title: t("errors.rateLimited") };
+    if (error.requestId)
+      return { title: t("errors.failed"), text: t("errors.reference", { id: error.requestId }) };
+  }
+  return { title: t("errors.failed") };
+}
+
+/** Problema de una fila antes de enviarla: plantilla elegida y campo propietario si lo exige. */
+function rowProblem(draft: RowDraft): "template" | "owner" | null {
+  if (!draft.template) return "template";
+  if (NEEDS_OWNER.includes(draft.template) && !draft.owner.trim()) return "owner";
+  return null;
+}
+
+function Policy({ project, data }: { project: Project; data: OperationPage }) {
+  const t = useTranslations("Policy");
+  const format = useFormatter();
+  const http = useHttpClient();
+  const toast = useToast();
+  const client = useQueryClient();
+  const [drafts, setDrafts] = useState<Record<string, RowDraft>>({});
+  const [invalid, setInvalid] = useState<Record<string, "template" | "owner">>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulk, setBulk] = useState<PolicyTemplate>("ownerOrAdmin");
+  const [bulkOwner, setBulkOwner] = useState("");
+  const [bulkError, setBulkError] = useState(false);
+
+  const current = data.items.filter((op) => op.retired_at === null);
+  // Una operación retirada con política es una regla huérfana: no se usa en las pruebas.
+  const orphans = data.items.filter((op) => op.retired_at !== null && op.policy !== null);
+  const confirmed = current.filter((op) => op.policy !== null && !drafts[op.id]).length;
+  const proposed = current.length - confirmed;
+  const dirtyIds = Object.keys(drafts);
+  const lastModified = current
+    .map((op) => op.modified_at)
+    .filter((x): x is string => x !== null)
+    .sort()
+    .at(-1);
+
+  const visible = current.filter((op) => {
+    if (filter === "all") return true;
+    const isConfirmed = op.policy !== null && !drafts[op.id];
+    return filter === "confirmed" ? isConfirmed : !isConfirmed;
+  });
+  const byPath = new Map<string, Operation[]>();
+  for (const op of visible) byPath.set(op.path, [...(byPath.get(op.path) ?? []), op]);
+  const groups = [...byPath.entries()];
+
+  const rowOf = (op: Operation) => drafts[op.id] ?? initialOf(op);
+
+  function edit(op: Operation, change: Partial<RowDraft>) {
+    const next = { ...rowOf(op), ...change };
+    const initial = initialOf(op);
+    const same =
+      op.policy !== null && next.template === initial.template && next.owner === initial.owner;
+    setDrafts((prev) => {
+      const copy = { ...prev };
+      if (same) delete copy[op.id];
+      else copy[op.id] = next;
+      return copy;
+    });
+    setInvalid((prev) => {
+      const copy = { ...prev };
+      delete copy[op.id];
+      return copy;
+    });
+  }
+
+  async function refresh(ids: string[]) {
+    await client.invalidateQueries({ queryKey: operationsKey(project.id) });
+    void client.invalidateQueries({ queryKey: projectKey(project.id), exact: true });
+    setDrafts((prev) => {
+      const copy = { ...prev };
+      for (const id of ids) delete copy[id];
+      return copy;
+    });
+  }
+
+  /** Confirma una o varias filas con `updateOperation`, una tras otra; se detiene al primer error. */
+  async function save(ops: Operation[]) {
+    if (busy) return;
+    const problems: Record<string, "template" | "owner"> = {};
+    for (const op of ops) {
+      const problem = rowProblem(rowOf(op));
+      if (problem) problems[op.id] = problem;
+    }
+    setInvalid(problems);
+    if (Object.keys(problems).length > 0) {
       toast.show({ type: "error", title: t("errors.ownerTitle"), text: t("errors.ownerText") });
       return;
     }
-    setSaved(draft);
-    toast.show({ type: "success", title: t("saved") });
+    setBusy(ops.length === 1 ? ops[0].id : "all");
+    const done: string[] = [];
+    try {
+      for (const op of ops) {
+        const row = rowOf(op);
+        const template = row.template as PolicyTemplate;
+        await updateOperation(http, project.id, op.id, {
+          policy: policyAdapter.toApi(template),
+          owner_field: NEEDS_OWNER.includes(template) ? row.owner.trim() : null,
+        });
+        done.push(op.id);
+      }
+      toast.show({ type: "success", title: t("saved") });
+    } catch (error) {
+      const failed = ops[done.length];
+      if (failed && error instanceof ApiError && error.code === "policy.owner_field_required") {
+        setInvalid({ [failed.id]: "owner" });
+      }
+      toast.show({ type: "error", ...actionError(error, t) });
+    } finally {
+      await refresh(done);
+      setBusy(null);
+    }
   }
 
-  return { draft, setDraft, invalid, setInvalid, dirty, save };
-}
-
-type PolicyDraft = ReturnType<typeof usePolicyDraft>;
-
-function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) {
-  const t = useTranslations("Policy");
-  const { draft, setDraft, invalid, setInvalid } = policy;
-  const [filter, setFilter] = useState<Filter>("all");
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<string[]>([]);
-  const [bulk, setBulk] = useState<PolicyTemplate>("ownerOrAdmin");
-  const [orphan, setOrphan] = useState(true);
-
-  const confirmed = POLICY_CONFIRMED_OUTSIDE_SAMPLE + draft.filter((r) => r.confirmed).length;
-  const proposed = POLICY_TOTAL - confirmed;
-
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return draft.filter(
-      (r) =>
-        (filter === "all" || (filter === "proposed" ? !r.confirmed : r.confirmed)) &&
-        (!q || r.path.toLowerCase().includes(q)),
-    );
-  }, [draft, filter, query]);
-
-  const groups = useMemo(() => {
-    const map = new Map<string, PolicyRow[]>();
-    for (const row of visible) map.set(row.path, [...(map.get(row.path) ?? []), row]);
-    return [...map.entries()];
-  }, [visible]);
-
-  function patch(id: string, change: Partial<PolicyRow>) {
-    setDraft((rows) => rows.map((r) => (r.id === id ? { ...r, ...change } : r)));
-    setInvalid((ids) => ids.filter((x) => x !== id));
-  }
-
-  function applyBulk() {
-    setDraft((rows) =>
-      rows.map((r) =>
-        selected.includes(r.id)
-          ? {
-              ...r,
-              template: bulk,
-              confirmed: true,
-              ownerField: NEEDS_OWNER.includes(bulk) ? (r.ownerField ?? OWNER_FIELDS[0]) : null,
-            }
-          : r,
-      ),
-    );
-    setSelected([]);
+  /** RF-42. Una plantilla para las filas elegidas con `applyPolicy`: todo o nada. */
+  async function applyBulk() {
+    if (busy) return;
+    const needsOwner = NEEDS_OWNER.includes(bulk);
+    if (needsOwner && !bulkOwner.trim()) return setBulkError(true);
+    setBulkError(false);
+    setBusy("bulk");
+    try {
+      await applyPolicy(http, project.id, {
+        operation_ids: selected,
+        policy: policyAdapter.toApi(bulk),
+        owner_field: needsOwner ? bulkOwner.trim() : null,
+      });
+      await refresh(selected);
+      setSelected([]);
+      toast.show({ type: "success", title: t("bulk.done", { count: selected.length }) });
+    } catch (error) {
+      toast.show({ type: "error", ...actionError(error, t) });
+    } finally {
+      setBusy(null);
+    }
   }
 
   const filters: [Filter, string][] = [
-    ["all", t("filters.all", { count: POLICY_TOTAL })],
+    ["all", t("filters.all", { count: current.length })],
     ["proposed", t("filters.proposed", { count: proposed })],
     ["confirmed", t("filters.confirmed", { count: confirmed })],
   ];
 
   return (
     <>
+      <UnsavedChangesGuard dirty={dirtyIds.length > 0} />
       <div className="flex flex-wrap items-start gap-5">
         <section
           aria-labelledby="policy-progress"
@@ -123,23 +210,33 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
             id="policy-progress"
             className="font-display text-4xl leading-none font-medium tracking-[-0.03em]"
           >
-            {t("progress.title", { confirmed, total: POLICY_TOTAL })}
+            {t("progress.title", { confirmed, total: current.length })}
           </h2>
           <div
             role="progressbar"
             aria-label={t("progress.label")}
             aria-valuenow={confirmed}
             aria-valuemin={0}
-            aria-valuemax={POLICY_TOTAL}
+            aria-valuemax={current.length}
             className="bg-track h-2.5 overflow-hidden rounded-[5px]"
           >
             <div
               className="bg-accent h-full rounded-[5px]"
-              style={{ width: `${(confirmed / POLICY_TOTAL) * 100}%` }}
+              style={{ width: `${current.length ? (confirmed / current.length) * 100 : 0}%` }}
             />
           </div>
           <p className="text-muted text-sm leading-[1.55]">
-            {t("progress.text", { count: proposed })} {t("progress.modified")}
+            {t("progress.text", { count: proposed })}{" "}
+            {/* TODO(api): `Operation` no dice quién la modificó (RF-43); solo `modified_at`. */}
+            {lastModified
+              ? t("progress.modified", {
+                  date: format.dateTime(new Date(lastModified), {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "UTC",
+                  }),
+                })
+              : null}
           </p>
         </section>
 
@@ -163,16 +260,17 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
         </section>
       </div>
 
-      {orphan ? (
-        <Banner
-          title={t("orphan.title", { count: 1 })}
-          action={
-            <Button variant="ghost" size="sm" onClick={() => setOrphan(false)}>
-              {t("orphan.remove")}
-            </Button>
-          }
-        >
-          {t.rich("orphan.text", { code: (chunks) => <code className="font-mono">{chunks}</code> })}
+      {orphans.length > 0 ? (
+        <Banner title={t("orphan.title", { count: orphans.length })}>
+          {t("orphan.text")}{" "}
+          {orphans.map((op, i) => (
+            <span key={op.id}>
+              {i > 0 ? ", " : null}
+              <code className="font-mono">
+                {op.method} {op.path}
+              </code>
+            </span>
+          ))}
         </Banner>
       ) : null}
 
@@ -206,17 +304,14 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
                 </button>
               ))}
             </div>
-            <label htmlFor="policy-search" className="sr-only">
-              {t("search")}
-            </label>
-            <input
-              id="policy-search"
-              type="search"
-              placeholder={t("search")}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className={cn(inputClass, "min-h-10 w-[220px] text-sm")}
-            />
+            <Button
+              onClick={() => void save(current.filter((op) => drafts[op.id]))}
+              disabled={dirtyIds.length === 0 || busy !== null}
+              loading={busy === "all"}
+            >
+              <Icon name="check" size={18} />
+              {t("save")}
+            </Button>
           </div>
         </div>
 
@@ -242,90 +337,121 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
                 </option>
               ))}
             </select>
-            <Button size="sm" onClick={applyBulk}>
+            {NEEDS_OWNER.includes(bulk) ? (
+              <>
+                <label htmlFor="policy-bulk-owner" className="sr-only">
+                  {t("bulk.owner")}
+                </label>
+                <input
+                  id="policy-bulk-owner"
+                  value={bulkOwner}
+                  maxLength={200}
+                  placeholder={t("ownerPlaceholder")}
+                  onChange={(e) => {
+                    setBulkOwner(e.target.value);
+                    setBulkError(false);
+                  }}
+                  aria-invalid={bulkError ? true : undefined}
+                  className={cn(inputClass, "min-h-10 w-[200px] text-sm")}
+                />
+              </>
+            ) : null}
+            <Button
+              size="sm"
+              loading={busy === "bulk"}
+              disabled={busy !== null}
+              onClick={() => void applyBulk()}
+            >
               {t("bulk.button")}
             </Button>
+            {bulkError ? (
+              <span role="alert" className="basis-full text-[13px]">
+                {t("errors.ownerText")}
+              </span>
+            ) : null}
           </div>
         ) : null}
 
-        {draft.length === 0 ? (
+        {current.length === 0 ? (
           <EmptyState title={t("empty.title")} text={t("empty.text")} />
         ) : visible.length === 0 ? (
-          <NoResultsState
-            onClear={() => {
-              setQuery("");
-              setFilter("all");
-            }}
-          />
+          <NoResultsState onClear={() => setFilter("all")} />
         ) : (
           <div className="flex flex-col gap-3.5">
-            {groups.map(([path, rows]) => (
+            {groups.map(([path, ops]) => (
               <div
                 key={path}
                 className="border-line bg-panel-2 flex flex-col gap-2 rounded-[20px] border p-3.5"
               >
                 <code className="text-muted px-1 font-mono text-[13px]">{path}</code>
-                {rows.map((r) => {
-                  const bad = invalid.includes(r.id);
+                {ops.map((op) => {
+                  const row = rowOf(op);
+                  const isConfirmed = op.policy !== null && !drafts[op.id];
+                  const bad = invalid[op.id];
+                  const params = op.parameters.filter((p) => p.location === "path");
                   return (
                     <div
-                      key={r.id}
+                      key={op.id}
                       className={cn(
                         "flex flex-wrap items-center gap-3 rounded-2xl border px-3 py-2",
-                        r.confirmed ? "border-line border-solid" : "border-warning border-dashed",
+                        isConfirmed ? "border-line border-solid" : "border-warning border-dashed",
                         bad && "border-danger",
                       )}
                     >
                       <input
                         type="checkbox"
-                        checked={selected.includes(r.id)}
+                        checked={selected.includes(op.id)}
                         onChange={(e) =>
                           setSelected((ids) =>
-                            e.target.checked ? [...ids, r.id] : ids.filter((x) => x !== r.id),
+                            e.target.checked ? [...ids, op.id] : ids.filter((x) => x !== op.id),
                           )
                         }
-                        aria-label={t("select", { method: r.method, path: r.path })}
+                        aria-label={t("select", { method: op.method, path: op.path })}
                         className="accent-accent size-5"
                       />
-                      <MethodBadge method={r.method} />
+                      <MethodBadge method={op.method} />
                       <code className="min-w-40 flex-1 font-mono text-[13.5px] break-all">
-                        {r.path}
+                        {op.path}
                       </code>
-                      <span className="text-muted w-16 text-[13px]">{t("bearer")}</span>
+                      <span className="text-muted min-w-16 text-[13px]">
+                        {op.security.map((s) => s.scheme).join(", ") || t("noSecurity")}
+                      </span>
                       <select
-                        aria-label={t("templateOf", { method: r.method, path: r.path })}
-                        value={r.template}
-                        onChange={(e) => {
-                          const template = e.target.value as PolicyTemplate;
-                          patch(r.id, {
-                            template,
-                            confirmed: false,
-                            ownerField: NEEDS_OWNER.includes(template)
-                              ? (r.ownerField ?? null)
-                              : null,
-                          });
-                        }}
+                        aria-label={t("templateOf", { method: op.method, path: op.path })}
+                        value={row.template ?? ""}
+                        aria-invalid={bad === "template" ? true : undefined}
+                        onChange={(e) =>
+                          edit(op, { template: (e.target.value || null) as PolicyTemplate | null })
+                        }
                         className={cn(inputClass, "min-h-10 w-auto text-sm")}
                       >
+                        {row.template === null ? <option value="">{t("noTemplate")}</option> : null}
                         {TEMPLATES.map((tpl) => (
                           <option key={tpl} value={tpl}>
                             {t(`template.${tpl}`)}
                           </option>
                         ))}
                       </select>
-                      {NEEDS_OWNER.includes(r.template) ? (
-                        <select
-                          aria-label={t("ownerOf", { method: r.method, path: r.path })}
-                          value={r.ownerField ?? ""}
-                          aria-invalid={bad ? true : undefined}
-                          onChange={(e) => patch(r.id, { ownerField: e.target.value || null })}
-                          className={cn(inputClass, "min-h-10 w-auto text-sm")}
-                        >
-                          <option value="">{t("noOwner")}</option>
-                          {OWNER_FIELDS.map((f) => (
-                            <option key={f}>{f}</option>
-                          ))}
-                        </select>
+                      {row.template && NEEDS_OWNER.includes(row.template) ? (
+                        <>
+                          <input
+                            aria-label={t("ownerOf", { method: op.method, path: op.path })}
+                            value={row.owner}
+                            maxLength={200}
+                            list={params.length ? `owner-${op.id}` : undefined}
+                            placeholder={t("ownerPlaceholder")}
+                            aria-invalid={bad === "owner" ? true : undefined}
+                            onChange={(e) => edit(op, { owner: e.target.value })}
+                            className={cn(inputClass, "min-h-10 w-[200px] text-sm")}
+                          />
+                          {params.length ? (
+                            <datalist id={`owner-${op.id}`}>
+                              {params.map((p) => (
+                                <option key={p.name} value={p.name} />
+                              ))}
+                            </datalist>
+                          ) : null}
+                        </>
                       ) : (
                         <span className="text-muted text-[13px]">{t("notApplicable")}</span>
                       )}
@@ -334,17 +460,23 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
                           aria-hidden="true"
                           className={cn(
                             "size-2 rounded-full",
-                            r.confirmed ? "bg-success" : "bg-warning",
+                            isConfirmed ? "bg-success" : "bg-warning",
                           )}
                         />
-                        {r.confirmed ? t("status.confirmed") : t("status.proposed")}
+                        {isConfirmed
+                          ? t("status.confirmed")
+                          : drafts[op.id]
+                            ? t("status.changed")
+                            : t("status.proposed")}
                       </span>
-                      {!r.confirmed ? (
+                      {!isConfirmed ? (
                         <Button
                           variant="secondary"
                           size="sm"
                           className="min-h-9 rounded-xl px-3 text-[13px]"
-                          onClick={() => patch(r.id, { confirmed: true })}
+                          loading={busy === op.id}
+                          disabled={busy !== null}
+                          onClick={() => void save([op])}
                         >
                           {t("confirm")}
                         </Button>
@@ -357,7 +489,7 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
           </div>
         )}
         <span className="text-muted text-[13px]">
-          {t("showing", { shown: visible.length, total: POLICY_TOTAL })}{" "}
+          {t("showing", { shown: visible.length, total: data.total })}{" "}
           <Link href={`/projects/${project.id}/contract`} className="text-link">
             {t("viewContract")}
           </Link>
@@ -367,36 +499,38 @@ function Policy({ project, policy }: { project: Project; policy: PolicyDraft }) 
   );
 }
 
+function PolicyLoader({ project }: { project: Project }) {
+  const t = useTranslations("Policy");
+  const query = useOperations(project.id, {
+    pageSize: PAGE_SIZE,
+    includeRetired: true,
+    enabled: project.current_contract !== null,
+  });
+  if (!project.current_contract) {
+    return (
+      <EmptyState
+        title={t("noContract.title")}
+        text={t("noContract.text")}
+        action={{ label: t("noContract.action"), href: `/projects/${project.id}/contract` }}
+      />
+    );
+  }
+  return (
+    <QueryState query={query} subject={t("subject")} skeleton={<TablePageSkeleton />}>
+      {(data) => <Policy project={project} data={data} />}
+    </QueryState>
+  );
+}
+
 /** V-24. Política de acceso: quién debería poder ejecutar cada operación (RF-39 a RF-43, RN-08). */
 export function PolicyView({ id }: { id: string }) {
   const t = useTranslations("Policy");
-  const policy = usePolicyDraft(id);
   return (
     <ProjectShell
       id={id}
       section={t("crumb")}
       title={t("title")}
-      actions={
-        <Button onClick={policy.save} disabled={!policy.dirty}>
-          <Icon name="check" size={18} />
-          {t("save")}
-        </Button>
-      }
-    >
-      {(project) => (
-        <>
-          <UnsavedChangesGuard dirty={policy.dirty} />
-          {project.contractOps === null ? (
-            <EmptyState
-              title={t("noContract.title")}
-              text={t("noContract.text")}
-              action={{ label: t("noContract.action"), href: `/projects/${id}/contract` }}
-            />
-          ) : (
-            <Policy key={project.id} project={project} policy={policy} />
-          )}
-        </>
-      )}
-    </ProjectShell>
+      render={(project) => <PolicyLoader key={project.id} project={project} />}
+    />
   );
 }

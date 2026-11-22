@@ -1142,6 +1142,18 @@
       "notFound": {
         "title": "No pudimos verificar: no encontramos el archivo",
         "how": "comprueba que la dirección abre el archivo en el navegador."
+      },
+      "txtMissing": {
+        "title": "No pudimos verificar: no encontramos el registro TXT",
+        "how": "revisa el nombre y el valor del registro; si lo acabas de crear, espera a que se propague."
+      },
+      "connectionError": {
+        "title": "No pudimos verificar: no logramos conectar con el host",
+        "how": "comprueba que el host responde desde internet y vuelve a intentarlo."
+      },
+      "destinationNotAllowed": {
+        "title": "No pudimos verificar: el host resuelve a una dirección no permitida",
+        "how": "usa un host público; las direcciones internas o privadas se bloquean y quedan en la bitácora."
       }
     },
     "help": {
@@ -1155,19 +1167,22 @@
       "common3": "Registro DNS ausente",
       "common4": "Error de conexión con el host",
       "common5": "El host resuelve a una dirección no permitida: se bloquea y queda en la bitácora"
-    }
+    },
+    "subject": "la verificación",
+    "rateLimited": "Demasiados intentos. Espera un momento y vuelve a verificar.",
+    "failed": "No pudimos verificar en este momento",
+    "reference": "Referencia: {id}"
   },
   "Contract": {
     "crumb": "Contrato",
     "title": "Contrato OpenAPI",
     "history": "Historial de versiones",
     "current": "Versión actual · importada el {date}",
-    "meta": "Formato YAML · origen: archivo · OpenAPI 3.1.0 · huella 9f3c…a1b7",
+    "meta": "Formato {format} · origen: {source} · OpenAPI {openapi} · huella {hash}",
     "summary": {
       "openapi": "OpenAPI",
       "operations": "Operaciones",
-      "schemas": "Esquemas",
-      "security": "Esquema de seguridad"
+      "version": "Versión vigente"
     },
     "empty": {
       "title": "Aún no hay contrato",
@@ -1194,40 +1209,67 @@
       "title": "{count} operaciones",
       "filterLabel": "Filtrar por método",
       "all": "Todos",
-      "search": "Buscar operación",
-      "searchPlaceholder": "Buscar ruta o resumen",
       "security": {
-        "bearer": "bearer",
         "public": "pública"
       },
       "detail": "Detalle de {method} {path}",
       "params": "Parámetros",
-      "paramPath": "ruta · string (uuid)",
-      "paramQuery": "consulta · string, opcional",
-      "responses": "Respuestas",
-      "r401": "Sin autenticar",
-      "r404": "No existe",
       "declaredSecurity": "Seguridad declarada",
       "seePolicy": "Ver en la política de acceso",
       "none": "Ninguna operación coincide.",
-      "showing": "Mostrando {shown} de {total}"
+      "showing": "Mostrando {shown} de {total}",
+      "subject": "las operaciones",
+      "paramCount": "{count, plural, =0 {sin parámetros} one {# parámetro} other {# parámetros}}",
+      "noParams": "Sin parámetros.",
+      "param": "{location} · {type}{required, select, yes {} other {, opcional}}",
+      "location": {
+        "path": "ruta",
+        "query": "consulta",
+        "header": "cabecera",
+        "cookie": "cookie"
+      },
+      "body": "Cuerpo",
+      "noBody": "Sin cuerpo.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "clave de API",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "otro"
+      },
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
     },
     "errors": {
       "type": "El archivo debe ser .json, .yaml o .yml.",
       "size": "El archivo supera los 5 MB.",
       "noFile": "Elige un archivo de contrato.",
-      "url": "Escribe una URL completa del contrato."
-    }
+      "url": "Escribe una URL completa del contrato.",
+      "invalid": "El documento no es un OpenAPI válido. Revisa las ubicaciones señaladas.",
+      "unsupported": "Solo se aceptan contratos OpenAPI 3.0 y 3.1.",
+      "unreachable": "No pudimos descargar el contrato desde esa URL.",
+      "notAllowed": "Esa URL apunta a una dirección no permitida.",
+      "failed": "No pudimos importar el contrato.",
+      "rateLimited": "Demasiadas importaciones seguidas. Espera un momento.",
+      "reference": "Referencia: {id}"
+    },
+    "source": {
+      "file": "archivo",
+      "url": "URL"
+    },
+    "untitled": "Contrato sin título",
+    "subject": "la versión del contrato",
+    "unchanged": "El documento es idéntico a la versión vigente; no se creó otra."
   },
   "ContractVersions": {
     "crumb": "Versiones",
     "title": "Versiones del contrato",
     "count": "{count, plural, one {# versión} other {# versiones}}",
     "current": "Actual",
-    "comparing": "Comparando",
     "originUrl": "URL",
     "originFile": "Archivo",
-    "originFileNamed": "Archivo {name}",
     "operations": "{count} operaciones",
     "warningsOf": "Avisos de {version}",
     "back": "Volver a la versión actual",
@@ -1248,12 +1290,23 @@
       "modified": "Modificada",
       "removed": "Eliminada"
     },
-    "details": {
-      "patch": "Cuerpo: nuevo campo «status» (string, enum). Seguridad sin cambios.",
-      "list": "Nuevo parámetro de consulta «createdAfter». Respuesta 200 agrega «nextCursor».",
-      "delete": "Ahora responde 409 si el pedido ya se envió.",
-      "health": "Se quitó el esquema de seguridad: ahora es pública."
-    }
+    "name": "Versión {number}",
+    "viewing": "Viendo",
+    "subject": "las versiones del contrato",
+    "versionSubject": "la versión",
+    "first": {
+      "title": "Primera versión",
+      "text": "La versión {number} es la primera importada: no hay otra con la cual compararla."
+    },
+    "noChanges": "Sin cambios en las operaciones.",
+    "empty": {
+      "title": "Aún no hay contrato",
+      "text": "Importa un contrato para ver sus versiones.",
+      "action": "Importar contrato"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Identities": {
     "crumb": "Identidades",
@@ -1278,7 +1331,8 @@
       "admin": "Administrador",
       "user": "Usuario",
       "other": "Otro",
-      "otherNamed": "Otro: {name}"
+      "anonymous": "Sin autenticar",
+      "named": "{role}: {name}"
     },
     "auth": {
       "none": "No envía credenciales",
@@ -1289,10 +1343,9 @@
     },
     "status": {
       "active": "Activa",
-      "expiredCredential": "Credencial vencida · 401",
+      "expiredCredential": "Credencial vencida",
       "untested": "Sin probar"
     },
-    "testedAgo": "probada hace {time}",
     "noResources": "0 · sin recursos",
     "alwaysExists": "Siempre existe",
     "edit": "Editar",
@@ -1300,7 +1353,13 @@
       "button": "Probar",
       "okTitle": "{name}: la credencial funciona",
       "failedTitle": "{name}: la credencial falló",
-      "failedText": "La API respondió 401 Unauthorized. Reemplázala y vuelve a probar."
+      "okText": "La API respondió {code} en {path}.",
+      "failure": {
+        "rejected": "La API respondió {code}. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
     },
     "delete": {
       "label": "Eliminar {name}",
@@ -1308,11 +1367,21 @@
       "text": "Esta acción no se puede deshacer.",
       "heading": "Qué pasa",
       "item1": "Se borran su credencial y sus recursos.",
-      "item2": "Sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada».",
+      "item2": "Sus hallazgos se conservan.",
       "confirm": "Eliminar identidad",
       "done": "Identidad «{name}» eliminada"
     },
-    "deleteNote": "Al eliminar una identidad, sus hallazgos abiertos pasan a «Resuelto» con el motivo «identidad eliminada»."
+    "deleteNote": "Al eliminar una identidad se borran su credencial y sus recursos; sus hallazgos se conservan.",
+    "subject": "las identidades",
+    "tested": "probada {time}",
+    "errors": {
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos completar la acción.",
+      "reference": "Referencia: {id}"
+    }
   },
   "IdentityForm": {
     "newCrumb": "Nueva",
@@ -1324,8 +1393,8 @@
       "admin": "Administrador",
       "user": "Usuario",
       "other": "Otro",
-      "otherName": "Nombre del rol",
-      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política."
+      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política.",
+      "labelName": "Nombre del rol en tu API (opcional)"
     },
     "auth": {
       "label": "Forma de autenticación",
@@ -1347,37 +1416,36 @@
       }
     },
     "fields": {
-      "user": "Usuario",
       "password": "Contraseña",
-      "endpoint": "Endpoint de login",
       "token": "Token",
       "cookieName": "Nombre de la cookie",
-      "cookieValue": "Valor",
       "headerName": "Nombre de la cabecera",
-      "headerValue": "Valor"
+      "username": "Usuario",
+      "value": "Valor",
+      "credential": "Credencial",
+      "loginOperation": "Operación de login",
+      "chooseOperation": "Elige la operación de login"
     },
     "endsIn": "Termina en ••••{last4}",
     "replace": "Reemplazar",
     "loginNote": "Durante la ejecución obtenemos y renovamos el token automáticamente.",
     "test": {
       "title": "Probar credencial",
-      "operation": "Operación protegida",
       "run": "Probar ahora",
       "testing": "Probando…",
-      "ok": "La API respondió 200 OK.",
-      "okText": "La credencial funciona.",
-      "failed": "La API respondió 401 Unauthorized.",
-      "failedText": "El token parece vencido. Reemplázalo y vuelve a probar. Nunca mostramos la credencial en los resultados."
+      "okText": "La credencial funciona con {method} {path}.",
+      "savedOnly": "Prueba la credencial guardada con una operación GET protegida que elige el sistema.",
+      "answered": "La API respondió {code}.",
+      "failure": {
+        "rejected": "La operación no respondió 2xx. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
     },
     "cancel": "Cancelar",
     "save": "Guardar identidad",
     "saved": "Identidad «{name}» guardada",
-    "failedDialog": {
-      "title": "La prueba de la credencial falló",
-      "text": "La última prueba respondió 401. Si la guardas así, los módulos que usen esta identidad omitirán sus operaciones.",
-      "confirm": "Guardar de todos modos",
-      "cancel": "Volver a editar"
-    },
     "help": {
       "encryptedTitle": "Tus credenciales están cifradas",
       "encryptedText": "Las guardamos con AES-256-GCM. Después de guardarlas solo verás los últimos 4 caracteres, y en evidencias y reportes aparecen enmascaradas.",
@@ -1390,22 +1458,24 @@
     "errors": {
       "nameRequired": "Escribe el nombre de la identidad.",
       "fieldRequired": "Este campo es obligatorio.",
-      "nameTooLong": "Usa un nombre de hasta 60 caracteres.",
       "nameTaken": "Ya hay una identidad con ese nombre. Elige otro.",
-      "endpoint": "Escribe una ruta que empiece con / o una URL completa con https://.",
-      "tokenName": "Usa solo letras, números y los símbolos - _ . (sin espacios)."
-    }
+      "length": "El texto es demasiado largo.",
+      "format": "El valor tiene caracteres no permitidos.",
+      "fieldNameReserved": "Esa cabecera la controla la plataforma; usa otra.",
+      "loginOperation": "Elige la operación de login.",
+      "limitReached": "Ya hay 20 identidades en este proyecto, contando la anónima.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos guardar la identidad.",
+      "reference": "No pudimos guardar la identidad. Referencia: {id}",
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar."
+    },
+    "editCrumb": "Editar"
   },
   "Resources": {
     "crumb": "Recursos",
     "title": "Recursos por identidad",
     "lead": "Indica qué objetos de tu API pertenecen a cada identidad. Así Acceso a objetos puede comprobar si una identidad alcanza los de otra.",
-    "kinds": {
-      "order": "Pedido",
-      "user": "Usuario",
-      "address": "Dirección",
-      "none": "No es de un usuario"
-    },
     "origin": {
       "discovered": "Descubierto",
       "manual": "Agregado a mano"
@@ -1417,18 +1487,24 @@
     "confirm": "Confirmar",
     "params": {
       "title": "1. Identificadores de recursos",
-      "lead": "Parámetros de ruta que detectamos en el contrato. Desmarca los que no identifican un objeto con dueño.",
+      "lead": "Parámetros de ruta del contrato vigente. Marca los que identifican un objeto con dueño y escribe su tipo.",
       "empty": "Importa un contrato para detectar los identificadores.",
-      "isId": "{param} es identificador"
+      "isId": "{param} es identificador",
+      "none": "El contrato vigente no tiene operaciones con parámetros de ruta.",
+      "subject": "las operaciones",
+      "type": "Tipo de recurso de {param}",
+      "typePlaceholder": "pedido",
+      "save": "Guardar",
+      "discard": "Descartar",
+      "saved": "Identificadores de {path} guardados",
+      "partial": "Se muestran {shown} de {total} operaciones."
     },
     "discover": {
       "title": "2. Descubrir recursos",
       "text": "Llamamos como cada identidad solo a las operaciones GET de listado, como <code>GET /orders</code>, y proponemos lo que encontremos.",
       "button": "Descubrir recursos",
-      "running": "Buscando…",
-      "found": "Encontrados",
-      "toConfirm": "Por confirmar",
-      "done": "{count, plural, one {Se encontró un recurso nuevo} other {Se encontraron # recursos nuevos}}"
+      "unavailable": "El descubrimiento automático aún no está disponible. Mientras tanto, agrega los recursos a mano.",
+      "registered": "Recursos registrados"
     },
     "review": {
       "title": "3. Revisa los recursos de cada identidad",
@@ -1441,27 +1517,38 @@
     },
     "empty": {
       "title": "{name} no tiene recursos",
-      "text": "Acceso a objetos no podrá probar esta identidad. Descubre recursos de nuevo o agrégalos a mano."
+      "text": "Acceso a objetos no podrá probar esta identidad. Agrega sus recursos a mano."
     },
     "add": {
       "kind": "Tipo",
       "value": "Identificador",
-      "button": "Agregar a {name}"
+      "button": "Agregar a {name}",
+      "done": "Recurso agregado a {name}"
     },
     "delete": {
       "label": "Eliminar {value}",
       "title": "Eliminar el recurso",
       "text": "Se quitará «{value}» de esta identidad. No se borra nada en tu API.",
-      "confirm": "Eliminar recurso"
+      "confirm": "Eliminar recurso",
+      "done": "Se eliminó «{value}»"
     },
     "errors": {
-      "valueRequired": "Escribe el identificador del recurso."
+      "valueRequired": "Escribe el identificador del recurso.",
+      "typeRequired": "Escribe el tipo de recurso.",
+      "valueInvalid": "El identificador admite hasta 500 caracteres, sin caracteres de control.",
+      "ownedByOther": "Ese recurso ya pertenece a otra identidad. Un objeto tiene un solo dueño.",
+      "identityNotFound": "La identidad ya no existe. Recarga la página.",
+      "anonymousOwner": "La identidad anónima no tiene recursos.",
+      "notFound": "El recurso ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo completar la acción",
+      "reference": "Referencia: {id}"
     },
-    "locked": {
-      "title": "Disponible tras verificar",
-      "text": "Los recursos se descubren llamando a tu API, así que primero debes verificar la propiedad del host.",
-      "action": "Ir a verificación"
-    }
+    "subject": "los recursos",
+    "identitiesSubject": "las identidades",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Policy": {
     "crumb": "Política",
@@ -1485,12 +1572,11 @@
       "title": "{confirmed} de {total} confirmadas",
       "label": "Operaciones confirmadas",
       "text": "{count, plural, one {La propuesta sin confirmar no se usa} other {Las # propuestas sin confirmar no se usan}} en Acceso a objetos ni Acceso a funciones.",
-      "modified": "Última modificación: Luis Selvas, 27 oct 2026, 18:40."
+      "modified": "Última modificación: {date}."
     },
     "orphan": {
       "title": "{count, plural, one {# regla huérfana} other {# reglas huérfanas}}",
-      "text": "<code>DELETE /orders/export</code> ya no está en el contrato v2.4.0 y aún tiene política. No se usa en las pruebas: puedes quitarla. Las plantillas de propiedad necesitan un campo propietario para guardarse.",
-      "remove": "Quitar regla"
+      "text": "Ya no están en el contrato vigente y aún tienen política. No se usan en las pruebas:"
     },
     "operations": "Operaciones",
     "filters": {
@@ -1499,25 +1585,25 @@
       "proposed": "Propuestas · {count}",
       "confirmed": "Confirmadas · {count}"
     },
-    "search": "Buscar ruta",
     "bulk": {
       "label": "Acciones en bloque",
       "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
       "apply": "Aplicar plantilla",
-      "button": "Aplicar y confirmar"
+      "button": "Aplicar y confirmar",
+      "owner": "Campo propietario",
+      "done": "{count, plural, one {Plantilla aplicada a # operación} other {Plantilla aplicada a # operaciones}}"
     },
     "select": "Seleccionar {method} {path}",
     "templateOf": "Plantilla de {method} {path}",
     "ownerOf": "Campo propietario de {method} {path}",
-    "noOwner": "Elige el campo propietario",
     "notApplicable": "No aplica",
-    "bearer": "bearer",
     "status": {
       "confirmed": "Confirmada",
-      "proposed": "Propuesta"
+      "proposed": "Propuesta",
+      "changed": "Sin guardar"
     },
     "confirm": "Confirmar",
-    "showing": "Mostrando {shown} de {total} rutas ·",
+    "showing": "Mostrando {shown} de {total} operaciones ·",
     "viewContract": "Ver el contrato",
     "save": "Guardar política",
     "saved": "Política guardada",
@@ -1532,8 +1618,17 @@
     },
     "errors": {
       "ownerTitle": "Falta el campo propietario",
-      "ownerText": "Las plantillas de propiedad necesitan un campo propietario para guardarse."
-    }
+      "ownerText": "Las plantillas de propiedad necesitan un campo propietario: un parámetro de ruta (userId) o un campo de la respuesta (owner.id).",
+      "retired": "Una operación ya no está en el contrato vigente. Recarga la página.",
+      "notFound": "Una operación ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo guardar la política",
+      "reference": "Referencia: {id}"
+    },
+    "ownerPlaceholder": "userId u owner.id",
+    "noTemplate": "Elige una plantilla",
+    "noSecurity": "Sin seguridad",
+    "subject": "las operaciones"
   },
   "ConfigureRun": {
     "title": "Nueva ejecución",

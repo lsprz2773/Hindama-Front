@@ -1,4 +1,6 @@
 import { expect, test } from "./fixtures";
+import { mockBff, problem } from "./support/bff";
+import { PROJECT_ID } from "./support/projects";
 
 test.describe("validaciones de formularios", () => {
   test("los códigos de 6 dígitos solo aceptan números y no se envían incompletos", async ({
@@ -36,45 +38,50 @@ test.describe("validaciones de formularios", () => {
   });
 
   test("identidad: cada forma de autenticación exige sus propios campos", async ({ page }) => {
-    await page.goto("/projects/pedidos/identities/new");
+    await page.goto(`/projects/${PROJECT_ID}/identities/new`);
     const expected: [string, string[]][] = [
-      ["Login automático", ["identity-user", "identity-password", "identity-endpoint"]],
+      ["Login automático", ["identity-username", "identity-password", "identity-login-op"]],
       ["Token Bearer", ["identity-token"]],
-      ["Cookie de sesión", ["identity-cookieName", "identity-cookieValue"]],
-      ["Cabecera personalizada", ["identity-headerName", "identity-headerValue"]],
+      ["Cookie de sesión", ["identity-field-name", "identity-value"]],
+      ["Cabecera personalizada", ["identity-field-name", "identity-value"]],
     ];
     for (const [kind, ids] of expected) {
       await page.getByRole("radio", { name: new RegExp(kind) }).click();
       await page.getByRole("button", { name: "Guardar identidad" }).click();
-      await expect(page.getByText("Escribe el nombre de la identidad.")).toBeVisible();
+      await expect(page.getByLabel("Nombre", { exact: true })).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
       for (const id of ids)
         await expect(page.locator(`#${id}`)).toHaveAttribute("aria-invalid", "true");
     }
   });
 
-  test("identidad: nombre repetido, endpoint y nombre de cabecera con formato", async ({
-    page,
-  }) => {
-    await page.goto("/projects/pedidos/identities/new");
-    await page.getByRole("textbox", { name: "Nombre", exact: true }).fill("Cliente A");
+  test("identidad: nombre de cabecera con formato y nombre repetido", async ({ page }) => {
+    const calls = await mockBff(
+      page,
+      `**/api/projects/${PROJECT_ID}/identities`,
+      { status: 409, body: problem(409, "identity.name_taken") },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/identities/new`);
+    await page.getByRole("textbox", { name: "Nombre", exact: true }).fill("Usuario A");
     await page.getByRole("radio", { name: /Cabecera personalizada/ }).click();
-    await page.locator("#identity-headerName").fill("X Api Key");
-    await page.locator("#identity-headerValue").fill("secreto-1234");
+    await page.locator("#identity-field-name").fill("X Api Key");
+    await page.locator("#identity-value").fill(["valor", "de", "prueba"].join("-"));
+    await page.getByRole("button", { name: "Guardar identidad" }).click();
+    await expect(page.locator("#identity-field-name")).toHaveAttribute("aria-invalid", "true");
+    expect(calls).toHaveLength(0);
+
+    await page.locator("#identity-field-name").fill("X-Api-Key");
     await page.getByRole("button", { name: "Guardar identidad" }).click();
     await expect(page.getByText("Ya hay una identidad con ese nombre. Elige otro.")).toBeVisible();
-    await expect(page.getByText(/Usa solo letras, números y los símbolos/)).toBeVisible();
-
-    await page.getByRole("radio", { name: /Login automático/ }).click();
-    await page.locator("#identity-user").fill("ana");
-    await page.locator("#identity-password").fill("clave-segura");
-    await page.locator("#identity-endpoint").fill("login sin ruta");
-    await page.getByRole("button", { name: "Guardar identidad" }).click();
-    await expect(page.getByText(/Escribe una ruta que empiece con \//)).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
 
   test("recursos: no se agrega un identificador vacío", async ({ page }) => {
-    await page.goto("/projects/pedidos/resources");
-    await page.getByRole("button", { name: "Agregar a Cliente A" }).click();
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await page.getByRole("button", { name: "Agregar a Usuario A" }).click();
     await expect(page.getByText("Escribe el identificador del recurso.")).toBeVisible();
   });
 
@@ -84,7 +91,7 @@ test.describe("validaciones de formularios", () => {
     await expect(page.locator("[role=alert]").filter({ hasText: /./ }).first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText("Escribe tu");
 
-    await page.goto("/en/projects/pedidos/identities/new");
+    await page.goto(`/en/projects/${PROJECT_ID}/identities/new`);
     await page.getByRole("button", { name: "Save identity" }).click();
     await expect(page.getByText("Enter the identity's name.")).toBeVisible();
     await expect(page.getByText("This field is required.").first()).toBeVisible();
@@ -97,7 +104,7 @@ test.describe("títulos de página por idioma", () => {
     ["/projects/pedidos/history", /^Historial/, /^History/],
     ["/projects/pedidos/findings", /^Hallazgos/, /^Findings/],
     ["/projects/pedidos/runs/new", /^Nueva ejecución/, /^New run/],
-    ["/projects/pedidos/policy", /^Política de acceso/, /^Access policy/],
+    [`/projects/${PROJECT_ID}/policy`, /^Política de acceso/, /^Access policy/],
     ["/admin", /^Estadísticas de uso/, /^Usage statistics/],
     ["/admin/audit-log", /^Bitácora de auditoría/, /^Audit log/],
   ];

@@ -7,6 +7,35 @@ import {
   projectSchema,
   projectUpdateSchema,
 } from "@/lib/api/schemas/projects";
+import { verificationRequestSchema, verificationSchema } from "@/lib/api/schemas/verification";
+import {
+  contractPageSchema,
+  contractVersionSchema,
+  listContractsQuerySchema,
+  listOperationsQuerySchema,
+  operationPageSchema,
+  operationSchema,
+  operationUpdateSchema,
+  policyBulkResultSchema,
+  policyBulkUpdateSchema,
+} from "@/lib/api/schemas/contracts";
+import {
+  identityCreateSchema,
+  identityPageSchema,
+  identitySchema,
+  identityTestRequestSchema,
+  identityTestSchema,
+  identityUpdateSchema,
+  listIdentitiesQuerySchema,
+} from "@/lib/api/schemas/identities";
+import {
+  listResourcesQuerySchema,
+  resourceCreateSchema,
+  resourcePageSchema,
+  resourceSchema,
+  resourceUpdateSchema,
+} from "@/lib/api/schemas/resources";
+import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
 import type { ApiRouteSpec } from "./route";
 
 /**
@@ -23,4 +52,80 @@ export const SPECS = {
   getProject: { path: project, response: projectSchema },
   updateProject: { path: project, body: projectUpdateSchema, response: projectSchema },
   deleteProject: { path: project, query: deleteProjectQuerySchema },
+  getVerification: { path: [...project, "verification"], response: verificationSchema },
+  verifyOwnership: {
+    path: [...project, "verification"],
+    body: verificationRequestSchema,
+    response: verificationSchema,
+  },
+  listContracts: {
+    path: [...project, "contracts"],
+    query: listContractsQuerySchema,
+    response: contractPageSchema,
+  },
+  importContract: {
+    path: [...project, "contracts"],
+    multipart: validateContractImport,
+    maxBodyBytes: CONTRACT_FORM_MAX_BYTES,
+    response: contractVersionSchema,
+  },
+  getContract: {
+    path: [...project, "contracts", { param: "contractId" }],
+    response: contractVersionSchema,
+  },
+  listOperations: {
+    path: [...project, "operations"],
+    query: listOperationsQuerySchema,
+    response: operationPageSchema,
+  },
+  updateOperation: {
+    path: [...project, "operations", { param: "operationId" }],
+    body: operationUpdateSchema,
+    response: operationSchema,
+  },
+  listIdentities: {
+    path: [...project, "identities"],
+    query: listIdentitiesQuerySchema,
+    response: identityPageSchema,
+  },
+  // La credencial va en el cuerpo de ida y nunca vuelve: la respuesta solo trae el sufijo.
+  createIdentity: {
+    path: [...project, "identities"],
+    body: identityCreateSchema,
+    response: identitySchema,
+    maxBodyBytes: 32 * 1024,
+  },
+  updateIdentity: {
+    path: [...project, "identities", { param: "identityId" }],
+    body: identityUpdateSchema,
+    response: identitySchema,
+    maxBodyBytes: 32 * 1024,
+  },
+  deleteIdentity: { path: [...project, "identities", { param: "identityId" }] },
+  testIdentity: {
+    path: [...project, "identities", { param: "identityId" }, "test"],
+    body: identityTestRequestSchema,
+    response: identityTestSchema,
+  },
+  applyPolicy: {
+    path: [...project, "policy"],
+    body: policyBulkUpdateSchema,
+    response: policyBulkResultSchema,
+  },
+  listResources: {
+    path: [...project, "resources"],
+    query: listResourcesQuerySchema,
+    response: resourcePageSchema,
+  },
+  createResource: {
+    path: [...project, "resources"],
+    body: resourceCreateSchema,
+    response: resourceSchema,
+  },
+  updateResource: {
+    path: [...project, "resources", { param: "resourceId" }],
+    body: resourceUpdateSchema,
+    response: resourceSchema,
+  },
+  deleteResource: { path: [...project, "resources", { param: "resourceId" }] },
 } satisfies Record<string, ApiRouteSpec>;

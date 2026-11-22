@@ -86,5 +86,9 @@ export function sanitizeProblem(status: number, body: unknown, requestId: string
     code: source.code,
     request_id: str(source.request_id) || requestId,
     errors,
+    // `VerificationProblem` (verifyOwnership, 422): resumen de lo obtenido, texto no confiable.
+    ...(source.code.startsWith("verification.") && typeof source.found === "string"
+      ? { found: source.found.slice(0, 200) }
+      : {}),
   };
 }
