@@ -66,7 +66,7 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={(next) => (!locked || next) && onOpenChange(next)}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[90] bg-black/55 backdrop-blur-sm" />
+        <Dialog.Overlay className="data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out fixed inset-0 z-[90] bg-black/55 backdrop-blur-sm" />
         <Dialog.Content
           role={alert ? "alertdialog" : "dialog"}
           onOpenAutoFocus={(e) => {
@@ -85,7 +85,7 @@ export function Modal({
           onEscapeKeyDown={(e) => locked && e.preventDefault()}
           onPointerDownOutside={(e) => locked && e.preventDefault()}
           onInteractOutside={(e) => locked && e.preventDefault()}
-          className="border-line-strong bg-menu text-fg fixed top-1/2 left-1/2 z-[91] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[560px] -translate-x-1/2 -translate-y-1/2 flex-col gap-5 overflow-y-auto rounded-[28px] border p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8"
+          className="border-line-strong bg-menu text-fg data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out fixed top-1/2 left-1/2 z-[91] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-5 overflow-y-auto rounded-[28px] border p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8"
         >
           {success ? (
             <div role="status" className="flex flex-col items-start gap-3.5">

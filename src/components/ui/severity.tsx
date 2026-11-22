@@ -28,8 +28,9 @@ export function SeverityMeter({
       {[0, 1, 2, 3, 4].map((i) => (
         <span
           key={i}
+          style={{ animationDelay: `${i * 60}ms` }}
           className={cn(
-            "h-2 w-5 rounded-sm",
+            "animate-grow-x h-2 w-5 origin-left rounded-sm",
             i < filled ? BAR_COLOR[severity] : "bg-track",
             barClassName,
           )}

@@ -81,7 +81,7 @@ export function LanguageSelector({
           side={placement}
           align="end"
           sideOffset={8}
-          className="border-line-strong bg-menu text-fg z-50 min-w-[200px] rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+          className="border-line-strong bg-menu text-fg data-[state=open]:animate-menu-in data-[state=closed]:animate-menu-out z-50 min-w-[200px] origin-top-right rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
         >
           <DropdownMenu.RadioGroup value={locale} onValueChange={choose} aria-label={t("label")}>
             {routing.locales.map((code) => (

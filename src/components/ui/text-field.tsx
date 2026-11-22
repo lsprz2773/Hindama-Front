@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 
 export const inputClass =
-  "min-h-[52px] w-full rounded-2xl border border-line-strong bg-field px-4 text-base text-fg placeholder:text-muted/80 read-only:opacity-80 disabled:opacity-50 aria-invalid:border-danger";
+  "min-h-[52px] w-full rounded-2xl border border-line-strong transition-colors duration-150 hover:border-accent/60 bg-field px-4 text-base text-fg placeholder:text-muted/80 read-only:opacity-80 disabled:opacity-50 aria-invalid:border-danger";
 
 interface TextFieldProps extends Omit<ComponentProps<"input">, "id"> {
   label: string;

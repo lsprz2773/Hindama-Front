@@ -36,7 +36,7 @@ export function UserMenu({ name }: { name: string }) {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="border-line-strong bg-menu text-fg z-50 min-w-[240px] rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+          className="border-line-strong bg-menu text-fg data-[state=open]:animate-menu-in data-[state=closed]:animate-menu-out z-50 min-w-[240px] origin-top-right rounded-[20px] border p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl"
         >
           <DropdownMenu.Item
             onSelect={() => router.push("/profile")}
