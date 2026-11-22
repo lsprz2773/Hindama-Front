@@ -3,30 +3,25 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Correo en proceso de verificación o recuperación. Se guarda en sessionStorage
- * (no en la URL) para llevarlo entre pantallas sin exponerlo en el historial.
+ * Correo en proceso de verificación. Vive solo en memoria (no en la URL ni en el almacenamiento
+ * del navegador, que no deben guardar datos personales): sobrevive a la navegación dentro de la
+ * app y se pierde al recargar, en cuyo caso la pantalla pide el correo otra vez.
  */
-const KEY = "hindama.pendingEmail";
+let pending = "";
+const listeners = new Set<() => void>();
 
 export function setPendingEmail(email: string) {
-  try {
-    sessionStorage.setItem(KEY, email);
-  } catch {
-    // Sin almacenamiento disponible: la pantalla siguiente pedirá el correo de nuevo.
-  }
+  pending = email;
+  listeners.forEach((listener) => listener());
 }
 
-function read(): string {
-  try {
-    return sessionStorage.getItem(KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-const subscribe = () => () => {};
-
-/** Devuelve el correo pendiente; vacío en el servidor y mientras no exista. */
 export function usePendingEmail(): string {
-  return useSyncExternalStore(subscribe, read, () => "");
+  return useSyncExternalStore(
+    (callback) => {
+      listeners.add(callback);
+      return () => listeners.delete(callback);
+    },
+    () => pending,
+    () => "",
+  );
 }

@@ -134,7 +134,8 @@
       "rateLimitText": "Espera unos minutos antes de volver a intentarlo.",
       "networkTitle": "No pudimos crear tu cuenta",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "nameInvalid": "Escribe un nombre de hasta 100 caracteres, sin caracteres especiales de control."
     }
   },
   "VerifyEmail": {
@@ -166,8 +167,10 @@
       "networkTitle": "No pudimos verificar el código",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
       "resendTitle": "No pudimos reenviar el código",
-      "retry": "Reintentar"
-    }
+      "retry": "Reintentar",
+      "emailInvalid": "Escribe el correo con el que creaste la cuenta."
+    },
+    "email": "Correo electrónico"
   },
   "ForgotPassword": {
     "meta": "Recuperar contraseña",
@@ -203,7 +206,7 @@
       "confirm": "Confirmar contraseña",
       "submit": "Cambiar contraseña"
     },
-    "verified": "Código verificado",
+    "verified": "Código listo",
     "sending": "Enviando…",
     "verifying": "Verificando…",
     "saving": "Guardando…",
@@ -221,18 +224,18 @@
       "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
       "passwordRequired": "Elige una contraseña.",
       "passwordWeak": "La contraseña aún no cumple todos los requisitos.",
-      "passwordReused": "Elige una contraseña distinta de la anterior.",
       "confirmRequired": "Repite la contraseña.",
       "confirmMismatch": "Las contraseñas no coinciden.",
       "networkTitle": "No pudimos completar el paso",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
       "resendTitle": "No pudimos enviar el código",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "passwordRejected": "La contraseña no cumple la política o es una de tus últimas 5. Elige otra."
     }
   },
   "Terms": {
     "title": "Términos de uso",
-    "badge": "Versión vigente 2026-10-30 · borrador para revisión legal",
+    "badge": "Versión vigente {version} · borrador para revisión legal",
     "lead": "Estas reglas aplican a toda persona que use Hindama. Al crear tu cuenta y antes de tu primer proyecto confirmas que las aceptas.",
     "tocLabel": "Contenido",
     "tocHeading": "Contenido",

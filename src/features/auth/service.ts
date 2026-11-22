@@ -1,9 +1,11 @@
+import { signInResultSchema } from "@/lib/api/schemas/auth";
+import { setCsrfToken } from "@/lib/http/browser";
+import type { HttpClient } from "@/lib/http";
+
 /**
- * Servicio de autenticación.
- *
- * TODO(api): todavía no hay conexión con la API. Estas funciones simulan la
- * respuesta para poder construir y probar las vistas; al conectar el BFF se
- * reemplazan por llamadas con `useHttpClient()` y conservan estas firmas.
+ * Acceso por el BFF (`/api/auth/*`), que llama a Cognito desde el servidor (guía del frontend
+ * §2.3). El navegador nunca ve tokens: el inicio de sesión deja la cookie cifrada y devuelve el
+ * token anti-CSRF y el rol de `GET /me`, que solo elige la pantalla inicial (guía §2.5).
  */
 
 export interface SignInInput {
@@ -15,54 +17,43 @@ export interface SignUpInput {
   name: string;
   email: string;
   password: string;
-  acceptedTerms: boolean;
 }
 
-const SIMULATED_LATENCY_MS = 600;
+export type SignInResult = { next: "projects" } | { next: "admin" };
 
-function wait(ms = SIMULATED_LATENCY_MS) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+export async function signIn(http: HttpClient, input: SignInInput): Promise<SignInResult> {
+  const { data } = await http.post<unknown>("/auth/sign-in", {
+    body: input,
+    schema: signInResultSchema,
+  });
+  const result = signInResultSchema.parse(data);
+  setCsrfToken(result.csrf_token);
+  return result.role === "admin" ? { next: "admin" } : { next: "projects" };
 }
 
-/** Resultado de iniciar sesión; el 2FA lo decide la API según la cuenta. */
-export type SignInResult = { next: "projects" } | { next: "two-factor" } | { next: "verify-email" };
-
-export async function signIn(input: SignInInput): Promise<SignInResult> {
-  void input;
-  await wait();
-  return { next: "projects" };
+export async function signUp(http: HttpClient, input: SignUpInput): Promise<void> {
+  await http.post("/auth/sign-up", { body: input });
 }
 
-export async function signUp(input: SignUpInput): Promise<void> {
-  void input;
-  await wait();
+export async function verifyEmail(
+  http: HttpClient,
+  input: { email: string; code: string },
+): Promise<void> {
+  await http.post("/auth/sign-up/confirm", { body: input });
 }
 
-export async function verifyEmail(input: { email: string; code: string }): Promise<void> {
-  void input;
-  await wait();
+export async function resendVerificationCode(http: HttpClient, email: string): Promise<void> {
+  await http.post("/auth/sign-up/resend", { body: { email } });
 }
 
-export async function resendVerificationCode(email: string): Promise<void> {
-  void email;
-  await wait(300);
+export async function requestPasswordReset(http: HttpClient, email: string): Promise<void> {
+  await http.post("/auth/password/forgot", { body: { email } });
 }
 
-export async function requestPasswordReset(email: string): Promise<void> {
-  void email;
-  await wait();
-}
-
-export async function confirmResetCode(input: { email: string; code: string }): Promise<void> {
-  void input;
-  await wait();
-}
-
-export async function resetPassword(input: {
-  email: string;
-  code: string;
-  password: string;
-}): Promise<void> {
-  void input;
-  await wait();
+/** Cognito valida el código y la contraseña nueva en la misma llamada (`ConfirmForgotPassword`). */
+export async function resetPassword(
+  http: HttpClient,
+  input: { email: string; code: string; password: string },
+): Promise<void> {
+  await http.post("/auth/password/reset", { body: input });
 }
