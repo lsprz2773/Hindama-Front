@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { ApiError, type ApiWarning } from "./errors";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -11,13 +12,29 @@ export interface HttpClientOptions {
   /** Token anti-CSRF (RNF-07); se envía en las peticiones que modifican datos. */
   getCsrfToken?: () => string | undefined | Promise<string | undefined>;
   fetchImpl?: typeof fetch;
+  /** Tiempo máximo de cada intento. Por defecto 35 s: la API puede tardar hasta 30 (convenciones §12). */
+  timeoutMs?: number;
+  /** Reintentos automáticos de un `GET`; nunca se reintenta una petición que modifica datos. */
+  getRetries?: number;
+  /** Espera antes del primer reintento; crece al doble en cada uno. */
+  retryBaseMs?: number;
+  /** Espera máxima entre reintentos, aunque `Retry-After` pida más. */
+  retryMaxMs?: number;
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
 
-export interface RequestOptions {
-  query?: Query;
+type QueryValue = string | number | boolean | null | undefined;
+
+export interface RequestOptions<S extends z.ZodType = z.ZodType> {
+  query?: Query | Record<string, QueryValue | readonly QueryValue[]>;
   body?: unknown;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /**
+   * Esquema de la respuesta. Si la respuesta no lo cumple, se trata como error
+   * (`kind: "invalid_response"`) y no llega a la vista.
+   */
+  schema?: S;
 }
 
 export interface ApiResult<T> {
@@ -28,12 +45,16 @@ export interface ApiResult<T> {
 
 export const CSRF_HEADER = "X-CSRF-Token";
 
-function buildUrl(baseUrl: string, path: string, query?: Query): string {
+function buildUrl(baseUrl: string, path: string, query?: RequestOptions["query"]): string {
   const url = `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   if (!query) return url;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== null) params.set(key, String(value));
+    // Un filtro con varios valores repite el parámetro (convenciones §7).
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      if (item !== undefined && item !== null) params.append(key, String(item));
+    }
   }
   const qs = params.toString();
   return qs ? `${url}?${qs}` : url;
@@ -137,10 +158,16 @@ export function createHttpClient(options: HttpClientOptions) {
   const baseUrl = options.baseUrl ?? "/api";
   const doFetch = options.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
 
-  async function request<T>(
+  const timeoutMs = options.timeoutMs ?? 35_000;
+  const getRetries = options.getRetries ?? 2;
+  const retryBaseMs = options.retryBaseMs ?? 500;
+  const retryMaxMs = options.retryMaxMs ?? 30_000;
+  const sleep = options.sleep ?? abortableSleep;
+
+  async function attempt<T>(
     method: Method,
     path: string,
-    { query, body, headers, signal }: RequestOptions = {},
+    { query, body, headers, signal, schema }: RequestOptions,
   ): Promise<ApiResult<T>> {
     const finalHeaders: Record<string, string> = {
       Accept: "application/json",
@@ -153,6 +180,7 @@ export function createHttpClient(options: HttpClientOptions) {
       if (token) finalHeaders[CSRF_HEADER] = token;
     }
 
+    const timeout = AbortSignal.timeout(timeoutMs);
     let response: Response;
     try {
       response = await doFetch(buildUrl(baseUrl, path, query), {
@@ -160,10 +188,13 @@ export function createHttpClient(options: HttpClientOptions) {
         headers: finalHeaders,
         body: body === undefined ? undefined : JSON.stringify(body),
         credentials: "same-origin",
-        signal,
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
     } catch (cause) {
-      if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+      // Cancelación de la vista: se propaga tal cual para que la consulta la ignore.
+      if (signal?.aborted) throw signal.reason ?? cause;
+      if (timeout.aborted)
+        throw new ApiError({ status: 0, kind: "network", code: "request.timeout" });
       throw new ApiError({ status: 0, kind: "network" });
     }
 
@@ -171,17 +202,76 @@ export function createHttpClient(options: HttpClientOptions) {
     if (!response.ok) throw toApiError(response.status, parsed, response.headers);
 
     // Un recurso viene sin sobre y una lista con `items` (convenciones, sección 6).
-    return { data: parsed as T, warnings: readWarnings(parsed), status: response.status };
+    let data = parsed as T;
+    if (schema && response.status !== 204) {
+      const result = schema.safeParse(parsed);
+      if (!result.success) {
+        throw new ApiError({
+          status: response.status,
+          kind: "invalid_response",
+          code: "response.invalid",
+          requestId: response.headers.get("X-Request-Id") ?? undefined,
+        });
+      }
+      data = result.data as T;
+    }
+    return { data, warnings: readWarnings(parsed), status: response.status };
+  }
+
+  async function request<T>(
+    method: Method,
+    path: string,
+    requestOptions: RequestOptions = {},
+  ): Promise<ApiResult<T>> {
+    for (let retry = 0; ; retry += 1) {
+      try {
+        return await attempt<T>(method, path, requestOptions);
+      } catch (error) {
+        // Solo los GET se reintentan, y solo ante fallos pasajeros (red, 429, 502, 503, 504).
+        if (method !== "GET" || retry >= getRetries || !isTransient(error)) throw error;
+        if (requestOptions.signal?.aborted) throw error;
+        const backoff = retryBaseMs * 2 ** retry;
+        const wait = (error as ApiError).retryAfter;
+        await sleep(
+          Math.min(retryMaxMs, wait !== undefined ? wait * 1000 : backoff),
+          requestOptions.signal,
+        );
+      }
+    }
   }
 
   return {
     request,
     get: <T>(path: string, o?: RequestOptions) => request<T>("GET", path, o),
+    /** `GET` validado: el tipo del resultado sale del esquema. */
+    read: <S extends z.ZodType>(path: string, schema: S, o?: Omit<RequestOptions, "schema">) =>
+      request<z.output<S>>("GET", path, { ...o, schema }),
     post: <T>(path: string, o?: RequestOptions) => request<T>("POST", path, o),
     put: <T>(path: string, o?: RequestOptions) => request<T>("PUT", path, o),
     patch: <T>(path: string, o?: RequestOptions) => request<T>("PATCH", path, o),
     delete: <T>(path: string, o?: RequestOptions) => request<T>("DELETE", path, o),
   };
+}
+
+function isTransient(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  return error.kind === "network" || [429, 502, 503, 504].includes(error.status);
+}
+
+function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason);
+    const timer = setTimeout(done, ms);
+    function done() {
+      signal?.removeEventListener("abort", abort);
+      resolve();
+    }
+    function abort() {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+  });
 }
 
 export type HttpClient = ReturnType<typeof createHttpClient>;
