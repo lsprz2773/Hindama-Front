@@ -23,7 +23,7 @@ const PROJECT_ROUTES = [
   `${API_PROJECT}/identities/0192e3a0-6666-7000-8000-000000000002`,
   `${API_PROJECT}/resources`,
   `${API_PROJECT}/policy`,
-  "/projects/pedidos/history",
+  `${API_PROJECT}/history`,
   `${API_PROJECT}/findings`,
   `${API_PROJECT}/findings/0192e3a0-8888-7000-8000-000000000001`,
   `${API_PROJECT}/runs/new`,

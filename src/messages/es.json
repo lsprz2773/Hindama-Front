@@ -2036,7 +2036,6 @@
   "History": {
     "title": "Historial",
     "repeat": "Repetir última ejecución",
-    "repeatStarted": "Repitiendo con la misma configuración (n.º {number})",
     "viewProgress": "Ver progreso",
     "following": "En seguimiento",
     "notConcluded": "Aún no está concluido",
@@ -2049,12 +2048,12 @@
     "openNow": "Abiertos ahora",
     "resolvedTotal": "Resueltos en total",
     "chart": {
-      "title": "Hallazgos abiertos al terminar cada ejecución",
+      "title": "Hallazgos detectados en cada ejecución",
       "running": "La n.º {number} sigue en curso",
-      "summary": "Hallazgos abiertos: {items}.",
+      "summary": "Hallazgos detectados: {items}.",
       "item": "ejecución {number}, {count}",
       "itemRunning": "ejecución {number} en curso, {count} hasta ahora",
-      "tip": "Ejecución {number}: {count, plural, one {# abierto} other {# abiertos}}",
+      "tip": "Ejecución {number}: {count, plural, one {# hallazgo} other {# hallazgos}}",
       "label": "n.º {number}",
       "labelRunning": "n.º {number} (en curso)"
     },
@@ -2065,22 +2064,27 @@
       "status": "Estado",
       "duration": "Duración",
       "requests": "Peticiones",
-      "severity": "Por severidad",
-      "changes": "Nuevos · persistentes · resueltos · regresiones"
+      "severity": "Por severidad"
     },
     "number": "n.º {number}",
-    "kind": {
-      "auth": "Autenticación",
-      "full": "Prueba completa · {count, plural, one {# módulo} other {# módulos}}"
-    },
-    "pending": "{count, plural, one {# recurso por eliminar} other {# recursos por eliminar}}",
+    "kind": "{count, plural, one {# módulo} other {# módulos}}",
     "open": "Abrir",
     "report": "Reporte",
     "empty": {
       "title": "Aún no hay ejecuciones",
       "text": "Cuando ejecutes las pruebas, aquí verás su evolución y cada resultado.",
       "action": "Nueva ejecución"
-    }
+    },
+    "subject": "el historial",
+    "filter": "Estado",
+    "allStatuses": "Todos los estados",
+    "none": "Ninguna ejecución tiene ese estado.",
+    "viewProgressOf": "Ver el progreso de la ejecución n.º {number}",
+    "openOf": "Abrir la ejecución n.º {number}",
+    "reportOf": "Reporte de la ejecución n.º {number}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
   },
   "Report": {
     "back": "Volver",

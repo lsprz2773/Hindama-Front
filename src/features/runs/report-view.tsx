@@ -19,7 +19,6 @@ import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { evidenceFor, FINDING_EXTRA, SAMPLE_MATRIX, SAMPLE_RUN, type RunSummary } from "./data";
 import { isOpen, useFindings } from "./findings-store";
-import { historyRows } from "./history-view";
 
 /** Datos de la ejecución `n` de un proyecto. TODO(api): V-32 (fase 6) y la matriz aún sin conectar; vienen de `getRun`. */
 export function runSummaryFor(project: Project, runId: string): RunSummary | null {
@@ -64,7 +63,7 @@ function Report({ project, runId }: { project: Project; runId: string }) {
     .sort((a, b) => SEVERITIES.indexOf(a.severity) - SEVERITIES.indexOf(b.severity));
   const detailed = open.slice(0, 2);
   const total = run.severities.reduce((a, b) => a + b, 0);
-  const runs = historyRows(project).length;
+  const runs = project.report?.runNumber ?? 0;
   const discrepancies = SAMPLE_MATRIX.flatMap((row) =>
     row.cells
       .map((cell, i) => ({ row, cell, i }))

@@ -2036,7 +2036,6 @@
   "History": {
     "title": "History",
     "repeat": "Repeat last run",
-    "repeatStarted": "Repeating with the same configuration (no. {number})",
     "viewProgress": "View progress",
     "following": "Being tracked",
     "notConcluded": "Not concluded yet",
@@ -2049,12 +2048,12 @@
     "openNow": "Open now",
     "resolvedTotal": "Resolved in total",
     "chart": {
-      "title": "Open findings at the end of each run",
+      "title": "Findings detected in each run",
       "running": "No. {number} is still running",
-      "summary": "Open findings: {items}.",
+      "summary": "Findings detected: {items}.",
       "item": "run {number}, {count}",
       "itemRunning": "run {number} in progress, {count} so far",
-      "tip": "Run {number}: {count} open",
+      "tip": "Run {number}: {count, plural, one {# finding} other {# findings}}",
       "label": "no. {number}",
       "labelRunning": "no. {number} (running)"
     },
@@ -2065,22 +2064,27 @@
       "status": "Status",
       "duration": "Duration",
       "requests": "Requests",
-      "severity": "By severity",
-      "changes": "New · persistent · resolved · regressions"
+      "severity": "By severity"
     },
     "number": "no. {number}",
-    "kind": {
-      "auth": "Authentication",
-      "full": "Full test · {count, plural, one {# module} other {# modules}}"
-    },
-    "pending": "{count, plural, one {# resource to delete} other {# resources to delete}}",
+    "kind": "{count, plural, one {# module} other {# modules}}",
     "open": "Open",
     "report": "Report",
     "empty": {
       "title": "There are no runs yet",
       "text": "When you run the tests, you will see their evolution and every result here.",
       "action": "New run"
-    }
+    },
+    "subject": "the history",
+    "filter": "Status",
+    "allStatuses": "All statuses",
+    "none": "No run has that status.",
+    "viewProgressOf": "View the progress of run no. {number}",
+    "openOf": "Open run no. {number}",
+    "reportOf": "Report of run no. {number}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
   },
   "Report": {
     "back": "Back",
