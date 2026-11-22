@@ -19,6 +19,15 @@ import {
   policyBulkResultSchema,
   policyBulkUpdateSchema,
 } from "@/lib/api/schemas/contracts";
+import {
+  identityCreateSchema,
+  identityPageSchema,
+  identitySchema,
+  identityTestRequestSchema,
+  identityTestSchema,
+  identityUpdateSchema,
+  listIdentitiesQuerySchema,
+} from "@/lib/api/schemas/identities";
 import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
 import type { ApiRouteSpec } from "./route";
 
@@ -66,6 +75,30 @@ export const SPECS = {
     path: [...project, "operations", { param: "operationId" }],
     body: operationUpdateSchema,
     response: operationSchema,
+  },
+  listIdentities: {
+    path: [...project, "identities"],
+    query: listIdentitiesQuerySchema,
+    response: identityPageSchema,
+  },
+  // La credencial va en el cuerpo de ida y nunca vuelve: la respuesta solo trae el sufijo.
+  createIdentity: {
+    path: [...project, "identities"],
+    body: identityCreateSchema,
+    response: identitySchema,
+    maxBodyBytes: 32 * 1024,
+  },
+  updateIdentity: {
+    path: [...project, "identities", { param: "identityId" }],
+    body: identityUpdateSchema,
+    response: identitySchema,
+    maxBodyBytes: 32 * 1024,
+  },
+  deleteIdentity: { path: [...project, "identities", { param: "identityId" }] },
+  testIdentity: {
+    path: [...project, "identities", { param: "identityId" }, "test"],
+    body: identityTestRequestSchema,
+    response: identityTestSchema,
   },
   applyPolicy: {
     path: [...project, "policy"],

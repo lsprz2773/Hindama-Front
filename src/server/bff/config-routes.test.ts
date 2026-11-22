@@ -385,3 +385,148 @@ describe("contratos y operaciones", () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 });
+
+const IID = "0192e3a0-6666-7000-8000-000000000002";
+const OP = "0192e3a0-5555-7000-8000-000000000001";
+const IDENTITY = {
+  id: IID,
+  name: "Cliente A",
+  role: "user",
+  role_label: null,
+  auth_type: "bearer",
+  credential_suffix: "x9Qk",
+  field_name: null,
+  login_operation: null,
+  status: "active",
+  last_tested_at: null,
+  last_test_status_code: null,
+  resource_count: 0,
+  warnings: [],
+  created_at: "2026-11-04T10:00:00Z",
+};
+const identityParams = { projectId: PID, identityId: IID };
+const SECRET = ["tok", "en-de-prueba", "-123"].join("");
+
+describe("identidades (V-21 y V-22)", () => {
+  it("createIdentity reenvía la credencial sin recortarla y no la devuelve", async () => {
+    const apiFetch = api(
+      Response.json({ ...IDENTITY, credential: { token: SECRET } }, { status: 201 }),
+    );
+    const response = await handleApiRoute(
+      SPECS.createIdentity,
+      request("POST", `/api/projects/${PID}/identities`, {
+        body: {
+          name: " Cliente A ",
+          role: "user",
+          auth_type: "bearer",
+          credential: { token: ` ${SECRET}` },
+        },
+      }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(201);
+    const sent = JSON.parse(String(apiFetch.mock.calls[0][1].body));
+    expect(sent).toEqual({
+      name: "Cliente A",
+      role: "user",
+      auth_type: "bearer",
+      credential: { token: ` ${SECRET}` },
+    });
+    // Aunque la API la devolviera por error, el esquema de respuesta la descarta.
+    expect(JSON.stringify(await response.json())).not.toContain(SECRET);
+  });
+
+  it.each([
+    [
+      "una credencial que no corresponde al tipo",
+      { auth_type: "login", credential: { token: "t" }, login_operation_id: OP },
+    ],
+    ["cookie sin nombre de campo", { auth_type: "cookie", credential: { value: "v" } }],
+    [
+      "login sin operación de login",
+      { auth_type: "login", credential: { username: "u", password: "p" } },
+    ],
+    [
+      "una cabecera con un nombre no válido",
+      { auth_type: "header", credential: { value: "v" }, field_name: "X-Api Key" },
+    ],
+    [
+      "una credencial con caracteres de control",
+      { auth_type: "bearer", credential: { token: "a\r\nInjected: 1" } },
+    ],
+    ["una credencial larga", { auth_type: "bearer", credential: { token: "t".repeat(4097) } }],
+    ["el tipo anónimo", { auth_type: "none", credential: { token: "t" } }],
+    [
+      "campos extra en la credencial",
+      { auth_type: "bearer", credential: { token: "t", scope: "admin" } },
+    ],
+  ])("createIdentity rechaza %s sin llamar a la API", async (_label, extra) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.createIdentity,
+      request("POST", `/api/projects/${PID}/identities`, {
+        body: { name: "Cliente A", role: "user", ...extra },
+      }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("updateIdentity exige la credencial al cambiar el tipo", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.updateIdentity,
+      request("PATCH", `/api/projects/${PID}/identities/${IID}`, { body: { auth_type: "cookie" } }),
+      identityParams,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect((await response.json()).errors[0].code).toBe("identity.credential_required");
+  });
+
+  it("testIdentity y deleteIdentity usan la ruta de la identidad", async () => {
+    const apiFetch = api(
+      Response.json({
+        succeeded: false,
+        status_code: 401,
+        failure: "rejected",
+        operation: { id: OP, method: "GET", path: "/me" },
+        tested_at: "2026-11-04T10:00:00Z",
+      }),
+    );
+    const tested = await handleApiRoute(
+      SPECS.testIdentity,
+      request("POST", `/api/projects/${PID}/identities/${IID}/test`, { body: {} }),
+      identityParams,
+      deps({ apiFetch }),
+    );
+    expect(tested.status).toBe(200);
+    expect(String(apiFetch.mock.calls[0][0])).toBe(
+      `http://api.internal:8000/projects/${PID}/identities/${IID}/test`,
+    );
+
+    const deleteFetch = api(new Response(null, { status: 204 }));
+    const deleted = await handleApiRoute(
+      SPECS.deleteIdentity,
+      request("DELETE", `/api/projects/${PID}/identities/${IID}`),
+      identityParams,
+      deps({ apiFetch: deleteFetch }),
+    );
+    expect(deleted.status).toBe(204);
+  });
+
+  it("un id de identidad que no es UUID responde 404", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.deleteIdentity,
+      request("DELETE", `/api/projects/${PID}/identities/cliente-a`),
+      { projectId: PID, identityId: "cliente-a" },
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(404);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+});
