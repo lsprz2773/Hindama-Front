@@ -8,14 +8,19 @@ import { MethodBadge } from "@/components/ui/method-badge";
 import { QueryState } from "@/components/ui/query-state";
 import { EmptyState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
+import { useToast } from "@/components/ui/toast";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { ProjectShell } from "@/features/projects/project-shell";
+import { Link, useRouter } from "@/i18n/navigation";
+import type { FindingSummary } from "@/lib/api/schemas/findings";
 import type { Project } from "@/lib/api/schemas/projects";
 import type { Result, Run } from "@/lib/api/schemas/runs";
 import type { Schemas } from "@/lib/api/types";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { useRun, useRunResults } from "./api";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { findCellFindings, useRun, useRunResults } from "./api";
 import { MODULE_VIEW } from "./modules";
 import { RunTabs } from "./run-tabs";
 
@@ -75,6 +80,79 @@ function Switch({
       </span>
       {children}
     </button>
+  );
+}
+
+/**
+ * Abre el hallazgo de una celda con discrepancia. `Result` no trae `finding_id`, así que se busca con
+ * `listFindings` por operación e identidad (guía §5.9): uno se abre en V-30 y varios se listan.
+ */
+function CellFinding({ project, runId, cell }: { project: Project; runId: string; cell: Result }) {
+  const t = useTranslations("Matrix");
+  const ts = useTranslations("Severity");
+  const http = useHttpClient();
+  const router = useRouter();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [found, setFound] = useState<FindingSummary[] | null>(null);
+
+  async function open() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const items = await findCellFindings(http, project.id, {
+        runId,
+        identityId: cell.identity.id,
+        operationId: cell.operation?.id ?? null,
+        module: cell.module,
+      });
+      if (items.length === 1) {
+        router.push(`/projects/${project.id}/findings/${items[0].id}`);
+        return;
+      }
+      setFound(items);
+    } catch (error) {
+      toast.show({
+        type: "error",
+        title:
+          error instanceof ApiError && error.status === 429
+            ? t("finding.rateLimited")
+            : t("finding.failed"),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="mt-1.5 min-h-9 self-start rounded-xl px-3 text-[13px]"
+        loading={busy}
+        aria-label={t("finding.openLabel", { identity: cell.identity.name })}
+        onClick={() => void open()}
+      >
+        {t("finding.open")}
+      </Button>
+      <div aria-live="polite">
+        {found?.length === 0 ? (
+          <p className="text-muted m-0 text-[12.5px]">{t("finding.none")}</p>
+        ) : found ? (
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[12.5px]">
+            {found.map((f) => (
+              <li key={f.id}>
+                <Link href={`/projects/${project.id}/findings/${f.id}`} className="text-link">
+                  {f.title}
+                </Link>{" "}
+                <span className="text-muted">· {ts(f.severity)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </>
   );
 }
 
@@ -270,7 +348,6 @@ function Matrix({ project, run }: { project: Project; run: Run }) {
                             const expected = t("expected", { value: code(cell.expected) });
                             return (
                               <td key={identity.id} className="p-0 align-top">
-                                {/* TODO(api): `Result` no enlaza su hallazgo; la celda no abre V-30. */}
                                 <div
                                   role="group"
                                   aria-label={`${identity.name}: ${verdict}, ${observed}, ${expected.toLowerCase()}`}
@@ -291,6 +368,9 @@ function Matrix({ project, run }: { project: Project; run: Run }) {
                                   <span className="text-muted text-[12.5px] break-words">
                                     {expected}
                                   </span>
+                                  {cell.verdict === "fail" ? (
+                                    <CellFinding project={project} runId={run.id} cell={cell} />
+                                  ) : null}
                                 </div>
                               </td>
                             );
