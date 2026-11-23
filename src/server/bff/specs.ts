@@ -31,6 +31,8 @@ import {
 import {
   listResourcesQuerySchema,
   resourceCreateSchema,
+  resourceDiscoveryRequestSchema,
+  resourceDiscoverySchema,
   resourcePageSchema,
   resourceSchema,
   resourceUpdateSchema,
@@ -138,6 +140,12 @@ export const SPECS = {
     path: [...project, "resources"],
     body: resourceCreateSchema,
     response: resourceSchema,
+  },
+  // Síncrona (hasta 25 s). El cuerpo es opcional en el contrato; el cliente siempre envía `{}`.
+  discoverResources: {
+    path: [...project, "resources", "discovery"],
+    body: resourceDiscoveryRequestSchema,
+    response: resourceDiscoverySchema,
   },
   updateResource: {
     path: [...project, "resources", { param: "resourceId" }],
