@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { CodeInput } from "@/components/ui/code-input";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
-import { verifyLoginTwoFactor } from "@/features/account/service";
+import { verifySignInCode } from "./service";
+import { useHttpClient } from "@/lib/http/browser";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/http";
 
@@ -16,6 +17,7 @@ export function SecondFactorForm({ admin = false }: { admin?: boolean }) {
   const t = useTranslations("SecondFactor");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -26,11 +28,18 @@ export function SecondFactorForm({ admin = false }: { admin?: boolean }) {
     setPending(true);
     setError(undefined);
     try {
-      await verifyLoginTwoFactor({ code, admin });
-      router.push(admin ? "/admin" : "/projects");
+      const result = await verifySignInCode(http, code);
+      router.push(
+        result.next === "setup-two-factor"
+          ? "/setup-two-factor"
+          : result.next === "admin"
+            ? "/admin"
+            : "/projects",
+      );
     } catch (e) {
       setPending(false);
-      if (e instanceof ApiError && e.code === "code.expired") setError(t("errors.expired"));
+      if (e instanceof ApiError && e.code === "auth.mfa_expired")
+        setError(t("errors.sessionExpired"));
       else if (e instanceof ApiError && e.status === 429) setError(t("errors.locked"));
       else if (e instanceof ApiError && e.kind === "validation") setError(t("errors.invalid"));
       else

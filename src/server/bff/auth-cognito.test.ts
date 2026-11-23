@@ -223,7 +223,8 @@ describe("inicio de sesión (V-04) y rol de /me", () => {
     );
     const body = await response.json();
     expect(body.role).toBe("admin");
-    expect(Object.keys(body).sort()).toEqual(["csrf_token", "role"]);
+    expect(Object.keys(body).sort()).toEqual(["csrf_token", "mfa_enabled", "role"]);
+    expect(body.mfa_enabled).toBe(false);
     const [url, init] = apiFetch.mock.calls[0];
     expect(url).toBe(`${CONFIG.apiUrl}/me`);
     expect(new Headers(init.headers).get("authorization")).toBe(`Bearer ${access}`);

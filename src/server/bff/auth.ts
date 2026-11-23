@@ -3,28 +3,44 @@ import { meSchema } from "@/lib/api/schemas/account";
 import {
   confirmSignUpSchema,
   emailOnlySchema,
+  mfaCodeSchema,
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
 } from "@/lib/api/schemas/auth";
 import { fieldErrors } from "@/lib/api/zod";
 import {
+  associateSoftwareToken,
   CognitoError,
+  CognitoMfaChallenge,
   confirmForgotPassword,
   confirmSignUp,
   forgotPassword,
+  refreshTokens,
   resendConfirmationCode,
+  respondToMfaChallenge,
   revokeRefreshToken,
+  setSoftwareTokenMfa,
   signInWithPassword,
   signUp,
+  verifySoftwareToken,
 } from "./cognito";
 import { parseCookieHeader, SetCookieCollector } from "./cookies";
 import { isAllowedOrigin, isValidCsrfToken } from "./csrf";
 import type { BffDeps } from "./deps";
+import { needsRefresh } from "./jwt";
+import { clearChallenge, readChallenge, writeChallenge } from "./mfa-challenge";
 import { problem } from "./problem";
 import { newRequestId } from "./request-context";
 import { readJsonBody } from "./route";
-import { clearSession, newCsrfToken, readSession, writeSession } from "./session";
+import {
+  clearSession,
+  newCsrfToken,
+  readSession,
+  writeSession,
+  type CookieReader,
+  type Session,
+} from "./session";
 
 /** Los cuerpos de acceso son pequeños; más de 8 KB no es un formulario legítimo. */
 const MAX_AUTH_BODY_BYTES = 8 * 1024;
@@ -55,6 +71,7 @@ function cognitoProblem(error: CognitoError): Response {
         errors: [{ field: "password", code: "auth.invalid_password", message: "" }],
       });
     case "CodeMismatchException":
+    case "EnableSoftwareTokenMFAException":
       return problem(422, "validation.failed", {
         errors: [{ field: "code", code: "auth.code_mismatch", message: "" }],
       });
@@ -108,12 +125,17 @@ async function cognitoAction(run: () => Promise<void>): Promise<Response> {
   }
 }
 
+interface Account {
+  role: "analyst" | "admin";
+  mfaEnabled: boolean;
+}
+
 /**
  * Primer `GET /me` tras iniciar sesión (guía §2.5 y §5.1): da de alta al usuario en la API y
- * devuelve su rol, que solo sirve para elegir la pantalla inicial. Si la API no responde, la
- * sesión sigue siendo válida y la pantalla siguiente vuelve a pedir `/me`.
+ * devuelve su rol y si tiene el segundo factor, que solo sirven para elegir la pantalla inicial.
+ * Si la API no responde, la sesión sigue siendo válida y la pantalla siguiente vuelve a pedir `/me`.
  */
-async function readRole(accessToken: string, deps: BffDeps): Promise<"analyst" | "admin" | null> {
+async function readAccount(accessToken: string, deps: BffDeps): Promise<Account | null> {
   try {
     const response = await deps.apiFetch(`${deps.config.apiUrl}/me`, {
       method: "GET",
@@ -127,13 +149,41 @@ async function readRole(accessToken: string, deps: BffDeps): Promise<"analyst" |
     });
     if (!response.ok) return null;
     const parsed = meSchema.safeParse(await response.json());
-    return parsed.success ? parsed.data.role : null;
+    return parsed.success ? { role: parsed.data.role, mfaEnabled: parsed.data.mfa_enabled } : null;
   } catch {
     return null;
   }
 }
 
-/** `POST /api/auth/sign-in`: inicia sesión con `USER_PASSWORD_AUTH` y crea la cookie cifrada. */
+/** Crea la sesión con los tokens que dio Cognito y responde con el token anti-CSRF y la cuenta. */
+async function startSession(
+  request: Request,
+  deps: BffDeps,
+  tokens: { accessToken: string; refreshToken: string; username: string },
+  collector: SetCookieCollector,
+): Promise<Response> {
+  const session = {
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    username: tokens.username,
+    csrf: newCsrfToken(),
+  };
+  writeSession(collector, session, deps.key, parseCookieHeader(request.headers.get("cookie")));
+  const account = await readAccount(session.accessToken, deps);
+  const response = json({
+    csrf_token: session.csrf,
+    role: account?.role ?? null,
+    mfa_enabled: account?.mfaEnabled ?? null,
+  });
+  collector.applyTo(response.headers);
+  return response;
+}
+
+/**
+ * `POST /api/auth/sign-in`: inicia sesión con `USER_PASSWORD_AUTH` y crea la cookie cifrada. Si la
+ * cuenta tiene el segundo factor, Cognito pide el código: no hay sesión todavía; el desafío queda
+ * en una cookie cifrada de 3 minutos y la respuesta es `{ mfa_required: true }`.
+ */
 export async function handleSignIn(request: Request, deps: BffDeps): Promise<Response> {
   const body = await readAuthBody(request, deps, signInSchema);
   if (!body.ok) return body.response;
@@ -141,22 +191,177 @@ export async function handleSignIn(request: Request, deps: BffDeps): Promise<Res
 
   try {
     const tokens = await signInWithPassword(deps.config, email, password, deps.cognitoFetch);
-    const session = {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      username: tokens.username,
-      csrf: newCsrfToken(),
-    };
-    const collector = new SetCookieCollector();
-    writeSession(collector, session, deps.key, parseCookieHeader(request.headers.get("cookie")));
-    const role = await readRole(session.accessToken, deps);
-    const response = json({ csrf_token: session.csrf, role });
-    collector.applyTo(response.headers);
-    return response;
+    return await startSession(request, deps, tokens, new SetCookieCollector());
   } catch (error) {
+    if (error instanceof CognitoMfaChallenge) {
+      const collector = new SetCookieCollector();
+      writeChallenge(
+        collector,
+        { email, username: error.username, session: error.session },
+        deps.key,
+        deps.now(),
+      );
+      const response = json({ mfa_required: true });
+      collector.applyTo(response.headers);
+      return response;
+    }
     if (error instanceof CognitoError) return cognitoProblem(error);
     return problem(503, "service.unavailable");
   }
+}
+
+/**
+ * `POST /api/auth/mfa/challenge` (V-05, V-35): completa el inicio de sesión con el código TOTP
+ * (`RespondToAuthChallenge`). Un código incorrecto deja el desafío vivo para reintentar; si
+ * venció, la persona vuelve a escribir su contraseña (401 `auth.mfa_expired`).
+ */
+export async function handleMfaChallenge(request: Request, deps: BffDeps): Promise<Response> {
+  const body = await readAuthBody(request, deps, mfaCodeSchema);
+  if (!body.ok) return body.response;
+  const cookies = parseCookieHeader(request.headers.get("cookie"));
+  const challenge = readChallenge(cookies, deps.key, deps.now());
+  const collector = new SetCookieCollector();
+  if (!challenge) {
+    clearChallenge(collector);
+    const response = problem(401, "auth.mfa_expired");
+    collector.applyTo(response.headers);
+    return response;
+  }
+
+  try {
+    const tokens = await respondToMfaChallenge(
+      deps.config,
+      { ...challenge, code: body.value.code },
+      deps.cognitoFetch,
+    );
+    clearChallenge(collector);
+    return await startSession(request, deps, tokens, collector);
+  } catch (error) {
+    let response: Response;
+    if (error instanceof CognitoError && error.type === "NotAuthorizedException") {
+      // La `Session` del desafío venció o ya se usó.
+      clearChallenge(collector);
+      response = problem(401, "auth.mfa_expired");
+    } else if (error instanceof CognitoError) {
+      response = cognitoProblem(error);
+    } else {
+      response = problem(503, "service.unavailable");
+    }
+    collector.applyTo(response.headers);
+    return response;
+  }
+}
+
+/**
+ * Sesión para las rutas del segundo factor: comprueba `Origin` y el token anti-CSRF y renueva el
+ * access token si le quedan menos de 5 minutos. Usan el access token directamente contra Cognito.
+ */
+async function mfaSession(
+  request: Request,
+  deps: BffDeps,
+  collector: SetCookieCollector,
+): Promise<{ ok: true; session: Session } | { ok: false; response: Response }> {
+  const cookies = parseCookieHeader(request.headers.get("cookie"));
+  const session = readSession(cookies, deps.key);
+  if (!session) return { ok: false, response: problem(401, "auth.required") };
+  if (
+    !isAllowedOrigin(request.headers, deps.config.publicOrigin) ||
+    !isValidCsrfToken(request.headers, session)
+  )
+    return { ok: false, response: problem(403, "csrf.invalid") };
+  if (!needsRefresh(session.accessToken, deps.now())) return { ok: true, session };
+  try {
+    return { ok: true, session: await renewSession(session, deps, collector, cookies) };
+  } catch {
+    clearSession(collector, cookies);
+    return { ok: false, response: problem(401, "auth.invalid_token") };
+  }
+}
+
+async function renewSession(
+  session: Session,
+  deps: BffDeps,
+  collector: SetCookieCollector,
+  cookies: CookieReader,
+): Promise<Session> {
+  const tokens = await refreshTokens(
+    deps.config,
+    session.username,
+    session.refreshToken,
+    deps.cognitoFetch,
+  );
+  const next = {
+    ...session,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken ?? session.refreshToken,
+  };
+  writeSession(collector, next, deps.key, cookies);
+  return next;
+}
+
+/** Corre una acción del segundo factor con la sesión y traduce los errores de Cognito. */
+async function mfaAction(
+  request: Request,
+  deps: BffDeps,
+  run: (session: Session) => Promise<Response>,
+): Promise<Response> {
+  const collector = new SetCookieCollector();
+  const auth = await mfaSession(request, deps, collector);
+  let response: Response;
+  if (!auth.ok) {
+    response = auth.response;
+  } else {
+    try {
+      response = await run(auth.session);
+    } catch (error) {
+      response =
+        error instanceof CognitoError ? cognitoProblem(error) : problem(503, "service.unavailable");
+    }
+  }
+  collector.applyTo(response.headers);
+  return response;
+}
+
+/** `POST /api/auth/mfa/setup` (V-10, V-11): `AssociateSoftwareToken`; devuelve la clave TOTP. */
+export async function handleMfaSetup(request: Request, deps: BffDeps): Promise<Response> {
+  return mfaAction(request, deps, async (session) => {
+    const secret = await associateSoftwareToken(
+      deps.config,
+      session.accessToken,
+      deps.cognitoFetch,
+    );
+    return json({ secret });
+  });
+}
+
+/**
+ * `POST /api/auth/mfa/verify` (V-10, V-11): `VerifySoftwareToken` con el primer código y, si es
+ * correcto, `SetUserMFAPreference` para que Cognito lo pida en cada inicio de sesión.
+ */
+export async function handleMfaVerify(request: Request, deps: BffDeps): Promise<Response> {
+  const body = await readAuthBody(request, deps, mfaCodeSchema);
+  if (!body.ok) return body.response;
+  return mfaAction(request, deps, async (session) => {
+    await verifySoftwareToken(deps.config, session.accessToken, body.value.code, deps.cognitoFetch);
+    await setSoftwareTokenMfa(deps.config, session.accessToken, true, deps.cognitoFetch);
+    return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+  });
+}
+
+/**
+ * `POST /api/auth/mfa/disable` (V-09, RF-87): pide un código vigente y desactiva el TOTP. El
+ * administrador no puede desactivarlo (CU-22 E2, RF-86): se comprueba con `GET /me`.
+ */
+export async function handleMfaDisable(request: Request, deps: BffDeps): Promise<Response> {
+  const body = await readAuthBody(request, deps, mfaCodeSchema);
+  if (!body.ok) return body.response;
+  return mfaAction(request, deps, async (session) => {
+    const account = await readAccount(session.accessToken, deps);
+    if (account?.role === "admin") return problem(403, "role.forbidden");
+    await verifySoftwareToken(deps.config, session.accessToken, body.value.code, deps.cognitoFetch);
+    await setSoftwareTokenMfa(deps.config, session.accessToken, false, deps.cognitoFetch);
+    return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+  });
 }
 
 /** `POST /api/auth/sign-up` (V-02, RF-01): `SignUp` en Cognito. */

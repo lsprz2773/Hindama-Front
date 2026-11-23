@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -9,9 +10,10 @@ import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/http";
-import { TWO_FACTOR_KEY, writeFlag } from "./browser-store";
-import { QrPlaceholder } from "./qr-placeholder";
-import { TOTP_SECRET_STUB, confirmTwoFactor, formatSecret } from "./service";
+import { useHttpClient } from "@/lib/http/browser";
+import { ME_KEY } from "@/lib/query/provider";
+import { confirmTwoFactor, formatSecret, otpauthUri, startTwoFactorSetup, useMe } from "./api";
+import { TotpQr } from "./totp-qr";
 
 const APPS = ["Google Authenticator", "Microsoft Authenticator", "1Password"];
 
@@ -38,23 +40,37 @@ export function TwoFactorSetup({ mandatory = false }: { mandatory?: boolean }) {
   const t = useTranslations("TwoFactorSetup");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
+  const client = useQueryClient();
+  const me = useMe();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
+  // Una clave por visita: pedirla otra vez invalidaría la que ya está en la app de la persona.
+  const setup = useQuery({
+    queryKey: ["mfa-setup"],
+    queryFn: ({ signal }) => startTwoFactorSetup(http, signal),
+    staleTime: Infinity,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+  const secret = setup.data;
+  const uri = secret && me.data ? otpauthUri(me.data.email, secret) : undefined;
 
   async function confirm() {
     if (code.length !== 6 || pending) return;
     setPending(true);
     setError(undefined);
     try {
-      await confirmTwoFactor(code);
-      writeFlag(TWO_FACTOR_KEY, "on");
+      await confirmTwoFactor(http, code);
+      await client.invalidateQueries({ queryKey: ME_KEY });
       toast.show({ type: "success", title: t("enabled") });
       router.push(mandatory ? "/admin" : "/profile");
     } catch (e) {
       setPending(false);
-      if (e instanceof ApiError && e.code === "code.expired") setError(t("errors.expired"));
-      else if (e instanceof ApiError && e.kind === "validation") setError(t("errors.invalid"));
+      if (e instanceof ApiError && e.kind === "validation") setError(t("errors.invalid"));
       else
         toast.show({
           type: "error",
@@ -97,19 +113,34 @@ export function TwoFactorSetup({ mandatory = false }: { mandatory?: boolean }) {
         </Step>
 
         <Step n={2} title={t("step2.title")}>
-          <QrPlaceholder label={t("step2.qrLabel")} />
-          <span className="text-muted text-[13.5px]">{t("step2.manual")}</span>
-          <div className="border-line bg-code-bg flex items-center gap-2.5 rounded-[14px] border py-2 pr-2 pl-3.5">
-            <code className="flex-1 font-mono text-sm tracking-[0.06em]">
-              {formatSecret(TOTP_SECRET_STUB)}
-            </code>
-            <CopyButton
-              value={TOTP_SECRET_STUB}
-              what={t("step2.keyLabel")}
-              size="sm"
-              className="min-h-10 px-3 text-sm"
-            />
-          </div>
+          {setup.isError ? (
+            <div role="alert" className="flex flex-col gap-3">
+              <span className="text-danger text-sm">{t("step2.failed")}</span>
+              <Button variant="secondary" onClick={() => void setup.refetch()}>
+                {t("errors.retry")}
+              </Button>
+            </div>
+          ) : uri && secret ? (
+            <>
+              <TotpQr value={uri} label={t("step2.qrLabel")} />
+              <span className="text-muted text-[13.5px]">{t("step2.manual")}</span>
+              <div className="border-line bg-code-bg flex items-center gap-2.5 rounded-[14px] border py-2 pr-2 pl-3.5">
+                <code className="flex-1 font-mono text-sm tracking-[0.06em]">
+                  {formatSecret(secret)}
+                </code>
+                <CopyButton
+                  value={secret}
+                  what={t("step2.keyLabel")}
+                  size="sm"
+                  className="min-h-10 px-3 text-sm"
+                />
+              </div>
+            </>
+          ) : (
+            <div role="status" aria-label={t("step2.loading")} className="flex flex-col gap-3">
+              <div className="bg-track mx-auto size-[220px] max-w-full animate-pulse rounded-[18px]" />
+            </div>
+          )}
         </Step>
 
         <Step n={3} title={t("step3.title")}>
@@ -129,7 +160,7 @@ export function TwoFactorSetup({ mandatory = false }: { mandatory?: boolean }) {
             className="mt-auto"
             onClick={() => void confirm()}
             loading={pending}
-            disabled={code.length !== 6}
+            disabled={code.length !== 6 || !secret}
           >
             {pending ? t("confirming") : t("confirm")}
           </Button>

@@ -28,6 +28,9 @@ export function QueryState<T>({ query, skeleton, subject, children }: QueryState
 
   if (query.status === "error" && error) {
     if (error.kind === "unauthorized") return <>{skeleton}</>;
+    // Un administrador sin segundo factor no entra al panel: se le lleva a activarlo (RF-86).
+    if (error.code === "auth.mfa_required")
+      return <ErrorPanel code={403} audience="mfa" href="/setup-two-factor" standalone={false} />;
     const panel = errorPanelProps(error);
     if (panel) return <ErrorPanel {...panel} onRetry={retry} standalone={false} />;
   }

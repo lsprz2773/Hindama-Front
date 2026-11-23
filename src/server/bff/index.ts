@@ -1,6 +1,10 @@
 export {
   handleConfirmSignUp,
   handleForgotPassword,
+  handleMfaChallenge,
+  handleMfaDisable,
+  handleMfaSetup,
+  handleMfaVerify,
   handleResendCode,
   handleResetPassword,
   handleSession,

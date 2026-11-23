@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { QueryState } from "@/components/ui/query-state";
@@ -13,8 +13,8 @@ import { useToast } from "@/components/ui/toast";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/http";
 import { useHttpClient } from "@/lib/http/browser";
+import { ME_KEY } from "@/lib/query/provider";
 import { deleteAccount, useMe } from "./api";
-import { TWO_FACTOR_KEY, useFlag, writeFlag } from "./browser-store";
 import { DisableTwoFactorDialog } from "./disable-two-factor-dialog";
 
 function Card({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -77,7 +77,6 @@ export function ProfileView() {
   const t = useTranslations("Profile");
   const format = useFormatter();
   const toast = useToast();
-  const twoFactor = useFlag(TWO_FACTOR_KEY) === "on";
   const [dialog, setDialog] = useState<"disable" | "delete" | null>(null);
   const router = useRouter();
   const http = useHttpClient();
@@ -85,6 +84,7 @@ export function ProfileView() {
 
   const me = useMe();
   const account = me.data;
+  const twoFactor = account?.mfa_enabled === true;
 
   return (
     <div className="flex flex-wrap items-start gap-5">
@@ -159,16 +159,24 @@ export function ProfileView() {
                   aria-hidden="true"
                   className={`size-2 rounded-full ${twoFactor ? "bg-success" : "bg-warning"}`}
                 />
-                {twoFactor ? t("twoFactorOn") : t("twoFactorSoon")}
+                {account === undefined
+                  ? t("twoFactorLoading")
+                  : twoFactor
+                    ? t("twoFactorOn")
+                    : t("twoFactorOff")}
               </span>
             }
-            // TODO(api): sin contrato de MFA (A5): no se ofrece activarlo hasta que exista el flujo real.
             action={
-              twoFactor ? (
-                <Button variant="secondary" onClick={() => setDialog("disable")}>
-                  {t("disableTwoFactor")}
-                </Button>
-              ) : null
+              account === undefined ? null : twoFactor ? (
+                // El administrador no lo desactiva: la API lo exige (RF-86, CU-22 E2).
+                account.role === "admin" ? null : (
+                  <Button variant="secondary" onClick={() => setDialog("disable")}>
+                    {t("disableTwoFactor")}
+                  </Button>
+                )
+              ) : (
+                <ButtonLink href="/profile/two-factor">{t("enableTwoFactor")}</ButtonLink>
+              )
             }
           />
         </Card>
@@ -230,7 +238,7 @@ export function ProfileView() {
         open={dialog === "disable"}
         onOpenChange={(open) => setDialog(open ? "disable" : null)}
         onDisabled={() => {
-          writeFlag(TWO_FACTOR_KEY, null);
+          void client.invalidateQueries({ queryKey: ME_KEY });
           toast.show({ type: "success", title: t("twoFactorDisabled") });
         }}
       />

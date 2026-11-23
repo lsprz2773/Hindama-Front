@@ -6,7 +6,8 @@ import { useSubmit } from "@/components/dialogs/use-submit";
 import { CodeInput } from "@/components/ui/code-input";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { ApiError } from "@/lib/http";
-import { disableTwoFactor } from "./service";
+import { useHttpClient } from "@/lib/http/browser";
+import { disableTwoFactor } from "./api";
 
 /** Desactivar el 2FA pide un código TOTP vigente (catálogo de estados, V-09). */
 export function DisableTwoFactorDialog({
@@ -20,11 +21,12 @@ export function DisableTwoFactorDialog({
 }) {
   const t = useTranslations("DisableTwoFactor");
   const td = useTranslations("Dialogs");
+  const http = useHttpClient();
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string>();
 
   const { busy, error, submit, reset } = useSubmit(
-    () => disableTwoFactor(code),
+    () => disableTwoFactor(http, code),
     () => {
       onOpenChange(false);
       onDisabled();

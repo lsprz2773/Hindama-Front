@@ -5,9 +5,10 @@ import { decodeClaims } from "./jwt";
 /**
  * Llamadas a Cognito desde el servidor con el cliente confidencial (ADR-005, guía del
  * frontend secciones 2.3 y 2.4): registro, confirmación del correo, recuperación de la contraseña,
- * `USER_PASSWORD_AUTH`, `REFRESH_TOKEN_AUTH` y `RevokeToken`. Ninguna
- * necesita credenciales de AWS: se autentican con el Client ID y el `SECRET_HASH`. El secreto
- * del cliente nunca sale del servidor. No se registran cuerpos ni tokens.
+ * `USER_PASSWORD_AUTH`, `REFRESH_TOKEN_AUTH`, `RevokeToken` y el segundo factor TOTP (guía §5.1,
+ * ADR-018). Ninguna necesita credenciales de AWS: se autentican con el Client ID y el
+ * `SECRET_HASH`, o con el access token de la sesión en las del segundo factor. El secreto del
+ * cliente nunca sale del servidor. No se registran cuerpos ni tokens.
  */
 
 /** Base64(HMAC-SHA256(llave = secreto del cliente, mensaje = username + client_id)). */
@@ -28,6 +29,21 @@ export class CognitoError extends Error {
   }
 }
 
+/**
+ * `InitiateAuth` respondió con el desafío `SOFTWARE_TOKEN_MFA`: falta el código TOTP. Lleva la
+ * `Session` del desafío (vale unos minutos) y el nombre con que Cognito espera la respuesta.
+ */
+export class CognitoMfaChallenge extends CognitoError {
+  constructor(
+    readonly session: string,
+    /** `USER_ID_FOR_SRP` del desafío: el `username` interno de la cuenta. */
+    readonly username: string | undefined,
+  ) {
+    super("MfaChallenge", 200);
+    this.name = "CognitoMfaChallenge";
+  }
+}
+
 export interface Tokens {
   accessToken: string;
   /** Solo viene al iniciar sesión; la renovación conserva el anterior. */
@@ -45,7 +61,11 @@ async function call(
     | "ConfirmSignUp"
     | "ResendConfirmationCode"
     | "ForgotPassword"
-    | "ConfirmForgotPassword",
+    | "ConfirmForgotPassword"
+    | "RespondToAuthChallenge"
+    | "AssociateSoftwareToken"
+    | "VerifySoftwareToken"
+    | "SetUserMFAPreference",
   body: Record<string, unknown>,
   fetchImpl: FetchLike,
 ): Promise<Record<string, unknown>> {
@@ -70,7 +90,11 @@ function readTokens(json: Record<string, unknown>): Tokens {
   const result = json.AuthenticationResult as Record<string, unknown> | undefined;
   const accessToken = result?.AccessToken;
   if (typeof accessToken !== "string") {
-    // Un desafío (p. ej. `SOFTWARE_TOKEN_MFA`) llega con F-15; hoy el MFA está desactivado.
+    if (json.ChallengeName === "SOFTWARE_TOKEN_MFA" && typeof json.Session === "string") {
+      const params = json.ChallengeParameters as Record<string, unknown> | undefined;
+      const userId = params?.USER_ID_FOR_SRP;
+      throw new CognitoMfaChallenge(json.Session, typeof userId === "string" ? userId : undefined);
+    }
     throw new CognitoError(
       typeof json.ChallengeName === "string" ? `Challenge:${json.ChallengeName}` : "NoTokens",
       400,
@@ -107,6 +131,97 @@ export async function signInWithPassword(
   const username = decodeClaims(tokens.accessToken)?.username;
   if (!tokens.refreshToken || typeof username !== "string") throw new CognitoError("NoTokens", 400);
   return { ...tokens, refreshToken: tokens.refreshToken, username };
+}
+
+/**
+ * `RespondToAuthChallenge` con `SOFTWARE_TOKEN_MFA`: completa el inicio de sesión con el código
+ * TOTP. El `SECRET_HASH` se calcula con el mismo `USERNAME` que se envía: el `username` interno
+ * que dio el desafío o, si no vino, el correo.
+ */
+export async function respondToMfaChallenge(
+  config: BffConfig,
+  input: { email: string; username?: string; code: string; session: string },
+  fetchImpl: FetchLike = fetch,
+): Promise<Tokens & { refreshToken: string; username: string }> {
+  const who = input.username ?? input.email;
+  const json = await call(
+    config,
+    "RespondToAuthChallenge",
+    {
+      ChallengeName: "SOFTWARE_TOKEN_MFA",
+      ClientId: config.cognitoClientId,
+      Session: input.session,
+      ChallengeResponses: {
+        USERNAME: who,
+        SOFTWARE_TOKEN_MFA_CODE: input.code,
+        SECRET_HASH: secretHash(who, config.cognitoClientId, config.cognitoClientSecret),
+      },
+    },
+    fetchImpl,
+  );
+  const tokens = readTokens(json);
+  const username = decodeClaims(tokens.accessToken)?.username;
+  if (!tokens.refreshToken || typeof username !== "string") throw new CognitoError("NoTokens", 400);
+  return { ...tokens, refreshToken: tokens.refreshToken, username };
+}
+
+/** `AssociateSoftwareToken` (RF-85): devuelve la clave TOTP (`SecretCode`) de la cuenta. */
+export async function associateSoftwareToken(
+  config: BffConfig,
+  accessToken: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<string> {
+  const json = await call(
+    config,
+    "AssociateSoftwareToken",
+    { AccessToken: accessToken },
+    fetchImpl,
+  );
+  if (typeof json.SecretCode !== "string") throw new CognitoError("NoSecret", 400);
+  return json.SecretCode;
+}
+
+/**
+ * `VerifySoftwareToken`: comprueba un código TOTP de 6 dígitos. Un código incorrecto responde
+ * `Status: ERROR` o `EnableSoftwareTokenMFAException`; ambos se tratan como `CodeMismatchException`.
+ */
+export async function verifySoftwareToken(
+  config: BffConfig,
+  accessToken: string,
+  code: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  try {
+    const json = await call(
+      config,
+      "VerifySoftwareToken",
+      { AccessToken: accessToken, UserCode: code, FriendlyDeviceName: "Hindama" },
+      fetchImpl,
+    );
+    if (json.Status !== "SUCCESS") throw new CognitoError("CodeMismatchException", 400);
+  } catch (error) {
+    if (error instanceof CognitoError && error.type === "EnableSoftwareTokenMFAException")
+      throw new CognitoError("CodeMismatchException", 400);
+    throw error;
+  }
+}
+
+/** `SetUserMFAPreference`: activa (y deja como preferido) o desactiva el TOTP de la cuenta. */
+export async function setSoftwareTokenMfa(
+  config: BffConfig,
+  accessToken: string,
+  enabled: boolean,
+  fetchImpl: FetchLike = fetch,
+): Promise<void> {
+  await call(
+    config,
+    "SetUserMFAPreference",
+    {
+      AccessToken: accessToken,
+      SoftwareTokenMfaSettings: { Enabled: enabled, PreferredMfa: enabled },
+    },
+    fetchImpl,
+  );
 }
 
 /**
