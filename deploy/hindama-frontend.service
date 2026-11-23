@@ -8,7 +8,8 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 # /run se vacía en cada arranque: start.sh vuelve a leer los secretos de SSM y levanta los contenedores.
-ExecStart=/opt/hindama/frontend/deploy/start.sh
+# Con bash: el actualizador hace checkout de cada commit y git no siempre conserva el bit de ejecución.
+ExecStart=/bin/bash /opt/hindama/frontend/deploy/start.sh
 ExecStop=/usr/bin/docker compose -f /opt/hindama/frontend/deploy/compose.yaml down
 
 [Install]
