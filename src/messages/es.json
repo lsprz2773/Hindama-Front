@@ -1503,7 +1503,27 @@
       "title": "2. Descubrir recursos",
       "text": "Llamamos como cada identidad solo a las operaciones GET de listado, como <code>GET /orders</code>, y proponemos lo que encontremos.",
       "button": "Descubrir recursos",
-      "unavailable": "El descubrimiento automático aún no está disponible. Mientras tanto, agrega los recursos a mano.",
+      "hint": "Puede tardar hasta 25 segundos. Lo que encuentre queda por confirmar.",
+      "running": "Descubriendo recursos…",
+      "needsVerified": "Verifica la propiedad del host antes de descubrir recursos.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noIdentities": "Registra una identidad con credencial para descubrir sus recursos.",
+      "done": "{count, plural, one {Se encontró # recurso nuevo} other {Se encontraron # recursos nuevos}}",
+      "doneNone": "No se encontraron recursos nuevos",
+      "summary": "{count, plural, one {# recurso nuevo por confirmar} other {# recursos nuevos por confirmar}} · {requests, plural, one {# petición} other {# peticiones}}",
+      "identityLine": "{found, plural, one {# encontrado} other {# encontrados}} · {created} nuevos · {other} de otra identidad",
+      "unknownIdentity": "Identidad eliminada",
+      "truncated": {
+        "title": "El descubrimiento se detuvo en un tope",
+        "text": "Se alcanzó el tope de 100 peticiones o de 25 segundos y puede haber más recursos. Confirma o elimina lo encontrado y vuelve a descubrir."
+      },
+      "failure": {
+        "rejected": "La API respondió con un error al listar. Revisa la credencial.",
+        "login_failed": "La operación de login no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida.",
+        "not_attempted": "No se probó: se alcanzó un tope antes de llegar a esta identidad."
+      },
       "registered": "Recursos registrados"
     },
     "review": {
@@ -1539,6 +1559,10 @@
       "ownedByOther": "Ese recurso ya pertenece a otra identidad. Un objeto tiene un solo dueño.",
       "identityNotFound": "La identidad ya no existe. Recarga la página.",
       "anonymousOwner": "La identidad anónima no tiene recursos.",
+      "notVerified": "Verifica la propiedad del host antes de descubrir recursos.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noListOperations": "El contrato vigente no tiene operaciones GET de listado, así que no hay nada que descubrir.",
+      "discoveryTimeout": "El descubrimiento tardó demasiado. Los recursos que alcanzó a encontrar se guardaron: recarga la lista.",
       "notFound": "El recurso ya no existe. Recarga la página.",
       "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
       "failed": "No se pudo completar la acción",
