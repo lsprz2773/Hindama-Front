@@ -10,7 +10,7 @@ Vinculación documental entre los 38 endpoints del contrato 0.6.0 y las rutas y 
 
 Fuentes: contrato `openapi.yaml` 0.6.0 (`09ac5c9`), código del backend (`080eaca`), rama `dev` del frontend, y el seguimiento de desarrollo del proyecto. Las llamadas por vista con su detalle están en [06-vistas-frontend.md](06-vistas-frontend.md).
 
-**Estado actual del frontend (verificado en `dev`):** todas las vistas de datos leen datos de ejemplo (`SEED_PROJECTS`, `runs/data.ts`, `admin/data.ts`) o guardan su estado en `sessionStorage`. Los servicios de autenticación y cuenta son simulados y tienen `TODO(api)`. La única llamada HTTP prevista es el cliente de `src/lib/http`, por defecto contra `/api`, que no se usa en ninguna vista todavía.
+**Estado actual del frontend (verificado en `dev`, 23/11/2026):** todas las vistas con contrato están conectadas a la API por el BFF (fases 0 a 6, PRs #6 a #12). No queda ningún dato de ejemplo en las vistas conectadas. Solo siguen simuladas las vistas bloqueadas por falta de contrato (V-05, V-10, V-11, V-33, V-34, V-35). La sección 7 lista, por vista, lo que falta en la API y lo que sigue fijo. _La descripción de abajo es la foto del 22/11/2026, antes de conectar._
 
 Leyenda: ✅ implementado en el backend · ⏳ pendiente en el backend · 🆕 elemento agregado en la revisión del 06/11/2026.
 
@@ -154,37 +154,154 @@ Los roles, los tipos de autenticación (`login`, `bearer`, `cookie`, `header`) y
 - Bloqueadas por falta de contrato o de decisión: V-33 y V-34 (administración, `/admin/*`), V-35 y V-11 (pool de administradores), C-14 (baja de cuenta), y C-17 (cambiar contraseña, sin endpoint).
 - Tests: el coordinador reporta 207 pruebas e2e. En `e2e/` cuento 167 llamadas `test(` o `it(` en los archivos fuente; la diferencia puede venir de ejecuciones por proyecto de Playwright (sin verificar).
 
-## 7. Datos fijos encontrados
+## 7. Datos faltantes y datos fijos por vista
 
-Lo que una vista conectada todavía muestra o envía sin traerlo de la API, y por qué. En el código va marcado con `TODO(api)`.
+Todo lo que una vista muestra sin traerlo de la API, lo que se quitó porque el contrato 0.6.0 no lo trae y lo que sigue simulado en las vistas bloqueadas. Se juntó en las seis fases (22/11/2026). En el código va marcado con `TODO(api)`. Cada entrada dice qué pasa hoy, por qué y qué lo resolvería.
 
-| Ruta                                                                                           | Archivo                                                        | Dato                                                                                                                                       | Motivo                                                                                                                                                              | Endpoint que lo resolvería                                                                                                |
-| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `/terms`                                                                                       | `src/features/legal/terms-version.tsx`                         | `PUBLISHED_TERMS_VERSION = "2026-10-30"`, la versión que se muestra sin sesión                                                             | `getMe` es la única operación que informa la versión vigente y requiere sesión                                                                                      | Una operación pública con la versión vigente de los términos (no existe en 0.6.0)                                         |
-| `/profile`                                                                                     | `src/features/account/profile-view.tsx`                        | «Miembro desde» (antes una fecha fija); se quitó de la vista                                                                               | `Me` no incluye la fecha de alta                                                                                                                                    | Un campo de fecha de alta en `Me` (no existe en 0.6.0)                                                                    |
-| `/profile`                                                                                     | `src/features/account/profile-view.tsx`                        | Estado del 2FA (marca en `sessionStorage`, simulado)                                                                                       | V-10 no tiene contrato                                                                                                                                              | Operaciones de MFA (no existen en 0.6.0)                                                                                  |
-| `/projects`                                                                                    | `src/features/projects/projects-view.tsx`                      | Totales de hallazgos abiertos y de proyectos pendientes de verificación                                                                    | `ProjectPage` solo trae la página actual; sumarla da totales parciales si hay más de una página                                                                     | Totales agregados en `ProjectPage` (no existen en 0.6.0)                                                                  |
-| `/projects`                                                                                    | `src/features/projects/projects-view.tsx`                      | Insignia «en ejecución» en cada tarjeta (se quitó)                                                                                         | `ProjectSummary` no informa si hay una ejecución activa                                                                                                             | Un campo de ejecución activa en `ProjectSummary`                                                                          |
-| `/projects/[id]`                                                                               | `src/features/projects/project-shell.tsx`                      | Notas de la barra lateral de identidades, recursos y operaciones sin confirmar (se quitaron)                                               | `Project` no trae esos conteos                                                                                                                                      | Conteos en `Project` (no existen en 0.6.0); cada vista de la fase 4 los muestra con sus propios endpoints                 |
-| `/projects/[id]`                                                                               | `src/features/projects/dashboard-view.tsx`                     | Porcentaje de política confirmada y hallazgos por módulo (se quitaron)                                                                     | `Project` solo informa si falta `policy_unconfirmed`; los hallazgos por módulo vienen de la ejecución                                                               | `getPolicy` (fase 4) y los hallazgos de la ejecución (fase 5)                                                             |
-| `/projects/[id]/settings`                                                                      | `src/features/projects/settings-view.tsx`                      | Lista de lo que se elimina con el proyecto (texto genérico, sin conteos)                                                                   | `Project` no trae conteos de identidades, recursos ni ejecuciones                                                                                                   | Conteos en `Project` (no existen en 0.6.0)                                                                                |
-| `/projects/[id]/resources`                                                                     | `src/features/config/resources-view.tsx`                       | Botón «Descubrir recursos» deshabilitado                                                                                                   | `discoverResources` no existe en el backend (RF-36)                                                                                                                 | `discoverResources`                                                                                                       |
-| `/projects/[id]/resources`                                                                     | `src/features/config/resources-view.tsx`                       | Contador «Por confirmar» de todo el proyecto (se quitó; queda «Recursos registrados», suma de `resource_count`)                            | `listResources` no filtra por `confirmed` ni trae totales por estado                                                                                                | Un filtro `confirmed` en `listResources`                                                                                  |
-| `/projects/[id]/policy`                                                                        | `src/features/config/policy-view.tsx`                          | Autor de la última modificación (solo se muestra la fecha)                                                                                 | `Operation` trae `modified_at` pero no quién la modificó, aunque RF-43 lo pide                                                                                      | Un campo de autor en `Operation`                                                                                          |
-| `/projects/[id]/policy`                                                                        | `src/features/config/policy-view.tsx`                          | «Quitar regla» de una regla huérfana (se quitó; solo se listan)                                                                            | `updateOperation` y `applyPolicy` responden `operation.retired` (409) con una operación retirada                                                                    | Una operación para limpiar la política de una operación retirada                                                          |
-| `/projects/[id]/runs/current`                                                                  | `src/features/runs/run-progress-view.tsx`                      | Avance de cada módulo (solo «Terminado», «En curso» o «En espera» según su orden)                                                          | `RunProgress` solo trae `current_module` y el avance global                                                                                                         | Avance por módulo en `RunProgress`                                                                                        |
-| `/projects/[id]/runs/current`                                                                  | `src/features/runs/run-progress-view.tsx`                      | Avisos de credencial vencida y de peticiones bloqueadas por 429 (se quitaron)                                                              | El stream no informa esos eventos                                                                                                                                   | Eventos o contadores en `RunProgress`                                                                                     |
-| `/projects/[id]/runs/[runId]`                                                                  | `src/features/runs/run-results-view.tsx`                       | Comparación con la ejecución anterior: solo en la última ejecución y sin «Resueltos»                                                       | `listFindings` con `run_id` da el estado actual de cada hallazgo, no el que tuvo al terminar esa ejecución, y no hay forma de contar los que se resolvieron en ella | Una comparación por ejecución en `Run` (nuevos, persistentes, resueltos, regresiones)                                     |
-| `/projects/[id]/runs/[runId]`                                                                  | `src/features/runs/run-results-view.tsx`                       | Hallazgos por módulo (solo «Ejecutado» o «No seleccionado») y avisos de módulos omitidos o credenciales vencidas                           | `Run` no trae resultados por módulo                                                                                                                                 | Resumen por módulo en `Run`                                                                                               |
-| `/projects/[id]/runs/[runId]`                                                                  | `src/features/runs/run-results-view.tsx`                       | C-15: operación, ubicación y último error de cada recurso sin borrar (solo el conteo)                                                      | `created_resources` solo trae contadores                                                                                                                            | Detalle de los recursos creados                                                                                           |
-| `/projects/[id]/runs/[runId]`, `/projects/[id]/findings`, `/projects/[id]/runs/[runId]/report` | `run-results-view.tsx`, `findings-view.tsx`, `report-view.tsx` | «Exportar a Excel» y «Hallazgos en Excel» (se quitaron; antes eran un aviso simulado)                                                      | No hay operación de exportación (RF-77)                                                                                                                             | Una operación de exportación                                                                                              |
-| `/projects/[id]/runs/[runId]/matrix`                                                           | `src/features/runs/matrix-view.tsx`                            | La celda de una discrepancia ya no abre su hallazgo; se quitaron el rol de cada identidad y la plantilla de política por fila              | `Result` no trae el id del hallazgo, el rol de la identidad ni la política                                                                                          | `finding_id` en `Result`; rol y plantilla en `Result` o en `IdentityRef`/`OperationRef`                                   |
-| `/projects/[id]/findings`                                                                      | `src/features/runs/findings-view.tsx`                          | Filtro por motivo de descarte (se quitó)                                                                                                   | `listFindings` no filtra por `dismissal.reason` y `FindingSummary` no lo trae                                                                                       | Un filtro `dismissal_reason` en `listFindings`                                                                            |
-| `/projects/[id]/findings/[findingId]`                                                          | `src/features/runs/finding-detail-view.tsx`                    | «Volver a probar» un hallazgo (se quitó) y «Esperado según la política» (se reemplazó por la explicación de la detección)                  | No hay operación para repetir una sola comprobación; `Finding` trae `explanation` y no la política esperada                                                         | Una operación para repetir una comprobación; la política esperada en `FindingOccurrence`                                  |
-| `/projects/[id]/history`                                                                       | `src/features/runs/history-view.tsx`                           | La gráfica muestra los hallazgos detectados en cada ejecución, no los que quedaron abiertos al terminarla                                  | `RunSummary` solo trae `findings_by_severity` de la ejecución                                                                                                       | Hallazgos abiertos al terminar cada ejecución en `RunSummary`                                                             |
-| `/projects/[id]/history`                                                                       | `src/features/runs/history-view.tsx`                           | Cambios de cada fila (nuevos, persistentes, resueltos, regresiones) y recursos por eliminar (se quitaron)                                  | `RunSummary` no trae comparación ni `created_resources`                                                                                                             | Esos campos en `RunSummary`                                                                                               |
-| `/projects/[id]/runs/[runId]/report`                                                           | `src/features/runs/report-view.tsx`                            | Evidencia, esperado y observado y recomendación de cada hallazgo (se quitaron; queda su clasificación, operación, identidad y ejecuciones) | `listFindings` devuelve `FindingSummary`, sin `last_occurrence` ni `recommendation`                                                                                 | La evidencia y la recomendación en `FindingSummary`, o pedir `getFinding` por hallazgo (no está en el inventario de V-32) |
-| `/projects/[id]/runs/[runId]/report`                                                           | `src/features/runs/report-view.tsx`                            | Hallazgos por estado de la ejecución: solo en la última y sin «Resueltos en esta ejecución»; módulos omitidos (se quitaron)                | Igual que la comparación de V-27; `Run` no trae resultados por módulo                                                                                               | Una comparación y un resumen por módulo en `Run`                                                                          |
+Leyenda: **Fijo** = valor escrito en el código. **Quitado** = el diseño lo mostraba y se retiró por falta de contrato. **Parcial** = se muestra solo con lo que trae la API. **Simulado** = la vista funciona con un servicio o datos de ejemplo (solo en vistas bloqueadas).
+
+### Acceso público y cuenta
+
+#### V-05 · Código de segundo factor (`/sign-in/two-factor`, `/admin/sign-in/two-factor`) — bloqueada
+
+- **Simulado · verificación del código.** `verifyLoginTwoFactor` (`src/features/account/service.ts`) espera 500 ms y acepta cualquier código. **Por qué:** el contrato no tiene MFA; si Cognito pide un reto al iniciar sesión, el BFF responde `auth.failed`. **Lo resolvería:** el flujo de MFA en el contrato y en el BFF.
+
+#### V-07 · Términos de uso (`/terms`)
+
+- **Fijo · versión sin sesión.** `PUBLISHED_TERMS_VERSION = "2026-10-30"` (`src/features/legal/terms-version.tsx`). Con sesión se muestra `terms.current_version` de `getMe`. **Por qué:** `getMe` es la única operación que informa la versión vigente y requiere sesión; la guía (§5.1) dice que el texto lo publica el frontend. **Lo resolvería:** una operación pública con la versión vigente, o acordar con el backend cada cambio de versión.
+
+#### V-09 · Perfil de usuario (`/profile`)
+
+- **Quitado · «Miembro desde».** Antes era una fecha fija. **Por qué:** `Me` no trae la fecha de alta. **Lo resolvería:** un campo de fecha de alta en `Me`.
+- **Simulado · estado del 2FA.** Se lee de una marca en `sessionStorage`. **Por qué:** V-10 no tiene contrato. **Lo resolvería:** el estado de MFA en `Me`.
+
+#### V-10 · Activar 2FA (`/profile/two-factor`) — bloqueada
+
+- **Simulado · activar y desactivar.** `confirmTwoFactor` y `disableTwoFactor` aceptan cualquier código.
+- **Fijo · clave y QR.** La clave TOTP es `TOTP_SECRET_STUB = "JBSWY3DPEHPK3PXP"`, y el QR es un dibujo de relleno (`qr-placeholder.tsx`).
+- **Por qué y qué lo resolvería (para las dos):** no hay operaciones de MFA en 0.6.0. Las resolverían las operaciones de alta y baja de MFA, con la clave y el `otpauth://` reales.
+
+#### V-11 · 2FA obligatorio para administrador — bloqueada
+
+- **Sin ruta propia.** Reutiliza la pantalla de V-10 en `/setup-two-factor`, con los mismos datos simulados. **Por qué:** sin MFA ni pool de administradores en el contrato.
+
+#### V-35 · Acceso de administradores (`/admin/sign-in`) — bloqueada
+
+- **Simulado · inicio de sesión.** `adminSignIn` espera 500 ms y deja pasar. **Por qué:** el backend valida un solo pool de Cognito; el de administradores es solo una propuesta en `arquitectura.md`. **Lo resolvería:** la decisión sobre el pool de administradores y su contrato.
+
+#### C-14 · Eliminar cuenta y C-17 · Cambiar contraseña — bloqueados
+
+- **Sin pantalla.** No hay endpoint de baja de cuenta (RF-88) ni de cambio de contraseña en 0.6.0.
+
+### Proyectos
+
+#### V-13 · Lista de proyectos (`/projects`)
+
+- **Parcial · totales de hallazgos abiertos y de proyectos por verificar.** Solo se muestran si todos los proyectos caben en la página; si no, sumarlos daría un total parcial. **Por qué:** `ProjectPage` solo trae la página actual. **Lo resolvería:** totales agregados en `ProjectPage`.
+- **Quitado · insignia «en ejecución» en cada tarjeta y el conteo de ejecuciones en curso del saludo.** **Por qué:** `ProjectSummary` no dice si hay una ejecución activa. **Lo resolvería:** un campo de ejecución activa en `ProjectSummary`.
+- **Quitado · buscador.** **Por qué:** `listProjects` no filtra por texto. **Lo resolvería:** un filtro de texto en `listProjects`.
+
+#### V-15 · Asistente de creación de proyecto (`/projects/new`)
+
+- **Quitado · aviso de nombre repetido.** **Por qué:** el contrato no define un conflicto por nombre de proyecto. **Lo resolvería:** un `409` por nombre en `createProject`.
+
+#### V-16 · Dashboard del proyecto (`/projects/[id]`)
+
+- **Quitado · porcentaje de política confirmada.** **Por qué:** `Project` solo informa en `missing` si falta `policy_unconfirmed`. **Lo resolvería:** el conteo de operaciones confirmadas en `Project`.
+- **Quitado · hallazgos por módulo en cada tarjeta.** **Por qué:** ni `Project` ni `Run` traen resultados por módulo. **Lo resolvería:** un resumen por módulo en `Run` o en `Project.last_run`.
+
+#### C-03 · Navegación interna del proyecto (barra lateral)
+
+- **Quitado · notas de identidades, recursos y operaciones sin confirmar.** Quedan verificación, operaciones del contrato, número de la última ejecución y hallazgos abiertos. **Por qué:** `Project` no trae esos conteos. **Lo resolvería:** esos conteos en `Project`.
+
+#### V-17 · Ajustes del proyecto (`/projects/[id]/settings`)
+
+- **Parcial · lo que se elimina con el proyecto.** Es un texto genérico, sin conteos. **Por qué:** `Project` no trae cuántas versiones, identidades, recursos o ejecuciones hay. **Lo resolvería:** esos conteos en `Project`.
+
+### Configuración del proyecto
+
+#### V-19 · Contrato OpenAPI (`/projects/[id]/contract`)
+
+- **Quitado · buscador de operaciones.** **Por qué:** `listOperations` no filtra por texto; solo por método. **Lo resolvería:** un filtro de texto en `listOperations`.
+- **Quitado · respuestas y conteo de esquemas en el detalle de una operación.** **Por qué:** `Operation` no los trae. **Lo resolvería:** esos campos en `Operation`.
+
+#### V-20 · Versiones y diferencias del contrato (`/projects/[id]/contract/versions`)
+
+- **Parcial · comparación.** Solo de una versión frente a la anterior. **Por qué:** `ContractVersion.changes` solo trae los cambios frente a `previous_version` (ver §8 #4). **Lo resolvería:** una operación para comparar dos versiones cualesquiera.
+
+#### V-22 · Formulario de identidad (`/projects/[id]/identities/new`)
+
+- **Quitado · probar la credencial antes de guardar y el diálogo «guardar con prueba fallida».** **Por qué:** `testIdentity` solo existe para una identidad ya creada (ver §8 #6). **Lo resolvería:** una prueba de credencial sin guardar.
+
+#### V-23 · Recursos por identidad (`/projects/[id]/resources`)
+
+- **Fijo · «Descubrir recursos» deshabilitado.** **Por qué:** `discoverResources` no existe en el backend (RF-36) y las instrucciones piden no simularlo. **Lo resolvería:** `discoverResources`.
+- **Quitado · contador «Por confirmar» de todo el proyecto.** Queda «Recursos registrados», la suma de `resource_count`. **Por qué:** `listResources` no filtra por `confirmed` ni trae totales por estado. **Lo resolvería:** un filtro `confirmed` o totales en `listResources`.
+
+#### V-24 · Política de acceso (`/projects/[id]/policy`)
+
+- **Parcial · última modificación.** Solo la fecha (`modified_at`), sin el autor que pide RF-43. **Lo resolvería:** el autor en `Operation`.
+- **Quitado · «Quitar regla» de una regla huérfana.** Las reglas huérfanas solo se listan. **Por qué:** `updateOperation` y `applyPolicy` responden `operation.retired` (409) con una operación retirada. **Lo resolvería:** una operación para limpiar la política de una operación retirada.
+- **Quitado · buscador.** **Por qué:** `listOperations` no filtra por texto.
+
+### Ejecuciones y hallazgos
+
+#### V-25 · Configurar ejecución (`/projects/[id]/runs/new`)
+
+- **Quitado · elegir las identidades de la ejecución.** **Por qué:** `RunCreate` solo lleva `modules`, `limits` y `confirm_risk` (ver §8 #11). **Lo resolvería:** un campo de identidades en `RunCreate`.
+
+#### V-26 · Ejecución en curso (`/projects/[id]/runs/current`)
+
+- **Parcial · avance de cada módulo.** Solo «Terminado», «En curso» o «En espera», según su orden frente a `current_module`; sin porcentaje ni hallazgos por módulo. **Por qué:** `RunProgress` solo trae `current_module` y el avance global. **Lo resolvería:** avance por módulo en `RunProgress`.
+- **Quitado · avisos de credencial vencida y de peticiones bloqueadas por 429.** **Por qué:** el stream no informa esos eventos. **Lo resolvería:** eventos o contadores en `RunProgress`.
+- **Parcial · C-15.** Solo el conteo de recursos sin borrar (`created_resources.failed`).
+
+#### V-27 · Resultados de la ejecución (`/projects/[id]/runs/[runId]`)
+
+- **Parcial · comparación con la ejecución anterior.** Solo en la última ejecución y sin «Resueltos». **Por qué:** `listFindings` con `run_id` da el estado actual de cada hallazgo, no el que tuvo al terminar esa ejecución, y no hay forma de contar los que se resolvieron en ella. **Lo resolvería:** una comparación por ejecución en `Run` (nuevos, persistentes, resueltos, regresiones).
+- **Parcial · resultado por módulo.** Solo «Ejecutado» o «No seleccionado»; sin hallazgos por módulo ni avisos de módulos omitidos o credenciales vencidas. **Por qué:** `Run` no trae resultados por módulo. **Lo resolvería:** un resumen por módulo en `Run`.
+- **Parcial · C-15.** Sin la operación, la ubicación ni el último error de cada recurso sin borrar. **Por qué:** `created_resources` solo trae contadores. **Lo resolvería:** el detalle de los recursos creados.
+- **Quitado · «Exportar a Excel».** **Por qué:** no hay operación de exportación (RF-77).
+
+#### V-28 · Matriz de acceso (`/projects/[id]/runs/[runId]/matrix`)
+
+- **Quitado · abrir el hallazgo desde una celda con discrepancia.** **Por qué:** `Result` no trae el id del hallazgo. **Lo resolvería:** `finding_id` en `Result`.
+- **Quitado · rol de cada identidad y plantilla de política de cada fila.** **Por qué:** `Result` no los trae. **Lo resolvería:** rol y plantilla en `Result`, `IdentityRef` u `OperationRef`.
+- **Fijo · textos de los códigos `expected` y `observed`.** Solo se traducen `allowed`, `denied`, `own_data_only` y `no_sql_error`, los que el contrato da como ejemplo; un código desconocido se muestra tal cual. **Por qué:** el contrato no publica la lista cerrada de códigos. **Lo resolvería:** un enum de códigos en el contrato. Lo mismo aplica a V-32.
+
+#### V-29 · Lista de hallazgos (`/projects/[id]/findings`)
+
+- **Quitado · filtro por motivo de descarte.** **Por qué:** `listFindings` no filtra por `dismissal.reason` y `FindingSummary` no lo trae. **Lo resolvería:** un filtro `dismissal_reason` en `listFindings`.
+- **Quitado · «Exportar a Excel».** **Por qué:** no hay operación de exportación (RF-77).
+
+#### V-30 · Detalle del hallazgo (`/projects/[id]/findings/[findingId]`)
+
+- **Quitado · «Volver a probar» un hallazgo.** **Por qué:** no hay operación para repetir una sola comprobación. **Lo resolvería:** esa operación.
+- **Quitado · «Esperado según la política».** Se reemplazó por la explicación de la detección (`explanation`). **Por qué:** `Finding` no trae la política esperada. **Lo resolvería:** la política esperada en `FindingOccurrence`.
+
+#### V-31 · Historial del proyecto (`/projects/[id]/history`)
+
+- **Parcial · gráfica.** Muestra los hallazgos detectados en cada ejecución, no los que quedaron abiertos al terminarla (como pedía el diseño, ver §8 #16). **Por qué:** `RunSummary` solo trae `findings_by_severity` de la ejecución. **Lo resolvería:** los hallazgos abiertos al terminar cada ejecución en `RunSummary`.
+- **Quitado · cambios de cada fila (nuevos, persistentes, resueltos, regresiones) y recursos por eliminar (C-15).** **Por qué:** `RunSummary` no trae comparación ni `created_resources`. **Lo resolvería:** esos campos en `RunSummary`.
+
+#### V-32 · Reporte imprimible (`/projects/[id]/runs/[runId]/report`)
+
+- **Quitado · evidencia, esperado y observado, y recomendación de cada hallazgo.** Queda su clasificación, operación, identidad y ejecuciones (ver §8 #17). **Por qué:** `listFindings` devuelve `FindingSummary`, sin `last_occurrence` ni `recommendation`. **Lo resolvería:** esos campos en `FindingSummary`, o asignar `getFinding` por hallazgo a V-32 en el inventario.
+- **Parcial · hallazgos por estado de la ejecución.** Solo en la última ejecución y sin «Resueltos en esta ejecución»; se quitaron los módulos omitidos. **Por qué:** lo mismo que en V-27. **Lo resolvería:** una comparación y un resumen por módulo en `Run`.
+- **Parcial · número de ejecuciones del «Estado actual».** Se toma de `last_run.number`, porque `number` es consecutivo por proyecto. **Lo resolvería:** un total de ejecuciones en `Project`.
+- **Quitado · «Hallazgos en Excel».** **Por qué:** no hay operación de exportación (RF-77).
+
+### Administración
+
+#### V-33 · Panel de estadísticas (`/admin`) — bloqueada
+
+- **Simulado · todo el panel.** Las métricas por periodo salen de `STATS` (`src/features/admin/data.ts`), con fecha de corte fija `STATS_END = "2026-10-30"`, y la carga es simulada (`use-simulated-load.ts`, que falla a propósito con una marca en `sessionStorage`).
+- **Fijo · huella de hosts.** Es FNV-1a calculada en el navegador; el diseño pide HMAC con clave del servidor. El host de ejemplo es `SAMPLE_BLOCKED_HOST`.
+- **Por qué y qué lo resolvería (para las dos):** `/admin/*` no está en el contrato 0.6.0. Lo resolverían esas operaciones; la huella la calcularía el servidor.
+
+#### V-34 · Bitácora de auditoría (`/admin/audit-log`) — bloqueada
+
+- **Simulado · registros.** Son 34 registros de ejemplo (`AUDIT_RECORDS`) con usuarios de ejemplo (`USERS`), y la carga es simulada. **Por qué:** `/admin/*` no está en el contrato 0.6.0. **Lo resolvería:** la operación de la bitácora (retención de 6 meses, RF-90).
 
 ## 8. Contradicciones de documentación
 
@@ -275,4 +392,5 @@ Cuando dos documentos no coinciden, el frontend sigue el contrato y lo anota aqu
 - **V-31.** El filtro de estado y la paginación (20 por página, RF-71) los aplica la API. Los resueltos en total salen de `listFindings` con `status=resolved` y `page_size=1`, leyendo solo `total`. Repetir usa el mismo botón que V-16 y pide de nuevo la confirmación de los módulos de riesgo (RN-05).
 - **V-32.** El reporte no usa el marco del proyecto (se imprime solo). La variante «Estado actual» cuenta las ejecuciones con `last_run.number`, porque `number` es consecutivo por proyecto. Las discrepancias se piden hasta 500 (RF-64) y los hallazgos hasta 100 (`PageSize`); si hay más, el reporte lo dice y remite a V-28 o V-29.
 - **Datos de ejemplo.** Se quitaron `runs/data.ts`, `findings-store.ts`, `config/use-session-state.ts`, `config/data.ts`, `projects/seed.ts` (`SEED_PROJECTS`) y `projects/store.ts`. Los tipos de la interfaz que usa `lib/contract` pasaron a esos mismos archivos. `ProjectShell` ya no tiene el modo de ejemplo (`toLegacyProject`, ids legibles como `pedidos`): todas las vistas de proyecto leen `getProject`.
+- **Nombre fijo.** Se quitó `SESSION_STUB` (`account/service.ts`), un nombre de usuario escrito en el código que ya no usaba ninguna vista; «Generado por» de V-32 y el saludo de V-13 usan `getMe`.
 - **Rutas.** Se quitaron los `generateStaticParams` de V-31 y V-32, que generaban las rutas de los proyectos de ejemplo.
