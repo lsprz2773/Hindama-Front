@@ -3,37 +3,57 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMe } from "@/features/account/api";
+import { useIsClient } from "@/features/account/browser-store";
+import { MODULE_VIEW } from "@/features/runs/modules";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { Loadable } from "@/components/ui/loadable";
+import { QueryState } from "@/components/ui/query-state";
 import { StatsSkeleton } from "@/components/skeletons/page-skeletons";
 import { EmptyState } from "@/components/ui/state-view";
 import { inputClass } from "@/components/ui/text-field";
 import { cn } from "@/lib/cn";
-import { useSimulatedLoad } from "./use-simulated-load";
-import { STATS, STATS_END, type StatsPeriod, type StatsSet } from "./data";
+import type { AdminStats } from "@/lib/api/schemas/admin";
+import { useAdminStats } from "./api";
+import {
+  groupFor,
+  isValidRange,
+  niceStep,
+  owaspKey,
+  presetRange,
+  utcDay,
+  type StatsGroup,
+  type StatsPeriod,
+} from "./stats";
 
 const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6 backdrop-blur-lg";
-const DAY = 86_400_000;
 const PERIODS: StatsPeriod[] = ["7", "30", "90", "custom"];
-/** Antes de esta fecha la plataforma aún no tenía actividad: el periodo sale vacío. */
-const FIRST_DATA = "2026-09-01";
 
 const parse = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
-function LineChart({ set, label }: { set: StatsSet; label: string }) {
+type Series = [label: string, value: number][];
+
+function LineChart({
+  series,
+  unit: unitKey,
+  label,
+}: {
+  series: Series;
+  unit: "runs" | "findings";
+  label: string;
+}) {
   const t = useTranslations("Stats");
-  const max = Math.max(...set.series.map(([, v]) => v));
-  const top = Math.ceil(max / 100) * 100 || 100;
+  const max = Math.max(0, ...series.map(([, v]) => v));
+  const step = niceStep(max);
+  const top = Math.max(step, Math.ceil(max / step) * step);
   const W = 960;
   const H = 250;
-  const x = (i: number) => 70 + (i * (W - 110)) / Math.max(1, set.series.length - 1);
+  const x = (i: number) => 70 + (i * (W - 110)) / Math.max(1, series.length - 1);
   const y = (v: number) => 210 - (v / top) * 190;
-  const guides = Array.from({ length: top / 100 + 1 }, (_, i) => i * 100);
-  const summary = set.series.map(([l, v]) => `${l}, ${v}`).join("; ");
-  const unit = t(`unit.${set.unit}`);
+  const guides = Array.from({ length: top / step + 1 }, (_, i) => i * step);
+  const summary = series.map(([l, v]) => `${l}, ${v}`).join("; ");
+  const unit = t(`unit.${unitKey}`);
 
   return (
     <svg
@@ -64,9 +84,9 @@ function LineChart({ set, label }: { set: StatsSet; label: string }) {
         strokeDasharray={1}
         strokeWidth={3}
         strokeLinejoin="round"
-        points={set.series.map(([, v], i) => `${x(i)},${y(v)}`).join(" ")}
+        points={series.map(([, v], i) => `${x(i)},${y(v)}`).join(" ")}
       />
-      {set.series.map(([l, v], i) => (
+      {series.map(([l, v], i) => (
         <g key={l}>
           <circle
             cx={x(i)}
@@ -84,12 +104,12 @@ function LineChart({ set, label }: { set: StatsSet; label: string }) {
         </g>
       ))}
       <text
-        x={x(set.series.length - 1)}
-        y={y(set.series.at(-1)![1]) - 14}
+        x={x(series.length - 1)}
+        y={y(series.at(-1)![1]) - 14}
         textAnchor="middle"
         className="fill-fg text-[14px] font-bold"
       >
-        {set.series.at(-1)![1]}
+        {series.at(-1)![1]}
       </text>
     </svg>
   );
@@ -105,7 +125,7 @@ function Bars({
   names: (key: string) => string;
 }) {
   const t = useTranslations("Stats");
-  const max = Math.max(...rows.map(([, n]) => n));
+  const max = Math.max(1, ...rows.map(([, n]) => n));
   return (
     <ul role="list" aria-label={label} className="m-0 flex list-none flex-col gap-2.5 p-0">
       {rows.map(([key, n]) => (
@@ -128,26 +148,71 @@ function Bars({
   );
 }
 
+/** Indicadores de la vista a partir de `AdminStats` (RF-78). */
+function kpisOf(stats: AdminStats, number: (n: number) => string) {
+  const days = stats.findings.average_days_to_resolve;
+  return [
+    { key: "users", value: number(stats.users.total), note: { count: stats.users.new } },
+    { key: "projects", value: number(stats.projects.created), note: {} },
+    {
+      key: "runs",
+      value: number(stats.runs.started),
+      note: { cancelled: stats.runs.cancelled, failed: stats.runs.failed },
+    },
+    { key: "resolution", value: days === null ? "—" : number(days), note: {} },
+    { key: "deletedAccounts", value: number(stats.users.deleted), note: {} },
+    { key: "regressions", value: number(stats.findings.regressions), note: {} },
+  ] as const;
+}
+
+/** Sin nada que contar en el periodo (ni cuentas, ni proyectos, ni ejecuciones, ni hallazgos). */
+const isEmpty = (stats: AdminStats) =>
+  stats.users.new === 0 &&
+  stats.users.deleted === 0 &&
+  stats.projects.created === 0 &&
+  stats.runs.started === 0 &&
+  stats.findings.detected === 0;
+
 /** V-33. Estadísticas de uso: solo datos agregados y anónimos, nunca una API ni un analista (RF-78 a RF-80). */
 function StatsViewInner() {
   const t = useTranslations("Stats");
   const tm = useTranslations("Dashboard.modules");
   const format = useFormatter();
+  const client = useIsClient();
+  // «Hoy» solo se conoce en el navegador; antes de montar no se consulta nada.
+  const today = client ? utcDay(new Date()) : null;
   const [period, setPeriod] = useState<StatsPeriod>("30");
-  const [from, setFrom] = useState("2026-10-01");
-  const [to, setTo] = useState(STATS_END);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
-  const load = useSimulatedLoad(`${period}|${from}|${to}`);
-  const rangeInvalid = period === "custom" && (!from || !to || from > to || to > STATS_END);
-  const days = period === "custom" ? 30 : Number(period);
-  const start =
-    period === "custom" ? parse(from) : new Date(parse(STATS_END).getTime() - (days - 1) * DAY);
-  const end = period === "custom" ? parse(to) : parse(STATS_END);
-  const empty = period === "custom" && !rangeInvalid && to < FIRST_DATA;
-  const set = STATS[period === "custom" ? "30" : period];
-  const fmt = (d: Date) => format.dateTime(d, { day: "numeric", month: "short", timeZone: "UTC" });
-  const fmtYear = (d: Date) =>
-    format.dateTime(d, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  const customFrom = from || (today ? presetRange(today, 30).dateFrom : "");
+  const customTo = to || today || "";
+  const rangeInvalid =
+    period === "custom" && today !== null && !isValidRange(customFrom, customTo, today);
+  const range = ((): { dateFrom: string; dateTo: string; group: StatsGroup } | null => {
+    if (!today || rangeInvalid) return null;
+    if (period === "custom")
+      return { dateFrom: customFrom, dateTo: customTo, group: groupFor(customFrom, customTo) };
+    return presetRange(today, Number(period) as 7 | 30 | 90);
+  })();
+
+  const query = useAdminStats({
+    dateFrom: range?.dateFrom,
+    dateTo: range?.dateTo,
+    group: range?.group ?? "day",
+    enabled: range !== null,
+  });
+
+  const fmt = (iso: string) =>
+    format.dateTime(parse(iso), { day: "numeric", month: "short", timeZone: "UTC" });
+  const fmtYear = (iso: string) =>
+    format.dateTime(parse(iso), {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  const number = (n: number) => format.number(n, { maximumFractionDigits: 1 });
 
   return (
     <AppShell
@@ -184,9 +249,9 @@ function StatsViewInner() {
             </button>
           ))}
         </div>
-        {!rangeInvalid ? (
+        {range ? (
           <span className="text-muted text-sm" role="status">
-            {t("range", { from: fmt(start), to: fmtYear(end) })}
+            {t("range", { from: fmt(range.dateFrom), to: fmtYear(range.dateTo) })}
           </span>
         ) : null}
       </div>
@@ -200,8 +265,8 @@ function StatsViewInner() {
             <input
               id="stats-from"
               type="date"
-              value={from}
-              max={STATS_END}
+              value={customFrom}
+              max={today ?? undefined}
               onChange={(e) => setFrom(e.target.value)}
               aria-invalid={rangeInvalid || undefined}
               aria-describedby={rangeInvalid ? "stats-range-error" : undefined}
@@ -215,8 +280,8 @@ function StatsViewInner() {
             <input
               id="stats-to"
               type="date"
-              value={to}
-              max={STATS_END}
+              value={customTo}
+              max={today ?? undefined}
               onChange={(e) => setTo(e.target.value)}
               aria-invalid={rangeInvalid || undefined}
               aria-describedby={rangeInvalid ? "stats-range-error" : undefined}
@@ -237,73 +302,108 @@ function StatsViewInner() {
       ) : null}
 
       {rangeInvalid ? null : (
-        <Loadable
-          status={load.status}
+        <QueryState
+          query={query}
+          subject={t("errorSubject")}
           skeleton={<StatsSkeleton label={t("loading")} />}
-          error={{ subject: t("errorSubject"), reference: "5C2E-18AB", onRetry: load.retry }}
         >
-          {empty ? (
-            <EmptyState title={t("empty.title")} text={t("empty.text")} />
-          ) : (
-            <>
-              <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
-                {set.kpis.map((k, i) => (
-                  <div
-                    key={k.key}
-                    className={cn(
-                      "border-line flex flex-col gap-1.5 rounded-[24px] border p-5",
-                      i === 0 ? "bg-[image:var(--hero)]" : "bg-panel",
-                    )}
-                  >
-                    <dt className="text-muted order-2 text-sm">{t(`kpi.${k.key}.label`)}</dt>
-                    <dd className="font-display order-1 m-0 text-[34px] leading-none font-medium tabular-nums">
-                      {k.value}
-                      {k.key === "resolution" ? (
-                        <span className="text-xl"> {t("days")}</span>
-                      ) : null}
-                    </dd>
-                    <span className="text-muted order-3 text-[13px]">
-                      {t(`kpi.${k.key}.note`, k.note)}
-                    </span>
+          {(stats) => {
+            if (isEmpty(stats))
+              return <EmptyState title={t("empty.title")} text={t("empty.text")} />;
+            const activity: Series = stats.activity.map((a) => [fmt(a.start), a.runs_started]);
+            const weekly: Series = stats.findings.weekly.map((w) => [fmt(w.week), w.detected]);
+            const moduleName = (key: string) =>
+              tm(`names.${MODULE_VIEW[key as keyof typeof MODULE_VIEW].key}`);
+            return (
+              <>
+                <dl className="stagger m-0 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+                  {kpisOf(stats, number).map((k, i) => (
+                    <div
+                      key={k.key}
+                      className={cn(
+                        "border-line flex flex-col gap-1.5 rounded-[24px] border p-5",
+                        i === 0 ? "bg-[image:var(--hero)]" : "bg-panel",
+                      )}
+                    >
+                      <dt className="text-muted order-2 text-sm">{t(`kpi.${k.key}.label`)}</dt>
+                      <dd className="font-display order-1 m-0 text-[34px] leading-none font-medium tabular-nums">
+                        {k.value}
+                        {k.key === "resolution" && k.value !== "—" ? (
+                          <span className="text-xl"> {t("days")}</span>
+                        ) : null}
+                      </dd>
+                      <span className="text-muted order-3 text-[13px]">
+                        {t(`kpi.${k.key}.note`, k.note)}
+                      </span>
+                    </div>
+                  ))}
+                </dl>
+
+                <section aria-labelledby="ln-h" className={card}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <h2 id="ln-h" className="text-lg font-semibold">
+                      {t(`runsBy.${stats.period.group}`)}
+                    </h2>
+                    <span className="text-muted text-[13px]">{t("hover")}</span>
                   </div>
-                ))}
-              </dl>
+                  <LineChart
+                    series={activity}
+                    unit="runs"
+                    label={t(`runsBy.${stats.period.group}`)}
+                  />
+                </section>
 
-              <section aria-labelledby="ln-h" className={card}>
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <h2 id="ln-h" className="text-lg font-semibold">
-                    {t(`runsBy.${set.unit}`)}
-                  </h2>
-                  <span className="text-muted text-[13px]">{t("hover")}</span>
+                <section aria-labelledby="wk-h" className={card}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <h2 id="wk-h" className="text-lg font-semibold">
+                      {t("findingsByWeek")}
+                    </h2>
+                    <span className="text-muted text-[13px]">{t("weekStart")}</span>
+                  </div>
+                  <LineChart series={weekly} unit="findings" label={t("findingsByWeek")} />
+                </section>
+
+                <div className="flex flex-wrap items-start gap-5">
+                  <section aria-labelledby="bm-h" className={cn(card, "min-w-[300px] flex-1")}>
+                    <h2 id="bm-h" className="text-lg font-semibold">
+                      {t("byModule")}
+                    </h2>
+                    {stats.findings.by_module.length > 0 ? (
+                      <Bars
+                        rows={stats.findings.by_module.map((m) => [m.module, m.detected])}
+                        label={t("byModuleList")}
+                        names={moduleName}
+                      />
+                    ) : (
+                      <p className="text-muted text-sm">{t("noFindings")}</p>
+                    )}
+                  </section>
+                  <section aria-labelledby="bo-h" className={cn(card, "min-w-[300px] flex-1")}>
+                    <h2 id="bo-h" className="text-lg font-semibold">
+                      {t("byOwasp")}
+                    </h2>
+                    {stats.findings.by_owasp_category.length > 0 ? (
+                      <Bars
+                        rows={stats.findings.by_owasp_category.map((c) => [
+                          c.owasp_category,
+                          c.detected,
+                        ])}
+                        label={t("byOwaspList")}
+                        names={(key) =>
+                          t.has(`owasp.${owaspKey(key)}` as "owasp.API1")
+                            ? t(`owasp.${owaspKey(key) as "API1"}`)
+                            : key
+                        }
+                      />
+                    ) : (
+                      <p className="text-muted text-sm">{t("noFindings")}</p>
+                    )}
+                  </section>
                 </div>
-                <LineChart set={set} label={t(`runsBy.${set.unit}`)} />
-              </section>
-
-              <div className="flex flex-wrap items-start gap-5">
-                <section aria-labelledby="bm-h" className={cn(card, "min-w-[300px] flex-1")}>
-                  <h2 id="bm-h" className="text-lg font-semibold">
-                    {t("byModule")}
-                  </h2>
-                  <Bars
-                    rows={set.modules}
-                    label={t("byModuleList")}
-                    names={(key) => tm(`names.${key as "auth"}`)}
-                  />
-                </section>
-                <section aria-labelledby="bo-h" className={cn(card, "min-w-[300px] flex-1")}>
-                  <h2 id="bo-h" className="text-lg font-semibold">
-                    {t("byOwasp")}
-                  </h2>
-                  <Bars
-                    rows={set.owasp}
-                    label={t("byOwaspList")}
-                    names={(key) => t(`owasp.${key as "API1"}`)}
-                  />
-                </section>
-              </div>
-            </>
-          )}
-        </Loadable>
+              </>
+            );
+          }}
+        </QueryState>
       )}
 
       <p className="text-muted text-[13.5px] leading-[1.55]">{t("privacy")}</p>

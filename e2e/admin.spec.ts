@@ -5,36 +5,132 @@ import { meBody, mockBff, problem } from "./support/bff";
 // Las pantallas de administración se muestran según el rol que informa `getMe`.
 test.use({ role: "admin" });
 
+const STATS_URL = "**/api/admin/stats**";
+
+/** Ejemplo `AdminStats` del contrato 0.9.0, con los números que las pruebas buscan en pantalla. */
+const STATS = {
+  period: { date_from: "2026-11-16", date_to: "2026-11-22", group: "day" },
+  users: { total: 18, new: 3, deleted: 2 },
+  projects: { created: 4 },
+  runs: { started: 1032, cancelled: 41, failed: 6 },
+  activity: [
+    ["2026-11-16", 3],
+    ["2026-11-17", 0],
+    ["2026-11-18", 4],
+  ].map(([start, started]) => ({
+    start,
+    new_users: 1,
+    deleted_accounts: 0,
+    projects_created: 1,
+    runs_started: started,
+    runs_cancelled: 0,
+    runs_failed: 0,
+  })),
+  findings: {
+    detected: 9,
+    resolved: 3,
+    regressions: 37,
+    average_days_to_resolve: 2.67,
+    by_severity: { critical: 1, high: 3, medium: 2, low: 2, info: 1, total: 9 },
+    by_module: [
+      { module: "object_access", detected: 4 },
+      { module: "configuration", detected: 3 },
+      { module: "authentication", detected: 2 },
+    ],
+    by_owasp_category: [
+      { owasp_category: "API1:2023", detected: 4 },
+      { owasp_category: "API8:2023", detected: 3 },
+      { owasp_category: "API2:2023", detected: 2 },
+      { owasp_category: "API9:2023", detected: 1 },
+    ],
+    weekly: [
+      { week: "2026-11-09", detected: 2 },
+      { week: "2026-11-16", detected: 7 },
+    ],
+  },
+};
+
+/** Día de hoy en UTC, como lo calcula la vista, y el de hace `back` días. */
+const utcDay = (back = 0) => new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10);
+
+/** Responde `getAdminStats` y guarda las consultas que llegaron al BFF. */
+async function mockStats(page: Page, handler: (url: URL) => { status?: number; body: unknown }) {
+  const requests: URL[] = [];
+  await page.route(STATS_URL, async (route) => {
+    const url = new URL(route.request().url());
+    requests.push(url);
+    const { status = 200, body } = handler(url);
+    await route.fulfill({
+      status,
+      headers: { "content-type": status >= 400 ? "application/problem+json" : "application/json" },
+      body: JSON.stringify(body),
+    });
+  });
+  return requests;
+}
+
 test.describe("V-33 estadísticas de uso", () => {
-  test("muestra los indicadores agregados y las gráficas del periodo por omisión", async ({
-    page,
-  }) => {
+  test("pide los últimos 30 días y muestra los indicadores y las gráficas", async ({ page }) => {
+    const requests = await mockStats(page, () => ({ body: STATS }));
     await page.goto("/admin");
     await expect(
       page.getByRole("heading", { name: "Estadísticas de uso", level: 1 }),
     ).toBeVisible();
     await expect(page.getByRole("radio", { name: "Últimos 30 días" })).toBeChecked();
     const kpis = page.locator("dl").first();
-    await expect(kpis).toContainText("Usuarios activos");
-    await expect(kpis).toContainText("128");
+    await expect(kpis).toContainText("Usuarios registrados");
+    await expect(kpis).toContainText("18");
+    await expect(kpis).toContainText("3 cuentas nuevas");
     await expect(kpis).toContainText("1,032");
+    await expect(kpis).toContainText("41 canceladas · 6 fallidas");
+    await expect(kpis).toContainText("2.7 días");
     await expect(kpis).toContainText("Cuentas eliminadas");
-    await expect(kpis).toContainText("Regresiones");
+    await expect(kpis).toContainText("37");
+    // Sin `date_to` ni `group=week`: la API termina hoy y 30 días van por día.
+    expect(requests).toHaveLength(1);
+    expect(requests[0].searchParams.get("date_from")).toBe(utcDay(29));
+    expect(requests[0].searchParams.get("date_to")).toBe(utcDay());
+    expect(requests[0].searchParams.get("group")).toBe("day");
 
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+    await expect(page.getByRole("img", { name: /Ejecuciones por día: 16 nov, 3/ })).toBeVisible();
     await expect(
-      page.getByRole("img", { name: /Ejecuciones por semana: 6 oct, 229/ }),
+      page.getByRole("img", { name: /Hallazgos detectados por semana: 9 nov, 2; 16 nov, 7/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("list", { name: "Fallas por módulo" }).getByRole("listitem"),
-    ).toHaveCount(7);
-    await expect(
-      page.getByRole("list", { name: "Fallas por categoría OWASP" }).getByRole("listitem"),
-    ).toHaveCount(6);
+    ).toHaveCount(3);
+    const owasp = page.getByRole("list", { name: "Fallas por categoría OWASP" });
+    await expect(owasp.getByRole("listitem")).toHaveCount(4);
+    await expect(owasp).toContainText("API1 Objetos");
+    // Una categoría que el frontend no conoce se muestra tal cual.
+    await expect(owasp).toContainText("API9:2023");
     await expect(page.getByText(/Solo datos agregados y anónimos/)).toBeVisible();
   });
 
+  test("sin hallazgos resueltos el promedio es un guion", async ({ page }) => {
+    await mockStats(page, () => ({
+      body: {
+        ...STATS,
+        findings: {
+          ...STATS.findings,
+          average_days_to_resolve: null,
+          by_module: [],
+          by_owasp_category: [],
+        },
+      },
+    }));
+    await page.goto("/admin");
+    const kpis = page.locator("dl").first();
+    await expect(
+      kpis.locator("dt", { hasText: "De la detección a la resolución" }).locator(".."),
+    ).toContainText("—");
+    await expect(kpis).not.toContainText("días");
+    await expect(page.getByText("Sin hallazgos en este periodo")).toHaveCount(2);
+  });
+
   test("la barra lateral es la del administrador y no ofrece proyectos", async ({ page }) => {
+    await mockStats(page, () => ({ body: STATS }));
     await page.goto("/admin");
     const nav = page.getByRole("navigation", { name: "Navegación principal" });
     await expect(nav.getByRole("link", { name: "Estadísticas" })).toHaveAttribute(
@@ -45,36 +141,85 @@ test.describe("V-33 estadísticas de uso", () => {
     await expect(nav.getByText("API de Pedidos")).toHaveCount(0);
   });
 
-  test("cambiar de periodo actualiza los indicadores y la agrupación", async ({ page }) => {
+  test("cambiar de periodo vuelve a consultar con sus fechas y su agrupación", async ({ page }) => {
+    const requests = await mockStats(page, (url) => ({
+      body: {
+        ...STATS,
+        period: {
+          date_from: url.searchParams.get("date_from"),
+          date_to: url.searchParams.get("date_to"),
+          group: url.searchParams.get("group"),
+        },
+      },
+    }));
     await page.goto("/admin");
+    await expect(page.locator("dl").first()).toBeVisible();
+
     await page.getByRole("radio", { name: "Últimos 7 días" }).click();
+    await expect(page.getByRole("radio", { name: "Últimos 7 días" })).toBeChecked();
+    await expect.poll(() => requests.at(-1)?.searchParams.get("date_from")).toBe(utcDay(6));
+    expect(requests.at(-1)?.searchParams.get("group")).toBe("day");
     await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
-    await expect(page.locator("dl").first()).toContainText("74");
+
     await page.getByRole("radio", { name: "Últimos 90 días" }).click();
-    await expect(page.locator("dl").first()).toContainText("2,946");
-    await expect(page.getByRole("img", { name: /8 sep, 182/ })).toBeVisible();
+    await expect.poll(() => requests.at(-1)?.searchParams.get("date_from")).toBe(utcDay(89));
+    expect(requests.at(-1)?.searchParams.get("group")).toBe("week");
+    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
   });
 
-  test("el periodo personalizado valida las fechas y avisa cuando no hay datos", async ({
+  test("el periodo personalizado valida las fechas y consulta el rango elegido", async ({
     page,
   }) => {
+    const requests = await mockStats(page, () => ({ body: STATS }));
     await page.goto("/admin");
+    await expect(page.locator("dl").first()).toBeVisible();
     await page.getByRole("radio", { name: "Personalizado" }).click();
     await page.getByLabel("Desde").fill("2026-10-20");
     await page.getByLabel("Hasta").fill("2026-10-10");
     await expect(page.locator("#stats-range-error")).toContainText("Escribe un rango válido");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toHaveCount(0);
+    const before = requests.length;
 
-    await page.getByLabel("Desde").fill("2026-08-01");
-    await page.getByLabel("Hasta").fill("2026-08-15");
-    await expect(page.getByText("Sin datos en este periodo")).toBeVisible();
+    // Más de 366 días tampoco se consulta.
+    await page.getByLabel("Desde").fill("2024-01-01");
+    await page.getByLabel("Hasta").fill("2026-10-10");
+    await expect(page.locator("#stats-range-error")).toBeVisible();
+    expect(requests).toHaveLength(before);
 
     await page.getByLabel("Desde").fill("2026-10-01");
-    await page.getByLabel("Hasta").fill("2026-10-30");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await page.getByLabel("Hasta").fill("2026-10-10");
+    await expect(page.locator("#stats-range-error")).toHaveCount(0);
+    await expect.poll(() => requests.at(-1)?.searchParams.get("date_from")).toBe("2026-10-01");
+    expect(requests.at(-1)?.searchParams.get("date_to")).toBe("2026-10-10");
+    expect(requests.at(-1)?.searchParams.get("group")).toBe("day");
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+  });
+
+  test("avisa cuando el periodo no tiene actividad", async ({ page }) => {
+    await mockStats(page, () => ({
+      body: {
+        ...STATS,
+        users: { total: 18, new: 0, deleted: 0 },
+        projects: { created: 0 },
+        runs: { started: 0, cancelled: 0, failed: 0 },
+        findings: {
+          ...STATS.findings,
+          detected: 0,
+          resolved: 0,
+          regressions: 0,
+          average_days_to_resolve: null,
+          by_module: [],
+          by_owasp_category: [],
+        },
+      },
+    }));
+    await page.goto("/admin");
+    await expect(page.getByText("Sin datos en este periodo")).toBeVisible();
+    await expect(page.locator("dl")).toHaveCount(0);
   });
 
   test("lleva a la bitácora", async ({ page }) => {
+    await mockStats(page, () => ({ body: STATS }));
     await page.goto("/admin");
     await page.getByRole("link", { name: "Ver bitácora" }).click();
     await expect(page).toHaveURL(/\/admin\/audit-log$/);
@@ -367,21 +512,38 @@ test.describe("estados de carga, error y permiso de la bitácora", () => {
 
 test.describe("estados de carga, error y permiso del panel", () => {
   test("estadísticas: muestra el esqueleto y luego los datos", async ({ page }) => {
+    await mockStats(page, () => ({ body: STATS }));
     await page.goto("/admin");
     await page.getByRole("radio", { name: "Últimos 7 días" }).click();
-    await expect(page.getByLabel("Cargando estadísticas")).toBeVisible();
-    await expect(page.getByLabel("Cargando estadísticas")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+    await expect(page.getByLabel("Cargando estadísticas")).toHaveCount(0);
   });
 
   test("estadísticas: si la consulta falla ofrece reintentar", async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem("hindama.simulate.error", "1"));
+    let fail = true;
+    await mockStats(page, () =>
+      fail ? { status: 500, body: problem(500, "internal.error") } : { body: STATS },
+    );
     await page.goto("/admin");
-    await expect(page.getByText("No pudimos cargar las estadísticas")).toBeVisible();
-    await expect(page.getByText(/Referencia/)).toBeVisible();
-    await page.evaluate(() => sessionStorage.removeItem("hindama.simulate.error"));
+    await expect(page.getByText("Referencia: req-e2e-500")).toBeVisible();
+    fail = false;
     await page.getByRole("button", { name: "Reintentar" }).click();
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+  });
+
+  test("estadísticas: el 403 de la API para un analista se muestra con la página de error", async ({
+    page,
+  }) => {
+    await mockStats(page, () => ({ status: 403, body: problem(403, "role.forbidden") }));
+    await page.goto("/admin");
+    await expect(page.getByText("Esta sección no es para tu rol")).toBeVisible();
+  });
+
+  test("estadísticas: la API manda un 429 con espera", async ({ page }) => {
+    await mockStats(page, () => ({ status: 429, body: problem(429, "rate_limited") }));
+    await page.goto("/admin");
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+    await expect(page.locator("dl")).toHaveCount(0);
   });
 
   test("un analista con sesión no entra al panel de administración", async ({ page }) => {
