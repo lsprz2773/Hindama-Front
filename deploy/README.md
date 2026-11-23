@@ -109,7 +109,9 @@ sudo systemctl enable --now hindama-frontend hindama-frontend-update.timer
 1. Si `origin/dev` no cambió, no hace nada.
 2. Construye la imagen del commit nuevo mientras la anterior sigue sirviendo.
 3. Si no compila, sigue la versión anterior y ese commit no se vuelve a intentar: hay que subir otro.
-4. Reinicia y comprueba `/api/health` por Caddy con el dominio. Si en 2 minutos no responde, regresa al commit y a la imagen anteriores.
+4. Reinicia **con las cachés de Next vacías** y comprueba `/api/health` por Caddy con el dominio. Si en 2 minutos no responde, regresa al commit y a la imagen anteriores.
+
+Las cachés se vacían porque Docker solo copia el contenido de la imagen a un volumen vacío. Si se conservan, Next sirve páginas prerenderizadas de la build anterior, que piden scripts que ya no existen: el navegador muestra `ChunkLoadError` y una página 500.
 
 Una construcción tarda unos minutos, y el reinicio deja el sitio sin servicio unos segundos. Para ver qué pasó:
 
@@ -130,7 +132,9 @@ Para cambiar de rama, agrega `HINDAMA_FRONTEND_BRANCH=<rama>` a `frontend.conf`.
 ```bash
 sudo systemctl stop hindama-frontend-update.timer
 cd /opt/hindama/frontend && sudo git fetch && sudo git checkout <sha>
-sudo systemctl restart hindama-frontend
+sudo systemctl stop hindama-frontend
+sudo docker volume rm hindama-frontend_next-cache hindama-frontend_next-route-cache   # cachés de la build anterior
+sudo systemctl start hindama-frontend
 ```
 
 ## Problemas comunes

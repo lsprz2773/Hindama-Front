@@ -6,6 +6,8 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+# Dominio e IP del backend: compose.yaml los exige también para `down`.
+EnvironmentFile=/etc/hindama/frontend.conf
 RemainAfterExit=yes
 # /run se vacía en cada arranque: start.sh vuelve a leer los secretos de SSM y levanta los contenedores.
 # Con bash: el actualizador hace checkout de cada commit y git no siempre conserva el bit de ejecución.

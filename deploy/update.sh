@@ -7,6 +7,11 @@
 # 3. Si no compila, se queda la versión anterior y ese commit no se reintenta.
 # 4. Reinicia y comprueba /api/health por Caddy con el dominio real; si no responde en 2 minutos,
 #    regresa al commit y la imagen anteriores.
+#
+# Cada cambio de imagen borra las cachés de Next (volúmenes next-cache y next-route-cache): Docker
+# solo copia el contenido de la imagen a un volumen vacío, así que sin borrarlas Next seguiría
+# sirviendo páginas prerenderizadas de la build anterior, que piden scripts que ya no existen
+# (ChunkLoadError y página 500).
 set -euo pipefail
 
 REPO="${HINDAMA_FRONTEND_REPO:-/opt/hindama/frontend}"
@@ -36,6 +41,14 @@ healthy() {
   return 1
 }
 
+# Reinicia con las cachés de Next vacías, para que se llenen con la imagen nueva.
+restart_clean() {
+  systemctl stop hindama-frontend
+  docker compose -f "$REPO/deploy/compose.yaml" down --remove-orphans >/dev/null 2>&1 || true
+  docker volume rm -f hindama-frontend_next-cache hindama-frontend_next-route-cache >/dev/null
+  systemctl start hindama-frontend
+}
+
 cd "$REPO"
 git fetch --quiet origin "$BRANCH"
 current="$(git rev-parse HEAD)"
@@ -56,7 +69,7 @@ if ! docker compose -f deploy/compose.yaml build frontend; then
   exit 1
 fi
 
-systemctl restart hindama-frontend
+restart_clean
 if healthy; then
   log "desplegado ${target}"
   echo "$target" >"$STATE/frontend-deployed"
@@ -69,6 +82,6 @@ log "${target} no responde: regreso a ${current}"
 echo "$target" >"$STATE/frontend-failed"
 git checkout --quiet --detach "$current"
 docker image tag hindama-frontend:previous hindama-frontend:latest
-systemctl restart hindama-frontend
+restart_clean
 healthy && log "de vuelta en ${current}" || log "ATENCIÓN: ${current} tampoco responde"
 exit 1
