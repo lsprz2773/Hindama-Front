@@ -1,4 +1,5 @@
 import { meSchema, termsAcceptanceSchema } from "@/lib/api/schemas/account";
+import { auditLogPageSchema, listAuditLogQuerySchema } from "@/lib/api/schemas/admin";
 import {
   deleteProjectQuerySchema,
   listProjectsQuerySchema,
@@ -195,4 +196,10 @@ export const SPECS = {
     maxBodyBytes: 16 * 1024,
   },
   revertDismissal: { path: [...project, "findings", { param: "findingId" }, "dismissal"] },
+  // Solo el administrador (la API responde 403 a un analista). Nunca devuelve hosts ni credenciales.
+  listAuditLog: {
+    path: ["admin", "audit-log"],
+    query: listAuditLogQuerySchema,
+    response: auditLogPageSchema,
+  },
 } satisfies Record<string, ApiRouteSpec>;
