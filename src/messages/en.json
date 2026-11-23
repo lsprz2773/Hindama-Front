@@ -1503,7 +1503,27 @@
       "title": "2. Discover resources",
       "text": "We call, as each identity, only the listing GET operations, such as <code>GET /orders</code>, and propose what we find.",
       "button": "Discover resources",
-      "unavailable": "Automatic discovery is not available yet. Meanwhile, add resources by hand.",
+      "hint": "It can take up to 25 seconds. Whatever it finds is left to confirm.",
+      "running": "Discovering resources…",
+      "needsVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noIdentities": "Register an identity with a credential to discover its resources.",
+      "done": "{count, plural, one {# new resource found} other {# new resources found}}",
+      "doneNone": "No new resources found",
+      "summary": "{count, plural, one {# new resource to confirm} other {# new resources to confirm}} · {requests, plural, one {# request} other {# requests}}",
+      "identityLine": "{found, plural, one {# found} other {# found}} · {created} new · {other} from another identity",
+      "unknownIdentity": "Deleted identity",
+      "truncated": {
+        "title": "Discovery stopped at a limit",
+        "text": "It reached the limit of 100 requests or 25 seconds and there may be more resources. Confirm or delete what it found and discover again."
+      },
+      "failure": {
+        "rejected": "The API answered with an error when listing. Check the credential.",
+        "login_failed": "The login operation did not return a token.",
+        "connection_error": "The host did not answer or the request timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address.",
+        "not_attempted": "Not tried: a limit was reached before getting to this identity."
+      },
       "registered": "Registered resources"
     },
     "review": {
@@ -1539,6 +1559,10 @@
       "ownedByOther": "That resource already belongs to another identity. An object has one owner.",
       "identityNotFound": "The identity no longer exists. Reload the page.",
       "anonymousOwner": "The anonymous identity has no resources.",
+      "notVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noListOperations": "The current contract has no listing GET operations, so there is nothing to discover.",
+      "discoveryTimeout": "Discovery took too long. Whatever it managed to find was saved: reload the list.",
       "notFound": "The resource no longer exists. Reload the page.",
       "rateLimited": "Too many requests. Wait a moment and try again.",
       "failed": "The action could not be completed",
@@ -2262,19 +2286,19 @@
       "action": "Action type",
       "allActions": "All actions",
       "user": "User",
-      "userPlaceholder": "Identifier or email",
+      "userPlaceholder": "Full identifier",
       "host": "Reported host",
       "clear": "Clear",
       "invalidRange": "The range is reversed: the start date cannot be after the end date."
     },
     "user": {
-      "none": "No matches for that user.",
-      "deletedHint": "No matches. A deleted account no longer has an email: search for it by identifier."
+      "help": "The log keeps no names or emails: search by the full identifier (UUID) or click one in the table.",
+      "invalid": "Enter the full identifier (UUID). Emails and fragments are not searched."
     },
     "host": {
-      "help": "It is compared by its fingerprint; the host is never shown.",
-      "matches": "{count, plural, one {# match by fingerprint.} other {# matches by fingerprint.}}",
-      "none": "No matches for that fingerprint."
+      "help": "Enter the name or the URL. It is compared by its HMAC: the host is never stored or shown.",
+      "active": "Showing the actions on that host, compared by its HMAC.",
+      "invalid": "That is not a valid host."
     },
     "count": "{count, plural, =0 {No records} one {# record} other {# records}}",
     "readOnly": "Read only · kept for 6 months and then deleted",
@@ -2282,7 +2306,9 @@
       "title": "No records match these filters",
       "text": "Widen the date range or clear the filters to see more.",
       "invalidTitle": "Fix the date range",
-      "invalidText": "The log is not queried while the start date is after the end date."
+      "invalidText": "The log is not queried while the start date is after the end date.",
+      "invalidFiltersTitle": "Fix the filters",
+      "invalidFiltersText": "The log is not queried with a user that is not a full identifier or with an invalid host."
     },
     "cols": {
       "date": "Date and time",
@@ -2291,57 +2317,75 @@
       "project": "Project",
       "ip": "Source IP"
     },
+    "ipNone": "No IP: the test engine made the action or no valid IP arrived.",
     "filterByUser": "Filter by this user",
     "copyId": "Copy the full identifier of {user}",
     "copied": "Identifier copied",
     "copyFailed": "Could not copy",
-    "deletedAccount": "Deleted account",
     "detailOf": "Details of the record from {date}",
     "actions": {
-      "accountCreated": "Account created",
-      "accountDeleted": "Account deleted",
-      "projectCreated": "Project created",
-      "projectVerified": "Project verified",
-      "projectDeleted": "Project deleted",
-      "identityCreated": "Identity created",
-      "identityDeleted": "Identity deleted",
-      "runLaunched": "Run launched",
-      "runCancelled": "Run cancelled",
-      "riskAccepted": "Risk accepted or false positive",
-      "targetBlocked": "Target blocked"
+      "account_created": "Account created",
+      "account_deleted": "Account deleted",
+      "project_created": "Project created",
+      "project_deleted": "Project deleted",
+      "project_verified": "Project verified",
+      "project_verification_lost": "Verification lost when starting a run",
+      "identity_created": "Identity created",
+      "identity_deleted": "Identity deleted",
+      "run_launched": "Run launched",
+      "run_cancelled": "Run cancelled",
+      "finding_dismissed": "Risk accepted or false positive",
+      "finding_dismissal_reverted": "Dismissal reverted",
+      "destination_blocked": "Destination blocked"
+    },
+    "modules": {
+      "authentication": "Authentication",
+      "configuration": "Configuration",
+      "object_access": "Object access",
+      "function_access": "Function access",
+      "property_access": "Properties",
+      "resource_consumption": "Resource consumption",
+      "sql_injection": "SQL injection"
     },
     "detail": {
+      "none": "This action carries no additional data.",
       "modules": "Modules",
       "limits": "Limits",
-      "confirmedRisk": "Confirmed risk",
-      "reason": "Reason",
-      "reportedHost": "Reported host",
-      "requests": "Requests",
-      "method": "Method",
-      "result": "Result",
-      "role": "Role",
-      "dismissReason": "Dismissal reason",
-      "justification": "Justification",
+      "run": "Run",
+      "sourceRun": "Repeats the run",
+      "verificationMethod": "Verification method",
       "identity": "Identity",
-      "credential": "Credential",
-      "by": "By",
-      "permanentDelete": "Permanent deletion",
-      "verification": "Verification"
+      "finding": "Finding",
+      "dismissalReason": "Dismissal reason",
+      "stage": "Blocking stage",
+      "blockReason": "Blocking reason"
     },
     "values": {
-      "limits": "5 req/s · 2 concurrent · 2,000 requests · 15 min",
-      "confirmedProperties": "Yes, Properties",
-      "redirect": "Redirect outside the verified host",
-      "fingerprint": "Fingerprint {fp} (HMAC)",
-      "file": "File",
-      "verified": "Verified",
-      "analyst": "Analyst",
-      "accepted": "Risk accepted",
-      "notStored": "Not stored in the log",
-      "notRecorded": "Not recorded",
-      "user": "The user",
-      "pending": "Pending",
-      "byDate": "No later than {date}"
+      "limits": "{rps} req/s · {concurrency} concurrent · {requests} requests · {minutes} min",
+      "verificationMethod": {
+        "file": "File",
+        "dns": "DNS record"
+      },
+      "dismissalReason": {
+        "accepted_risk": "Risk accepted",
+        "false_positive": "False positive"
+      },
+      "stage": {
+        "project_url": "Project URL",
+        "verification": "Verification",
+        "contract_import": "Contract import",
+        "identity_test": "Identity test",
+        "resource_discovery": "Resource discovery",
+        "run": "Run"
+      },
+      "blockReason": {
+        "address_not_allowed": "Address not allowed (private, local or metadata)",
+        "host_mismatch": "Redirect outside the project host",
+        "unresolved": "The host does not resolve",
+        "invalid_url": "Invalid URL",
+        "scheme_not_allowed": "Scheme not allowed",
+        "too_many_redirects": "Too many redirects"
+      }
     },
     "pagination": {
       "label": "Pagination",

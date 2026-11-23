@@ -662,6 +662,99 @@ describe("recursos (V-23)", () => {
     expect(emptyFetch).not.toHaveBeenCalled();
   });
 
+  const DISCOVERY = {
+    created: [{ ...RESOURCE, source: "discovered", confirmed: false }],
+    identities: [
+      { identity_id: IID, found: 3, created: 1, owned_by_other: 2, failure: null },
+      {
+        identity_id: "0192e3a0-6666-7000-8000-000000000003",
+        found: 0,
+        created: 0,
+        owned_by_other: 0,
+        failure: "not_attempted",
+      },
+    ],
+    requests_sent: 4,
+    truncated: true,
+  };
+
+  it("discoverResources usa la ruta fija, reenvía el cuerpo y valida el resultado", async () => {
+    const apiFetch = api(Response.json(DISCOVERY));
+    const response = await handleApiRoute(
+      SPECS.discoverResources,
+      request("POST", `/api/projects/${PID}/resources/discovery`, { body: {} }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(DISCOVERY);
+    expect(String(apiFetch.mock.calls[0][0])).toBe(
+      `http://api.internal:8000/projects/${PID}/resources/discovery`,
+    );
+    expect(apiFetch.mock.calls[0][1].method).toBe("POST");
+    expect(JSON.parse(String(apiFetch.mock.calls[0][1].body))).toEqual({});
+  });
+
+  it("discoverResources acepta una lista de identidades", async () => {
+    const apiFetch = api(Response.json(DISCOVERY));
+    const response = await handleApiRoute(
+      SPECS.discoverResources,
+      request("POST", `/api/projects/${PID}/resources/discovery`, {
+        body: { identity_ids: [IID] },
+      }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(200);
+    expect(JSON.parse(String(apiFetch.mock.calls[0][1].body))).toEqual({ identity_ids: [IID] });
+  });
+
+  it.each([
+    ["una identidad que no es UUID", { identity_ids: ["cliente-a"] }],
+    ["identidades repetidas", { identity_ids: [IID, IID] }],
+    ["una lista vacía", { identity_ids: [] }],
+    ["más de 20 identidades", { identity_ids: Array.from({ length: 21 }, () => IID) }],
+    ["campos extra", { identity_ids: [IID], truncate: true }],
+  ])("discoverResources rechaza %s sin llamar a la API", async (_label, body) => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.discoverResources,
+      request("POST", `/api/projects/${PID}/resources/discovery`, { body }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(422);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("discoverResources trata un resultado fuera del contrato como error", async () => {
+    const apiFetch = api(
+      Response.json({
+        ...DISCOVERY,
+        identities: [{ ...DISCOVERY.identities[0], failure: "explotó" }],
+      }),
+    );
+    const response = await handleApiRoute(
+      SPECS.discoverResources,
+      request("POST", `/api/projects/${PID}/resources/discovery`, { body: {} }),
+      params,
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(502);
+  });
+
+  it("discoverResources rechaza un proyecto que no es UUID", async () => {
+    const apiFetch = vi.fn<FetchLike>();
+    const response = await handleApiRoute(
+      SPECS.discoverResources,
+      request("POST", `/api/projects/x/resources/discovery`, { body: {} }),
+      { projectId: "x" },
+      deps({ apiFetch }),
+    );
+    expect(response.status).toBe(404);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
   it("deleteResource rechaza un id que no es UUID", async () => {
     const apiFetch = vi.fn<FetchLike>();
     const response = await handleApiRoute(

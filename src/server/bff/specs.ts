@@ -1,4 +1,5 @@
 import { meSchema, termsAcceptanceSchema } from "@/lib/api/schemas/account";
+import { auditLogPageSchema, listAuditLogQuerySchema } from "@/lib/api/schemas/admin";
 import {
   deleteProjectQuerySchema,
   listProjectsQuerySchema,
@@ -31,6 +32,8 @@ import {
 import {
   listResourcesQuerySchema,
   resourceCreateSchema,
+  resourceDiscoveryRequestSchema,
+  resourceDiscoverySchema,
   resourcePageSchema,
   resourceSchema,
   resourceUpdateSchema,
@@ -139,6 +142,12 @@ export const SPECS = {
     body: resourceCreateSchema,
     response: resourceSchema,
   },
+  // Síncrona (hasta 25 s). El cuerpo es opcional en el contrato; el cliente siempre envía `{}`.
+  discoverResources: {
+    path: [...project, "resources", "discovery"],
+    body: resourceDiscoveryRequestSchema,
+    response: resourceDiscoverySchema,
+  },
   updateResource: {
     path: [...project, "resources", { param: "resourceId" }],
     body: resourceUpdateSchema,
@@ -187,4 +196,10 @@ export const SPECS = {
     maxBodyBytes: 16 * 1024,
   },
   revertDismissal: { path: [...project, "findings", { param: "findingId" }, "dismissal"] },
+  // Solo el administrador (la API responde 403 a un analista). Nunca devuelve hosts ni credenciales.
+  listAuditLog: {
+    path: ["admin", "audit-log"],
+    query: listAuditLogQuerySchema,
+    response: auditLogPageSchema,
+  },
 } satisfies Record<string, ApiRouteSpec>;
