@@ -37,7 +37,7 @@ Rotar `session-key` cierra todas las sesiones abiertas, nada más.
 ## 2. La EC2 del frontend
 
 - Subred **pública**, grupo de seguridad `hindama-sg-fe` (80 y 443 desde internet; el 8443 del backend ya acepta a este grupo).
-- Imagen de Amazon Linux 2023 arm64 (igual que el backend) con Docker y el plugin de Compose.
+- Instancia `t4g` (arm64, como la del backend) con Docker, el plugin de Compose, Git y la AWS CLI instalados. Las imágenes base (`node`, `caddy`) son multiarquitectura.
 - **IP elástica** `hindama-frontend-eip`, asociada a la instancia. Agrégala a `own-ip-addresses` del backend (`/hindama/backend/own-ip-addresses`, lista JSON) y reinicia el backend: así nadie puede apuntar la plataforma contra sí misma (ADR-008).
 - **Rol de la instancia** con `ssm:GetParameter` **solo** sobre `/hindama/dev/frontend/*` y `kms:Decrypt` de la clave que protege esos parámetros. No debe poder leer `/hindama/backend/*`. Verifica con el simulador de IAM como en la sección 6 del procedimiento del backend.
 - `start.sh` lee SSM desde el servidor y no desde el contenedor, así que no hace falta cambiar el límite de saltos de IMDS.
