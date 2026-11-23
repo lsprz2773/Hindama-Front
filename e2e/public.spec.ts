@@ -83,12 +83,12 @@ test.describe("área pública", () => {
     });
   });
 
-  test("V-01 avisa cuando la sesión solo se cerró en este navegador", async ({ page }) => {
+  test("avisa cuando la sesión solo se cerró en este navegador", async ({ page }) => {
     await mockBff(page, "**/api/auth/sign-out", { body: { revoked: false } });
     await page.goto("/projects");
     await page.getByRole("button", { name: /Ana López/ }).click();
     await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/sign-in$/);
     await expect(page.getByText("Cerraste sesión solo en este navegador").first()).toBeVisible();
   });
 });

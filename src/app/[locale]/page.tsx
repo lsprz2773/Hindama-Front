@@ -4,7 +4,6 @@ import { PublicShell } from "@/components/layout/public-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { SeverityBadge } from "@/components/ui/severity";
-import { HomeNotice } from "@/features/account/home-notice";
 import { resolveLocale } from "@/i18n/params";
 
 const BENEFITS = [
@@ -42,7 +41,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const t = await getTranslations({ locale, namespace: "Home" });
 
   return (
-    <PublicShell notice={<HomeNotice />}>
+    <PublicShell>
       <section
         aria-labelledby="hero-h"
         className="border-line flex flex-wrap items-center gap-10 rounded-[28px] border bg-[image:var(--hero)] px-6 py-10 sm:px-12 sm:py-14"

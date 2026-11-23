@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { useSignOut } from "@/features/account/use-sign-out";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 
@@ -154,7 +155,7 @@ export function Sidebar({ role, project, collapsed = false }: SidebarProps) {
           active={isActive("/profile")}
           open={open}
         />
-        <NavItem href="/sign-in" icon="logout" label={t("signOut")} active={false} open={open} />
+        <SignOutItem label={t("signOut")} open={open} />
       </div>
     </nav>
   );
@@ -178,6 +179,24 @@ function Group({
       ) : null}
       {children}
     </div>
+  );
+}
+
+/** «Cerrar sesión»: llama al BFF y lleva a iniciar sesión; no es un enlace a `/sign-in`. */
+function SignOutItem({ label, open }: { label: string; open: boolean }) {
+  const { signOut, signingOut } = useSignOut();
+  return (
+    <button
+      type="button"
+      onClick={() => void signOut()}
+      disabled={signingOut}
+      aria-label={label}
+      title={label}
+      className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[14px] px-3 text-left text-[15px] font-medium text-[#c9c1b8] transition-colors duration-200 hover:bg-white/8 disabled:cursor-wait disabled:opacity-60"
+    >
+      <Icon name="logout" size={20} strokeWidth={1.8} />
+      {open ? <span className="flex-1 whitespace-nowrap">{label}</span> : null}
+    </button>
   );
 }
 
