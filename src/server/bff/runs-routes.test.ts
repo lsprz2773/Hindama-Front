@@ -55,7 +55,7 @@ const RUN = {
     findings_by_severity: severity,
     updated_at: "2026-11-16T10:00:00Z",
   },
-  created_resources: { pending: 0, deleted: 0, failed: 0 },
+  created_resources: { pending: 0, deleted: 0, failed: 0, failed_items: [] },
   cancel_requested_at: null,
   created_at: "2026-11-16T10:00:00Z",
   started_at: null,

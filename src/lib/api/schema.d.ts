@@ -321,7 +321,8 @@ export interface paths {
         /**
          * Eliminar una identidad
          * @description Borrado lógico: la credencial se borra de inmediato y el nombre queda libre (ADR-015). Sus
-         *     recursos se eliminan. Los hallazgos que la usan se conservan.
+         *     recursos se eliminan. Sus hallazgos se conservan, pero los abiertos pasan a resueltos con el
+         *     motivo `identity_deleted` (RF-69); su historial y sus ocurrencias no cambian.
          */
         delete: operations["deleteIdentity"];
         options?: never;
@@ -791,6 +792,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estadísticas agregadas de la plataforma
+         * @description CU-20, RF-78 y RF-79. Solo el administrador; el analista recibe 403. Las cifras salen
+         *     **solo** de métricas anónimas que se escriben cuando ocurre cada hecho (RF-89): no cambian
+         *     al eliminarse un proyecto o una cuenta, y no traen URLs, contratos, credenciales, evidencias
+         *     ni identificadores de analistas, proyectos o hallazgos.
+         *
+         *     Periodo:
+         *     - `date_from` y `date_to` son fechas en UTC y **ambas se incluyen**. Por omisión, los 30 días
+         *       que terminan hoy. Un `date_from` posterior a `date_to` (en `date_to`) o un periodo de más de
+         *       366 días (en `date_from`) es 422 con `validation.format`.
+         *     - `group` agrupa la serie `activity`: `day` (por omisión) o `week`. Con `week`, cada grupo
+         *       empieza el lunes (`start`) y el primero y el último pueden estar incompletos. La serie trae
+         *       todos los grupos del periodo, también los que valen cero.
+         *
+         *     Hallazgos: para no fechar a nadie, cada hallazgo se guarda con el **lunes de la semana** en
+         *     que se detectó por primera vez. Cuentan los de las semanas cuyo lunes cae entre el lunes de
+         *     `date_from` y `date_to`. `average_days_to_resolve` promedia, entre esos hallazgos, los que una
+         *     ejecución confirmó corregidos (motivo `not_detected`); los cierres administrativos no cuentan
+         *     (modelo de datos, sección 7.3). Es `null` si no hay ninguno.
+         *
+         *     Usuarios: `users.total` son las cuentas que existían al terminar el periodo (altas menos
+         *     bajas desde el inicio de la plataforma).
+         */
+        get: operations["getAdminStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -993,8 +1034,13 @@ export interface components {
              */
             risk: "low" | "medium" | "high";
             available: boolean;
-            /** @description Requisitos que faltan (RF-45); vacío si `available` es `true`. */
-            missing: ("project_not_verified" | "no_contract" | "insufficient_identities" | "no_admin_identity" | "no_resources" | "policy_unconfirmed")[];
+            /**
+             * @description Requisitos que faltan (RF-45), en este orden; vacío si `available` es `true`.
+             *     `not_implemented`: el motor todavía no tiene el módulo. Se informa junto con los demás
+             *     requisitos y lo quita una versión nueva del backend, no el analista. Lanzarlo responde
+             *     `run.module_unavailable`.
+             */
+            missing: ("project_not_verified" | "no_contract" | "insufficient_identities" | "no_admin_identity" | "no_resources" | "policy_unconfirmed" | "not_implemented")[];
         };
         /**
          * @description Resumen de una ejecución (RF-63): elemento de `listRuns` y `last_run` del dashboard. La duración
@@ -1506,13 +1552,35 @@ export interface components {
             updated_at: string;
         };
         /**
-         * @description Recursos que la plataforma creó en la API del analista (RN-06). `failed`: no se pudieron borrar
-         *     tras 3 intentos y el analista debe borrarlos a mano (CU-23 E1).
+         * @description Recursos que la plataforma creó en la API del analista (RN-06); hoy solo los crea el módulo de
+         *     propiedades (API3). Cada uno se anota antes de crearse y se borra en la misma prueba, también al
+         *     cancelar. `failed`: no se pudo borrar y el analista debe hacerlo a mano (CU-23 E1); `failed_items`
+         *     dice dónde.
          */
         CreatedResourceCount: {
             pending: number;
             deleted: number;
             failed: number;
+            /** @description Uno por recurso en `failed`, en el orden en que se crearon. */
+            failed_items: components["schemas"]["CreatedResourceFailure"][];
+        };
+        CreatedResourceFailure: {
+            /**
+             * Format: uuid
+             * @description La operación que lo creó.
+             */
+            operation_id: string;
+            /**
+             * @description La ruta para borrarlo, relativa a la URL base del proyecto (`/wishlist/wish-7`). Si no se
+             *     pudo leer su identificador, es la ruta con que se creó (`/wishlist`).
+             */
+            location: string;
+            /**
+             * @description Por qué no se borró: `status_NNN` (código del último intento), `no_answer`, `no_identifier`,
+             *     `budget_exhausted`, `not_deleted` (la ejecución terminó antes) o `run_interrupted` (el motor
+             *     se detuvo y la reconciliación la dio por perdida).
+             */
+            last_error: string | null;
         };
         RunPage: {
             items: components["schemas"]["RunSummary"][];
@@ -1701,7 +1769,10 @@ export interface components {
                 headers: {
                     [key: string]: string;
                 };
-                /** @description `null` si la petición no llevó cuerpo (hoy, siempre: las pruebas son de solo lectura, RF-48). */
+                /**
+                 * @description El cuerpo enviado, hasta 1 KB y con las credenciales enmascaradas; `null` si la petición no llevó.
+                 *     Solo lo llevan propiedades (asignación masiva) y consumo de recursos (límite de cuerpo).
+                 */
                 body: string | null;
             };
             response: {
@@ -1717,9 +1788,13 @@ export interface components {
             };
             /**
              * @description Datos del módulo que ayudan a leer la evidencia. Sus claves dependen del módulo; el frontend
-             *     muestra las que conoce y puede ignorar las demás. Hoy: `resource` (`type`, `value`, `owner`)
-             *     en acceso a objetos y `control_identity` en acceso a funciones. Vacío si el módulo no agrega
-             *     nada.
+             *     muestra las que conoce y puede ignorar las demás. Vacío si el módulo no agrega nada. Hoy:
+             *     - acceso a objetos: `resource` (`type`, `value`, `owner`);
+             *     - acceso a funciones: `control_identity`;
+             *     - propiedades: `undeclared` (campos sobrantes) o `accepted_fields` y `created_resource`
+             *       (`deleted` o `failed`);
+             *     - consumo de recursos: `operation` y `requests` (ráfaga) o `request_body_bytes` (cuerpo);
+             *     - inyección SQL: `parameter` y `payload`.
              */
             context: {
                 [key: string]: unknown;
@@ -1751,6 +1826,82 @@ export interface components {
             total: number;
             page: number;
             page_size: number;
+        };
+        /** @description Estadísticas agregadas y anónimas del periodo (CU-20, RF-78, RF-79, RF-89). */
+        AdminStats: {
+            /** @description El periodo aplicado, con los valores por omisión ya resueltos. */
+            period: {
+                /** Format: date */
+                date_from: string;
+                /** Format: date */
+                date_to: string;
+                /** @enum {string} */
+                group: "day" | "week";
+            };
+            users: {
+                /** @description Cuentas al terminar el periodo. */
+                total: number;
+                new: number;
+                deleted: number;
+            };
+            projects: {
+                created: number;
+            };
+            /**
+             * @description Lanzadas (incluye las repetidas) y, de todas las que terminaron en el periodo, cuántas se
+             *     cancelaron o fallaron. Una ejecución lanzada el último día puede terminar en el siguiente.
+             */
+            runs: {
+                started: number;
+                cancelled: number;
+                failed: number;
+            };
+            /** @description Un elemento por día o por semana (`group`), en orden, sin huecos. */
+            activity: components["schemas"]["AdminStatsActivity"][];
+            findings: components["schemas"]["AdminStatsFindings"];
+        };
+        AdminStatsActivity: {
+            /**
+             * Format: date
+             * @description El día, o el lunes de la semana.
+             */
+            start: string;
+            new_users: number;
+            deleted_accounts: number;
+            projects_created: number;
+            runs_started: number;
+            runs_cancelled: number;
+            runs_failed: number;
+        };
+        /**
+         * @description Hallazgos detectados por primera vez en las semanas del periodo. `by_module` y
+         *     `by_owasp_category` van de más a menos frecuente (el nombre desempata) y solo traen los que
+         *     tienen alguno.
+         */
+        AdminStatsFindings: {
+            detected: number;
+            /** @description Cuántos de ellos una ejecución confirmó corregidos (`not_detected`). */
+            resolved: number;
+            /** @description Veces que alguno de ellos volvió a aparecer después de resuelto. */
+            regressions: number;
+            /** @description Días promedio entre la primera detección y la corrección confirmada, con dos decimales. */
+            average_days_to_resolve: number | null;
+            by_severity: components["schemas"]["SeverityCount"];
+            by_module: {
+                module: components["schemas"]["Module"];
+                detected: number;
+            }[];
+            by_owasp_category: {
+                /** @description Categoría del OWASP API Security Top 10 2023 (`API1:2023`). */
+                owasp_category: string;
+                detected: number;
+            }[];
+            /** @description Detectados por semana, del lunes de `date_from` al de `date_to`, sin huecos. */
+            weekly: {
+                /** Format: date */
+                week: string;
+                detected: number;
+            }[];
         };
         AuditLogPage: {
             items: components["schemas"]["AuditLogEntry"][];
@@ -3480,6 +3631,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditLogPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["AdminOnly"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    getAdminStats: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                group?: "day" | "week";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estadísticas del periodo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminStats"];
                 };
             };
             401: components["responses"]["Unauthenticated"];

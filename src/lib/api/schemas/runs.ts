@@ -55,10 +55,24 @@ export const runProgressSchema = z.object({
 assertType<Equal<z.output<typeof runProgressSchema>, Schemas["RunProgress"]>>();
 export type RunProgress = z.output<typeof runProgressSchema>;
 
+/** Un recurso que la plataforma creó y no pudo borrar: el analista lo borra a mano (CU-23 E1). */
+export const createdResourceFailureSchema = z.object({
+  operation_id: z.string(),
+  /** Ruta relativa a la URL base del proyecto (`/wishlist/wish-7`). */
+  location: z.string(),
+  /** `status_NNN`, `no_answer`, `no_identifier`, `budget_exhausted`, `not_deleted`, `run_interrupted`. */
+  last_error: z.string().nullable(),
+});
+assertType<
+  Equal<z.output<typeof createdResourceFailureSchema>, Schemas["CreatedResourceFailure"]>
+>();
+export type CreatedResourceFailure = z.output<typeof createdResourceFailureSchema>;
+
 export const createdResourceCountSchema = z.object({
   pending: z.number().int().min(0),
   deleted: z.number().int().min(0),
   failed: z.number().int().min(0),
+  failed_items: z.array(createdResourceFailureSchema),
 });
 assertType<Equal<z.output<typeof createdResourceCountSchema>, Schemas["CreatedResourceCount"]>>();
 

@@ -55,6 +55,7 @@ export const missingReasonSchema = z.enum([
   "no_admin_identity",
   "no_resources",
   "policy_unconfirmed",
+  "not_implemented",
 ]);
 
 export const moduleAvailabilitySchema = z.object({
