@@ -57,20 +57,35 @@ function Wait-Url([string]$Url) {
   Write-Host "Aviso: $Url aun no responde desde este equipo; espera un minuto y vuelve a intentar." -ForegroundColor Yellow
 }
 
-function Show-Info([string]$Url) {
+function Show-Info([string]$Url, $Tokens) {
   Write-Host ''
   Write-Host 'VAmPI (modo vulnerable)' -ForegroundColor Cyan
   Write-Host "  URL base del proyecto : $Url"
   Write-Host "  Contrato (importar)   : $Url/openapi.json"
   Write-Host "  Archivo de verificacion: $Url/.well-known/hindama-verificacion.txt"
-  Write-Host ''
-  Write-Host 'Identidades de prueba (inicio de sesion automatico: POST /users/v1/login, el token dura 60 s):'
-  Write-Host '  name1  contrasena: pass1'
-  Write-Host '  name2  contrasena: pass2'
-  Write-Host '  admin  contrasena: pass1'
+  if ($Tokens) {
+    Write-Host ''
+    Write-Host 'Identidades de prueba: crealas como "Token Bearer" con estos tokens (duran 1 hora):'
+    foreach ($user in $Tokens.Keys) { Write-Host ("  {0,-6} {1}" -f $user, $Tokens[$user]) }
+    Write-Host ''
+    Write-Host 'No uses "inicio de sesion automatico": VAmPI devuelve el token en el campo auth_token y Hindama solo busca'
+    Write-Host 'access_token, accessToken, token, jwt, id_token e idToken.'
+  }
   Write-Host ''
   Write-Host 'Siguiente paso: crea el proyecto con la URL base, copia su codigo de verificacion y ejecuta:'
   Write-Host '  .\demo\vampi.ps1 -Code <codigo>'
+}
+
+# Tokens de VAmPI de name1, name2 y admin (lo que devuelve su inicio de sesion), validos 1 hora.
+function Get-Tokens {
+  $passwords = [ordered]@{ name1 = 'pass1'; name2 = 'pass2'; admin = 'pass1' }
+  $tokens = [ordered]@{}
+  foreach ($user in $passwords.Keys) {
+    $body = @{ username = $user; password = $passwords[$user] } | ConvertTo-Json
+    $answer = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8081/users/v1/login' -ContentType 'application/json' -Body $body
+    $tokens[$user] = $answer.auth_token
+  }
+  return $tokens
 }
 
 switch ($Action) {
@@ -82,7 +97,7 @@ switch ($Action) {
   }
   'status' {
     Write-Host ("VAmPI: " + $(if (Test-Running $Vampi) { 'encendido' } else { 'apagado' }))
-    if (Test-Running $Tunnel) { Show-Info (Get-TunnelUrl) } else { Write-Host 'Tunel: apagado' }
+    if (Test-Running $Tunnel) { Show-Info (Get-TunnelUrl) $null } else { Write-Host 'Tunel: apagado' }
     return
   }
 }
@@ -95,7 +110,7 @@ docker network inspect $Net 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) { docker network create $Net | Out-Null }
 
 Remove-Container $Vampi
-docker run -d --name $Vampi --network $Net -e vulnerable=1 erev0s/vampi:latest | Out-Null
+docker run -d --name $Vampi --network $Net -e vulnerable=1 -e tokentimetolive=3600 erev0s/vampi:latest | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'docker run fallo: revisa que Docker Desktop este encendido.' }
 
 Remove-Container $Caddy
@@ -122,4 +137,4 @@ if (-not (Test-Running $Tunnel)) {
 }
 $u = Get-TunnelUrl
 Wait-Url $u
-Show-Info $u
+Show-Info $u (Get-Tokens)
