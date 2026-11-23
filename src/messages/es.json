@@ -12,7 +12,9 @@
     "signIn": "Iniciar sesión",
     "signUp": "Crear cuenta",
     "terms": "Términos de uso",
-    "privacy": "Aviso de privacidad"
+    "privacy": "Aviso de privacidad",
+    "goProjects": "Ir a mis proyectos",
+    "goAdmin": "Ir al panel"
   },
   "LanguageSelector": {
     "label": "Idioma",
@@ -427,7 +429,7 @@
     },
     "404": {
       "title": "No encontramos esta página",
-      "text": "El enlace puede estar mal escrito, o el proyecto ya no existe o no es tuyo.",
+      "text": "El enlace puede estar mal escrito, o lo que buscas ya no existe o no es tuyo.",
       "action": "Ir a mis proyectos"
     },
     "429": {
@@ -1052,7 +1054,7 @@
     },
     "stats": {
       "requests": "Peticiones",
-      "minutes": "Minutos de duración",
+      "minutes": "Duración (m:ss)",
       "modules": "Módulos ejecutados",
       "lastRun": "Última ejecución"
     },
@@ -1321,7 +1323,8 @@
     },
     "untitled": "Contrato sin título",
     "subject": "la versión del contrato",
-    "unchanged": "El documento es idéntico a la versión vigente; no se creó otra."
+    "unchanged": "El documento es idéntico a la versión vigente; no se creó otra.",
+    "importedTextClean": "Confirma la política de acceso."
   },
   "ContractVersions": {
     "crumb": "Versiones",
@@ -1378,7 +1381,8 @@
       "objects": {
         "title": "Acceso a objetos",
         "ok": "Dos identidades autenticadas, cada una con recursos propios. Lo cumples.",
-        "missing": "Necesitas dos identidades autenticadas, cada una con recursos propios."
+        "missing": "Necesitas dos identidades autenticadas, cada una con recursos propios.",
+        "noResources": "Ya tienes dos identidades, pero falta que cada una tenga recursos propios. Descúbrelos o agrégalos en «Recursos»."
       },
       "functions": {
         "title": "Acceso a funciones",
@@ -1881,7 +1885,7 @@
     "viewFindings": "Ver hallazgos",
     "stats": {
       "requests": "Peticiones",
-      "minutes": "Minutos de duración",
+      "minutes": "Duración (m:ss)",
       "modules": "Módulos ejecutados",
       "cells": "Comprobaciones evaluadas"
     },
@@ -1969,7 +1973,26 @@
       "allowed": "permitido",
       "denied": "denegado",
       "own_data_only": "solo sus datos",
-      "no_sql_error": "sin error SQL"
+      "no_sql_error": "sin error SQL",
+      "no_data": "sin datos",
+      "baseline_failed": "no se pudo comparar",
+      "method_not_safe": "método no seguro, no se probó",
+      "no_resources": "sin recursos para probar",
+      "no_auth_required": "no exige credenciales",
+      "login_failed": "falló el inicio de sesión",
+      "credential_expired": "credencial vencida",
+      "error": "error",
+      "accepted": "aceptado",
+      "rejected": "rechazado",
+      "declared_only": "solo campos declarados",
+      "undeclared_fields": "campos no declarados",
+      "hardened": "protegido",
+      "limited": "con límite",
+      "not_applicable": "no aplica",
+      "not_created": "no se creó",
+      "not_injectable": "no inyectable",
+      "not_jwt": "no usa JWT",
+      "budget_reserved": "presupuesto reservado"
     },
     "finding": {
       "open": "Ver hallazgo",

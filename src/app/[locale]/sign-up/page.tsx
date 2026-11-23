@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/layout/auth-shell";
+import { RedirectIfSignedIn } from "@/features/auth/redirect-if-signed-in";
 import { SignUpForm } from "@/features/auth/sign-up-form";
 import { resolveLocale } from "@/i18n/params";
 
@@ -44,6 +45,7 @@ export default async function SignUpPage({ params }: PageProps<"/[locale]/sign-u
         </ol>
       }
     >
+      <RedirectIfSignedIn />
       <SignUpForm />
     </AuthShell>
   );

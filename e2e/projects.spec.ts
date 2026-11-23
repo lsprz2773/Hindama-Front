@@ -247,7 +247,8 @@ test.describe("V-14 y V-15 nuevo proyecto", () => {
     ).toBeVisible();
     await expect(page.getByText("Falta verificar la propiedad").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Prueba completa" })).toBeDisabled();
-    await expect(page.getByText("Disponible tras verificar")).toBeVisible();
+    // «Recursos» abre aunque falte verificar: solo «Descubrir recursos» lo exige (F-04).
+    await expect(page.getByRole("link", { name: "Recursos" })).toBeVisible();
   });
 
   test("V-15: un destino que la API no permite se marca en la URL", async ({ page }) => {

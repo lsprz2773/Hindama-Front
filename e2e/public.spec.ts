@@ -2,22 +2,25 @@ import { expect, test } from "./fixtures";
 import { mockBff } from "./support/bff";
 
 test.describe("área pública", () => {
-  test("V-01 lleva a crear cuenta, iniciar sesión y a los textos legales", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Encuentra las fallas");
-    await page.getByRole("link", { name: "Crear cuenta" }).first().click();
-    await expect(page).toHaveURL(/\/sign-up$/);
+  test.describe("sin sesión", () => {
+    test.use({ signedIn: false });
+    test("V-01 lleva a crear cuenta, iniciar sesión y a los textos legales", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.getByRole("heading", { level: 1 })).toContainText("Encuentra las fallas");
+      await page.getByRole("link", { name: "Crear cuenta" }).first().click();
+      await expect(page).toHaveURL(/\/sign-up$/);
 
-    await page.goto("/");
-    await page.getByRole("link", { name: "Iniciar sesión" }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
+      await page.goto("/");
+      await page.getByRole("link", { name: "Iniciar sesión" }).click();
+      await expect(page).toHaveURL(/\/sign-in$/);
 
-    await page.goto("/");
-    await page.getByRole("link", { name: "Términos de uso" }).click();
-    await expect(page).toHaveURL(/\/terms$/);
-    await page.goBack();
-    await page.getByRole("link", { name: "Aviso de privacidad" }).click();
-    await expect(page).toHaveURL(/\/privacy$/);
+      await page.goto("/");
+      await page.getByRole("link", { name: "Términos de uso" }).click();
+      await expect(page).toHaveURL(/\/terms$/);
+      await page.goBack();
+      await page.getByRole("link", { name: "Aviso de privacidad" }).click();
+      await expect(page).toHaveURL(/\/privacy$/);
+    });
   });
 
   test("V-01 'Ver qué prueba' baja a los siete módulos", async ({ page }) => {
@@ -87,5 +90,49 @@ test.describe("área pública", () => {
     await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByText("Cerraste sesión solo en este navegador").first()).toBeVisible();
+  });
+});
+
+test.describe("páginas públicas con la sesión abierta (F-03, F-05, F-10)", () => {
+  test("el 404 no ofrece iniciar sesión ni crear cuenta y la pestaña lo nombra", async ({
+    page,
+  }) => {
+    await page.goto("/esta-ruta-no-existe");
+    await expect(page).toHaveTitle("No encontramos esta página · Hindama");
+    await expect(page.getByRole("link", { name: "Ir a mis proyectos" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Crear cuenta" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Iniciar sesión" })).toHaveCount(0);
+  });
+
+  test.describe("administrador", () => {
+    test.use({ role: "admin" });
+    test("el encabezado lleva a su panel", async ({ page }) => {
+      await page.goto("/esta-ruta-no-existe");
+      await expect(page.getByRole("link", { name: "Ir al panel" }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: "Crear cuenta" })).toHaveCount(0);
+    });
+  });
+
+  test("/sign-in y /sign-up llevan a proyectos", async ({ page }) => {
+    await page.goto("/sign-in");
+    await expect(page).toHaveURL(/\/projects$/);
+    await page.goto("/sign-up");
+    await expect(page).toHaveURL(/\/projects$/);
+  });
+
+  test.describe("sin sesión", () => {
+    test.use({ signedIn: false });
+
+    test("el 404 sí ofrece iniciar sesión y crear cuenta", async ({ page }) => {
+      await page.goto("/esta-ruta-no-existe");
+      await expect(page.getByRole("link", { name: "Iniciar sesión" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Crear cuenta" })).toBeVisible();
+    });
+
+    test("/sign-in muestra el formulario", async ({ page }) => {
+      await page.goto("/sign-in");
+      await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
+      await expect(page).toHaveURL(/\/sign-in$/);
+    });
   });
 });

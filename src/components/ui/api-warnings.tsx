@@ -60,10 +60,11 @@ export function ApiWarnings({ warnings, only, className }: ApiWarningsProps) {
               tag={config.persistent ? t("persistent") : t("momentary")}
             >
               {t(`${key}.text` as never)}
-              {w.location || w.message ? (
+              {w.location ? (
                 <code className="bg-track text-fg mt-1.5 block max-w-full self-start rounded-[10px] px-2.5 py-1.5 font-mono text-[12.5px] break-words">
-                  {/* En avisos del contrato, `location` es un JSON Pointer dentro del documento. */}
-                  {w.location ?? w.message}
+                  {/* En avisos del contrato, `location` es un JSON Pointer dentro del documento. El
+                      `message` de la API no se muestra: el texto ya sale traducido por `code`. */}
+                  {w.location}
                 </code>
               ) : null}
             </Banner>

@@ -17,6 +17,7 @@ import type { Run } from "@/lib/api/schemas/runs";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { useFindings, useRun } from "./api";
+import { formatDuration } from "@/lib/format-duration";
 import { ExportFindingsButton } from "./export-findings-button";
 import { FailedResources } from "./failed-resources";
 import { MODULE_ORDER, MODULE_VIEW } from "./modules";
@@ -98,15 +99,12 @@ function Results({ project, run }: { project: Project; run: Run }) {
   const top = useFindings(project.id, { runId: run.id, status: [...OPEN_STATUSES], pageSize: 3 });
   const status = run.status === "cancelled" || run.status === "failed" ? run.status : "completed";
   const chip = STATUS_CHIP[status];
-  const minutes =
-    run.started_at && run.finished_at
-      ? Math.max(1, Math.round((Date.parse(run.finished_at) - Date.parse(run.started_at)) / 60_000))
-      : null;
+  const elapsed = formatDuration(run.started_at, run.finished_at);
   const when = run.finished_at ?? run.created_at;
 
   const stats: [string, string][] = [
     [format.number(run.progress.requests_sent), t("stats.requests")],
-    [minutes === null ? "—" : String(minutes), t("stats.minutes")],
+    [elapsed ?? "—", t("stats.minutes")],
     [`${run.modules.length} / ${MODULE_ORDER.length}`, t("stats.modules")],
     [
       `${format.number(run.progress.cells_evaluated)} / ${format.number(run.progress.cells_planned)}`,

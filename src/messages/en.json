@@ -12,7 +12,9 @@
     "signIn": "Sign in",
     "signUp": "Create account",
     "terms": "Terms of use",
-    "privacy": "Privacy notice"
+    "privacy": "Privacy notice",
+    "goProjects": "Go to my projects",
+    "goAdmin": "Go to the panel"
   },
   "LanguageSelector": {
     "label": "Language",
@@ -427,7 +429,7 @@
     },
     "404": {
       "title": "We couldn't find this page",
-      "text": "The link may be mistyped, or the project no longer exists or isn't yours.",
+      "text": "The link may be mistyped, or what you are looking for no longer exists or isn't yours.",
       "action": "Go to my projects"
     },
     "429": {
@@ -1052,7 +1054,7 @@
     },
     "stats": {
       "requests": "Requests",
-      "minutes": "Minutes of duration",
+      "minutes": "Duration (m:ss)",
       "modules": "Modules run",
       "lastRun": "Last run"
     },
@@ -1321,7 +1323,8 @@
     },
     "untitled": "Untitled contract",
     "subject": "the contract version",
-    "unchanged": "The document is identical to the current version; no new version was created."
+    "unchanged": "The document is identical to the current version; no new version was created.",
+    "importedTextClean": "Confirm the access policy."
   },
   "ContractVersions": {
     "crumb": "Versions",
@@ -1378,7 +1381,8 @@
       "objects": {
         "title": "Object access",
         "ok": "Two authenticated identities, each with its own resources. You meet it.",
-        "missing": "You need two authenticated identities, each with its own resources."
+        "missing": "You need two authenticated identities, each with its own resources.",
+        "noResources": "You have two identities, but each one still needs resources of its own. Discover or add them under “Resources”."
       },
       "functions": {
         "title": "Function access",
@@ -1881,7 +1885,7 @@
     "viewFindings": "View findings",
     "stats": {
       "requests": "Requests",
-      "minutes": "Minutes",
+      "minutes": "Duration (m:ss)",
       "modules": "Modules run",
       "cells": "Checks evaluated"
     },
@@ -1969,7 +1973,26 @@
       "allowed": "allowed",
       "denied": "denied",
       "own_data_only": "own data only",
-      "no_sql_error": "no SQL error"
+      "no_sql_error": "no SQL error",
+      "no_data": "no data",
+      "baseline_failed": "could not compare",
+      "method_not_safe": "unsafe method, not tested",
+      "no_resources": "no resources to test",
+      "no_auth_required": "needs no credentials",
+      "login_failed": "login failed",
+      "credential_expired": "credential expired",
+      "error": "error",
+      "accepted": "accepted",
+      "rejected": "rejected",
+      "declared_only": "declared fields only",
+      "undeclared_fields": "undeclared fields",
+      "hardened": "hardened",
+      "limited": "limited",
+      "not_applicable": "not applicable",
+      "not_created": "not created",
+      "not_injectable": "not injectable",
+      "not_jwt": "does not use JWT",
+      "budget_reserved": "budget reserved"
     },
     "finding": {
       "open": "View finding",
