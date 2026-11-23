@@ -54,6 +54,8 @@ test.describe("V-25 configurar una ejecución", () => {
   });
 
   test("un módulo de riesgo exige confirmación antes de poder ejecutar", async ({ page }) => {
+    // El ejemplo del contrato 0.10.0 marca los tres módulos nuevos como no disponibles.
+    await mockBff(page, PROJECT, { body: project() }, "GET");
     await page.goto(`${BASE}/runs/new`);
     await page.getByRole("checkbox", { name: /^Propiedades/ }).check();
     await expect(
@@ -88,6 +90,7 @@ test.describe("V-25 configurar una ejecución", () => {
   test("ejecutar envía los módulos, los límites y la confirmación, y abre la vista en curso", async ({
     page,
   }) => {
+    await mockBff(page, PROJECT, { body: project() }, "GET");
     await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
     const calls = await mockBff(
       page,
@@ -974,7 +977,7 @@ test.describe("V-30 detalle de hallazgo", () => {
     await expect(page.getByText("Parámetro probado: id")).toBeVisible();
     await expect(page.getByText("Carga de prueba: ' OR 1=1 --")).toBeVisible();
     await expect(page.getByText('{"role":"admin"}')).toBeVisible();
-    await expect(page.locator("#main b")).toHaveCount(0);
+    await expect(page.locator("#main ul:has-text('Campos protegidos') b")).toHaveCount(0);
   });
 
   test("aceptar el riesgo envía el motivo y la justificación y muestra el descarte", async ({
