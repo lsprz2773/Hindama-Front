@@ -1,17 +1,13 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
-import { useState } from "react";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/toast";
 import { useMe } from "@/features/account/api";
-import { setHomeNotice } from "@/features/account/notice";
+import { useSignOut } from "@/features/account/use-sign-out";
 import { useRouter } from "@/i18n/navigation";
-import { setCsrfToken, useHttpClient } from "@/lib/http/browser";
 
 function initials(name: string) {
   return name
@@ -29,30 +25,9 @@ function initials(name: string) {
 export function UserMenu() {
   const t = useTranslations("UserMenu");
   const router = useRouter();
-  const http = useHttpClient();
-  const queryClient = useQueryClient();
-  const toast = useToast();
   const me = useMe();
-  const [signingOut, setSigningOut] = useState(false);
+  const { signOut, signingOut } = useSignOut();
   const name = me.data?.name ?? "";
-
-  async function signOut() {
-    if (signingOut) return;
-    setSigningOut(true);
-    let revoked = true;
-    try {
-      const { data } = await http.post<{ revoked?: unknown }>("/auth/sign-out");
-      revoked = data?.revoked !== false;
-    } catch {
-      toast.show({ type: "error", title: t("signOutError") });
-      setSigningOut(false);
-      return;
-    }
-    setCsrfToken(undefined);
-    queryClient.clear();
-    setHomeNotice(revoked ? null : "local_sign_out");
-    router.replace("/");
-  }
 
   if (!me.data) {
     return (
