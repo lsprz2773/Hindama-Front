@@ -590,9 +590,100 @@ test.describe("V-23 recursos por identidad", () => {
     await expect(page.getByRole("radio", { name: "Usuario A · 3" })).toBeChecked();
     await expect(page.getByRole("radio", { name: /Anónimo/ })).toHaveCount(0);
     await expect(page.getByText("101", { exact: true })).toBeVisible();
-    // El descubrimiento aún no existe en el backend.
+    // El proyecto está verificado y sin ejecución activa: se puede descubrir.
+    await expect(page.getByRole("button", { name: "Descubrir recursos" })).toBeEnabled();
+    await expect(page.getByText("Puede tardar hasta 25 segundos")).toBeVisible();
+  });
+
+  const DISCOVERY_URL = `**/api/projects/${PROJECT_ID}/resources/discovery`;
+  const OTHER_IDENTITY = "0192e3a0-6666-7000-8000-000000000003";
+
+  test("descubrir usa discoverResources, muestra el resultado y recarga los recursos", async ({
+    page,
+  }) => {
+    const calls = await mockBff(
+      page,
+      DISCOVERY_URL,
+      {
+        body: {
+          created: [DISCOVERED],
+          identities: [
+            { identity_id: USER_A, found: 3, created: 1, owned_by_other: 0, failure: null },
+            {
+              identity_id: OTHER_IDENTITY,
+              found: 0,
+              created: 0,
+              owned_by_other: 0,
+              failure: "not_attempted",
+            },
+          ],
+          requests_sent: 4,
+          truncated: true,
+        },
+      },
+      "POST",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await page.getByRole("button", { name: "Descubrir recursos" }).click();
+    await expect(page.getByText("Se encontró 1 recurso nuevo")).toBeVisible();
+    expect(calls).toHaveLength(1);
+    expect(calls[0].postDataJSON()).toEqual({});
+    await expect(page.getByText("1 recurso nuevo por confirmar · 4 peticiones")).toBeVisible();
+    await expect(page.getByText("El descubrimiento se detuvo en un tope")).toBeVisible();
+    await expect(page.getByText("3 encontrados · 1 nuevos · 0 de otra identidad")).toBeVisible();
+    await expect(page.getByText("No se probó: se alcanzó un tope")).toBeVisible();
+  });
+
+  test("descubrir explica una ejecución activa y un contrato sin listados", async ({ page }) => {
+    let answer = 0;
+    await page.route(DISCOVERY_URL, async (route) => {
+      answer += 1;
+      const code = answer === 1 ? "project.active_run" : "resource.no_list_operations";
+      const status = answer === 1 ? 409 : 422;
+      await route.fulfill({
+        status,
+        contentType: "application/problem+json",
+        body: JSON.stringify(problem(status, code)),
+      });
+    });
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    const button = page.getByRole("button", { name: "Descubrir recursos" });
+    await button.click();
+    await expect(page.getByText("Hay una ejecución en cola o en curso").first()).toBeVisible();
+    await button.click();
+    await expect(page.getByText("no tiene operaciones GET de listado")).toBeVisible();
+  });
+
+  test("descubrir no está disponible sin verificar el proyecto ni con una ejecución activa", async ({
+    page,
+  }) => {
+    const project_ = `**/api/projects/${PROJECT_ID}`;
+    await mockBff(
+      page,
+      project_,
+      { body: project({ verification_status: "pending", verified_at: null }) },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
     await expect(page.getByRole("button", { name: "Descubrir recursos" })).toBeDisabled();
-    await expect(page.getByText("aún no está disponible")).toBeVisible();
+    await expect(page.getByText("Verifica la propiedad del host antes de descubrir")).toBeVisible();
+
+    await page.unroute(project_);
+    const verified = project();
+    await mockBff(
+      page,
+      project_,
+      {
+        body: {
+          ...verified,
+          last_run: { ...(verified.last_run as object), status: "running", finished_at: null },
+        },
+      },
+      "GET",
+    );
+    await page.goto(`/projects/${PROJECT_ID}/resources`);
+    await expect(page.getByRole("button", { name: "Descubrir recursos" })).toBeDisabled();
+    await expect(page.getByText("Hay una ejecución en cola o en curso; espera")).toBeVisible();
   });
 
   test("cambiar un identificador envía la selección completa con updateOperation", async ({

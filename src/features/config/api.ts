@@ -29,11 +29,14 @@ import {
 } from "@/lib/api/schemas/identities";
 import {
   resourceCreateSchema,
+  resourceDiscoveryRequestSchema,
+  resourceDiscoverySchema,
   resourcePageSchema,
   resourceSchema,
   resourceUpdateSchema,
   type Resource,
   type ResourceCreate,
+  type ResourceDiscovery,
   type ResourceUpdate,
 } from "@/lib/api/schemas/resources";
 import type { Schemas } from "@/lib/api/types";
@@ -356,6 +359,23 @@ export async function updateResource(
 /** `deleteResource` (V-23): solo lo quita de Hindama, no de la API del analista. */
 export async function deleteResource(http: HttpClient, id: string, resourceId: string) {
   await http.delete(resourcePath(id, resourceId));
+}
+
+/**
+ * `discoverResources` (V-23): llama como cada identidad a los GET de listado del contrato.
+ * Síncrona (hasta 25 s). Los recursos nuevos quedan `discovered` y sin confirmar. Sin
+ * `identityIds` usa todas las identidades con credencial.
+ */
+export async function discoverResources(http: HttpClient, id: string, identityIds?: string[]) {
+  const body = resourceDiscoveryRequestSchema.parse(
+    identityIds ? { identity_ids: identityIds } : {},
+  );
+  return (
+    await http.post<ResourceDiscovery>(`${projectPath(id)}/resources/discovery`, {
+      body,
+      schema: resourceDiscoverySchema,
+    })
+  ).data;
 }
 
 /** Tras cambiar recursos: las listas, las identidades (`resource_count`) y el proyecto (módulos). */

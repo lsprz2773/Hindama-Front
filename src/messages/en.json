@@ -1503,7 +1503,27 @@
       "title": "2. Discover resources",
       "text": "We call, as each identity, only the listing GET operations, such as <code>GET /orders</code>, and propose what we find.",
       "button": "Discover resources",
-      "unavailable": "Automatic discovery is not available yet. Meanwhile, add resources by hand.",
+      "hint": "It can take up to 25 seconds. Whatever it finds is left to confirm.",
+      "running": "Discovering resources…",
+      "needsVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noIdentities": "Register an identity with a credential to discover its resources.",
+      "done": "{count, plural, one {# new resource found} other {# new resources found}}",
+      "doneNone": "No new resources found",
+      "summary": "{count, plural, one {# new resource to confirm} other {# new resources to confirm}} · {requests, plural, one {# request} other {# requests}}",
+      "identityLine": "{found, plural, one {# found} other {# found}} · {created} new · {other} from another identity",
+      "unknownIdentity": "Deleted identity",
+      "truncated": {
+        "title": "Discovery stopped at a limit",
+        "text": "It reached the limit of 100 requests or 25 seconds and there may be more resources. Confirm or delete what it found and discover again."
+      },
+      "failure": {
+        "rejected": "The API answered with an error when listing. Check the credential.",
+        "login_failed": "The login operation did not return a token.",
+        "connection_error": "The host did not answer or the request timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address.",
+        "not_attempted": "Not tried: a limit was reached before getting to this identity."
+      },
       "registered": "Registered resources"
     },
     "review": {
@@ -1539,6 +1559,10 @@
       "ownedByOther": "That resource already belongs to another identity. An object has one owner.",
       "identityNotFound": "The identity no longer exists. Reload the page.",
       "anonymousOwner": "The anonymous identity has no resources.",
+      "notVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noListOperations": "The current contract has no listing GET operations, so there is nothing to discover.",
+      "discoveryTimeout": "Discovery took too long. Whatever it managed to find was saved: reload the list.",
       "notFound": "The resource no longer exists. Reload the page.",
       "rateLimited": "Too many requests. Wait a moment and try again.",
       "failed": "The action could not be completed",

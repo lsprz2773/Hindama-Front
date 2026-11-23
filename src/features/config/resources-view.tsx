@@ -15,16 +15,17 @@ import { Link } from "@/i18n/navigation";
 import type { Operation } from "@/lib/api/schemas/contracts";
 import type { Identity } from "@/lib/api/schemas/identities";
 import type { Project } from "@/lib/api/schemas/projects";
-import type { Resource } from "@/lib/api/schemas/resources";
+import type { Resource, ResourceDiscovery } from "@/lib/api/schemas/resources";
 import { resourceCreateSchema } from "@/lib/api/schemas/resources";
 import { fieldErrors } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/http";
 import { useHttpClient } from "@/lib/http/browser";
-import { ProjectShell } from "@/features/projects/project-shell";
+import { hasActiveRun, ProjectShell } from "@/features/projects/project-shell";
 import {
   createResource,
   deleteResource,
+  discoverResources,
   updateOperation,
   updateResource,
   useAfterPolicy,
@@ -222,9 +223,59 @@ function IdentifierParams({ project }: { project: Project }) {
   );
 }
 
-/** RF-36. `discoverResources` aún no está en el backend: el botón queda deshabilitado. */
-function Discovery({ total }: { total: number }) {
+/**
+ * RF-36. `discoverResources` llama como cada identidad a los GET de listado del contrato. Es
+ * síncrona (hasta 25 s) y los recursos nuevos quedan sin confirmar, para revisarlos abajo.
+ */
+function Discovery({
+  project,
+  identities,
+  total,
+}: {
+  project: Project;
+  identities: Identity[];
+  total: number;
+}) {
   const t = useTranslations("Resources");
+  const http = useHttpClient();
+  const toast = useToast();
+  const afterChange = useAfterResources(project.id);
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<ResourceDiscovery | null>(null);
+  const [failure, setFailure] = useState<{ title: string; text?: string } | null>(null);
+  const blocked =
+    project.verification_status !== "verified"
+      ? t("discover.needsVerified")
+      : hasActiveRun(project)
+        ? t("discover.activeRun")
+        : identities.length === 0
+          ? t("discover.noIdentities")
+          : null;
+  const names = new Map(identities.map((i) => [i.id, i.name]));
+
+  async function discover() {
+    if (running || blocked) return;
+    setRunning(true);
+    setFailure(null);
+    try {
+      const found = await discoverResources(http, project.id);
+      setResult(found);
+      afterChange();
+      toast.show({
+        type: "success",
+        title:
+          found.created.length > 0
+            ? t("discover.done", { count: found.created.length })
+            : t("discover.doneNone"),
+      });
+    } catch (error) {
+      setResult(null);
+      setFailure(discoveryError(error, t));
+    } finally {
+      setRunning(false);
+    }
+  }
+
   return (
     <section
       aria-labelledby="res-discover"
@@ -238,14 +289,26 @@ function Discovery({ total }: { total: number }) {
           code: (chunks) => <code className="font-mono">{chunks}</code>,
         })}
       </p>
-      {/* TODO(api): conectar `discoverResources` cuando exista en el backend (RF-36). */}
-      <Button disabled aria-describedby="res-discover-soon">
+      <Button
+        loading={running}
+        disabled={blocked !== null}
+        aria-describedby="res-discover-hint"
+        onClick={() => void discover()}
+      >
         <Icon name="search" size={18} />
         {t("discover.button")}
       </Button>
-      <p id="res-discover-soon" className="text-muted text-[13px]">
-        {t("discover.unavailable")}
+      <p id="res-discover-hint" className="text-muted text-[13px]">
+        {running ? t("discover.running") : (blocked ?? t("discover.hint"))}
       </p>
+      <div aria-live="polite" className="flex flex-col gap-3">
+        {failure ? (
+          <Banner tone="danger" title={failure.title}>
+            {failure.text}
+          </Banner>
+        ) : null}
+        {result ? <DiscoveryResult result={result} names={names} /> : null}
+      </div>
       <dl className="border-line bg-panel-2 m-0 flex flex-col gap-0.5 rounded-[20px] border px-[18px] py-4">
         <dt className="text-muted order-2 text-[13px]">{t("discover.registered")}</dt>
         <dd className="font-display order-1 m-0 text-[28px] leading-none font-medium tabular-nums">
@@ -254,6 +317,60 @@ function Discovery({ total }: { total: number }) {
       </dl>
     </section>
   );
+}
+
+/** Qué pasó con cada identidad; la evidencia llega como contadores, nunca como texto del servidor. */
+function DiscoveryResult({
+  result,
+  names,
+}: {
+  result: ResourceDiscovery;
+  names: Map<string, string>;
+}) {
+  const t = useTranslations("Resources");
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm font-semibold">
+        {t("discover.summary", { count: result.created.length, requests: result.requests_sent })}
+      </p>
+      {result.truncated ? (
+        <Banner title={t("discover.truncated.title")}>{t("discover.truncated.text")}</Banner>
+      ) : null}
+      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+        {result.identities.map((item) => (
+          <li
+            key={item.identity_id}
+            className="bg-panel-2 flex flex-col gap-0.5 rounded-2xl px-3.5 py-2.5"
+          >
+            <span className="text-[14.5px] font-semibold break-words">
+              {names.get(item.identity_id) ?? t("discover.unknownIdentity")}
+            </span>
+            <span className="text-muted text-[13px]">
+              {item.failure
+                ? t(`discover.failure.${item.failure}`)
+                : t("discover.identityLine", {
+                    found: item.found,
+                    created: item.created,
+                    other: item.owned_by_other,
+                  })}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Error de `discoverResources` → texto (los códigos los da la API). */
+function discoveryError(error: unknown, t: Translate) {
+  if (error instanceof ApiError) {
+    if (error.code === "project.not_verified") return { title: t("errors.notVerified") };
+    if (error.code === "project.active_run") return { title: t("errors.activeRun") };
+    if (error.code === "resource.no_list_operations")
+      return { title: t("errors.noListOperations") };
+    if (error.code === "request.timeout") return { title: t("errors.discoveryTimeout") };
+  }
+  return actionError(error, t);
 }
 
 function ResourceList({
@@ -522,7 +639,7 @@ function Resources({ project, identities }: { project: Project; identities: Iden
 
       <div className="flex flex-wrap items-stretch gap-5">
         <IdentifierParams project={project} />
-        <Discovery total={total} />
+        <Discovery project={project} identities={named} total={total} />
       </div>
 
       <section aria-labelledby="res-review" className={card}>
