@@ -12,17 +12,25 @@
 param(
   [ValidateSet('start', 'stop', 'status')][string]$Action = 'start',
   [ValidateSet('vulnerable', 'secure')][string]$Mode = 'vulnerable',
+  # Correcciones parciales: el laboratorio sigue vulnerable salvo en lo que se nombre aqui.
+  #   objetos   -> API1: GET /orders/{id} y GET /accounts/{id}/statement (acceso a objetos de otra identidad)
+  #   funciones -> API5: GET /admin/users y DELETE /admin/users/{id} (funciones de administrador)
+  #   sql       -> inyeccion SQL: /products y /products/{id}
+  [ValidateSet('objetos', 'funciones', 'sql')][string[]]$Fix = @(),
   [string]$Code = '',
   # Carpeta de hindama-backend (por defecto, la hermana de este repositorio).
-  [string]$Backend = (Join-Path $PSScriptRoot '..\..\hindama-backend')
+  [string]$Backend = (Join-Path $PSScriptRoot '..\..\hindama-backend'),
+  # Para tener dos laboratorios a la vez: otro nombre y otro puerto.
+  [string]$Name = 'hindama-demo-lab',
+  [int]$Port = 8100
 )
 
 # Windows PowerShell 5.1 convierte el stderr de docker en error terminante con 'Stop': se revisa
 # $LASTEXITCODE donde importa.
 $ErrorActionPreference = 'Continue'
-$Lab = 'hindama-demo-lab'
-$Tunnel = 'hindama-demo-lab-tunel'
-$Data = Join-Path $PSScriptRoot '.datos\lab'
+$Lab = $Name
+$Tunnel = "$Name-tunel"
+$Data = Join-Path $PSScriptRoot ".datos\$Name"
 
 function Test-Running([string]$Name) {
   $state = docker inspect -f '{{.State.Running}}' $Name 2>$null
@@ -46,7 +54,7 @@ function Get-TunnelUrl {
     if ($m.Success) { return $m.Value }
     Start-Sleep -Seconds 1
   }
-  throw 'El tunel no dio su URL en 40 segundos. Revisa: docker logs hindama-demo-lab-tunel'
+  throw "El tunel no dio su URL en 40 segundos. Revisa: docker logs $Tunnel"
 }
 
 # El nombre del tunel tarda unos segundos en resolverse desde fuera: se espera a que responda para
@@ -63,7 +71,8 @@ function Wait-Url([string]$Url) {
 
 function Show-Info([string]$Url) {
   Write-Host ''
-  Write-Host "Laboratorio del catalogo ($Mode)" -ForegroundColor Cyan
+  $estado = if ($Fix.Count -gt 0) { "vulnerable, con corregido: " + ($Fix -join ', ') } else { $Mode }
+  Write-Host "Laboratorio del catalogo ($estado)" -ForegroundColor Cyan
   Write-Host "  URL base del proyecto : $Url"
   Write-Host "  Contrato (importar)   : $Url/openapi.json"
   Write-Host "  Archivo de verificacion: $Url/.well-known/hindama-verificacion.txt"
@@ -101,8 +110,8 @@ if ($Code) { Set-Code $Code }
 elseif (-not (Test-Path (Join-Path $Data 'verificacion.txt'))) { Set-Code '' }
 
 Remove-Container $Lab
-docker run -d --name $Lab -p 127.0.0.1:8100:8100 `
-  -e "LAB_MODE=$Mode" -e 'PYTHONPATH=/lab:/app/src' `
+docker run -d --name $Lab -p "127.0.0.1:${Port}:8100" `
+  -e "LAB_MODE=$Mode" -e "LAB_FIXES=$($Fix -join ',')" -e 'PYTHONPATH=/lab:/app/src' `
   -v "${Tests}:/lab/tests:ro" `
   -v "$(Join-Path $PSScriptRoot 'lab-catalogo\run_lab.py'):/lab/run_lab.py:ro" `
   -v "${Data}:/data" `
@@ -111,16 +120,16 @@ if ($LASTEXITCODE -ne 0) { throw 'docker run fallo: revisa que Docker Desktop es
 
 for ($i = 0; $i -lt 30; $i++) {
   try {
-    Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8100/openapi.json' -TimeoutSec 2 | Out-Null
+    Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/openapi.json" -TimeoutSec 2 | Out-Null
     break
   } catch { Start-Sleep -Seconds 1 }
-  if ($i -eq 29) { throw 'El laboratorio no responde en 127.0.0.1:8100. Revisa: docker logs hindama-demo-lab' }
+  if ($i -eq 29) { throw "El laboratorio no responde en 127.0.0.1:$Port. Revisa: docker logs $Lab" }
 }
 
 if (-not (Test-Running $Tunnel)) {
   Remove-Container $Tunnel
   docker run -d --name $Tunnel --add-host=host.docker.internal:host-gateway cloudflare/cloudflared:latest `
-    tunnel --no-autoupdate --url http://host.docker.internal:8100 | Out-Null
+    tunnel --no-autoupdate --url "http://host.docker.internal:$Port" | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'docker run fallo: revisa que Docker Desktop este encendido.' }
 }
 $u = Get-TunnelUrl
