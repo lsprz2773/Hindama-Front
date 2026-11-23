@@ -22,7 +22,8 @@ Hindama solo prueba una API cuyo dominio puedas demostrar que controlas (un arch
 ```powershell
 .\demo\lab-catalogo.ps1                       # enciende el laboratorio vulnerable y su túnel
 .\demo\lab-catalogo.ps1 -Code <código>        # pone el código de verificación del proyecto
-.\demo\lab-catalogo.ps1 -Mode secure          # lo «corrige» para volver a probar (la URL no cambia)
+.\demo\lab-catalogo.ps1 -Fix objetos,funciones,sql   # corrige solo tres fallas y deja las demás (la URL no cambia)
+.\demo\lab-catalogo.ps1 -Mode secure          # lo corrige todo (la URL no cambia)
 .\demo\lab-catalogo.ps1 -Action status
 .\demo\lab-catalogo.ps1 -Action stop          # al terminar
 ```
@@ -38,6 +39,16 @@ Al encender imprime la **URL base**, la del **contrato** (`/openapi.json`) y las
 Son valores de prueba que ya están en el repositorio del backend. Las operaciones «solo propietario» piden indicar el campo propietario al confirmar la política.
 
 **Qué debe salir** con los siete módulos (ejecución de referencia del 23/11/2026, 10 peticiones por segundo): terminó en 1:03 con 114 peticiones y 28 hallazgos (11 críticos, 9 altos, 4 medios, 3 bajos y 1 informativo), repartidos entre los siete módulos. En modo seguro, la nueva ejecución queda sin hallazgos y el proyecto pasa a «Concluido».
+
+**Corregir tres fallas y volver a probar.** `-Fix` deja el laboratorio vulnerable salvo en lo que nombres, para ver en Hindama qué pasa a «Resuelto» y qué sigue abierto:
+
+| `-Fix`      | Qué corrige                                             | Rutas                                              |
+| ----------- | ------------------------------------------------------- | -------------------------------------------------- |
+| `objetos`   | API1: acceso al objeto de otra identidad                | `GET /orders/{id}`, `GET /accounts/{id}/statement` |
+| `funciones` | API5: función de administrador al alcance de un usuario | `GET /admin/users`, `DELETE /admin/users/{id}`     |
+| `sql`       | Inyección SQL                                           | `GET /products`, `GET /products/{id}`              |
+
+Con las tres correcciones, tras «Volver a probar» sobre una ejecución de referencia de 28 hallazgos: **13 pasan a «Resuelto»** (acceso a objetos 3, funciones 2, inyección SQL 4 y, además, 4 de autenticación, porque las rutas corregidas ahora también verifican la firma del JWT) y **quedan 15 abiertos**: configuración (6), propiedades (2), consumo de recursos (1), autenticación (5) e inyección SQL en `/invoices/{id}` (1), una ruta que `-Fix` no toca. Lo medido el 23/11/2026 en un proyecto donde un hallazgo de acceso a objetos ya estaba como «Riesgo aceptado» fue: 12 resueltos, 1 riesgo aceptado y 15 abiertos. Cada corrección solo cambia las rutas de la tabla: no se toca el código del backend.
 
 **Confirmar las fallas sin Hindama.** `.\demo\verificar-laboratorio.ps1 -Url <URL base>` hace una petición por cada falla (credenciales ausentes, JWT alterado y sin firma, acceso al pedido de otra identidad, función de administrador, CORS, cabeceras, traza de error, campos de más, ausencia de límite de peticiones e inyección SQL) y muestra lo que debe verse en modo vulnerable y en modo seguro. Compara el resultado con los hallazgos de Hindama. Es solo para el laboratorio propio.
 
@@ -72,7 +83,7 @@ Pega el token de cada uno en una identidad nueva. Si apagas y enciendes VAmPI, l
 7. **Nueva ejecución.** Selecciona los siete módulos, confirma los tres de riesgo y sube el límite a 10 peticiones por segundo para que dure un minuto.
 8. **Progreso en vivo**, después **resultados**, **matriz** (celdas con discrepancia), **detalle de un hallazgo** (petición y respuesta con las credenciales enmascaradas) y **reporte** (con «Exportar a Excel»).
 9. **Aceptar un riesgo** con justificación en un hallazgo.
-10. **Corregir y volver a probar** (solo laboratorio): `.\demo\lab-catalogo.ps1 -Mode secure`, «Volver a probar» y la comparación «0 nuevos, 0 persistentes, 0 regresiones».
+10. **Corregir y volver a probar** (solo laboratorio): `.\demo\lab-catalogo.ps1 -Fix objetos,funciones,sql` (o `-Mode secure` para corregir todo), «Volver a probar» y la comparación «0 nuevos, 0 persistentes, 0 regresiones».
 11. **Cierre.** `-Action stop` en el script que hayas usado.
 
 ## Cosas que conviene saber
