@@ -756,6 +756,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bitácora de acciones sensibles
+         * @description CU-21, RF-81 a RF-84. Solo el administrador; el analista recibe 403. Los registros no se editan
+         *     ni se eliminan desde la plataforma (RF-83) y se borran solos a los 6 meses (RF-90).
+         *
+         *     Orden: el más reciente primero (`occurred_at`; `id` desempata).
+         *
+         *     Filtros, todos opcionales y combinables:
+         *     - `occurred_from` (incluido) y `occurred_to` (excluido) acotan la fecha. Van en RFC 3339 con
+         *       hora y zona (`2026-11-20T00:00:00Z`, `2026-11-20T00:00:00-06:00`); una fecha sola, sin zona
+         *       o en segundos Unix es 422 con `validation.format`, igual que un `occurred_from` posterior a
+         *       `occurred_to` (en `occurred_to`).
+         *     - `action` se repite para varios valores.
+         *     - `user_id` deja las acciones de un usuario (el `id` interno, el mismo que lleva cada registro).
+         *     - `host` deja las acciones sobre ese host (A1 de CU-21): el servidor calcula su HMAC con cada
+         *       versión de la llave y compara. Acepta el nombre (`api.example.com`) o una URL completa; se
+         *       compara sin mayúsculas, sin puerto y en IDNA, igual que el host de un proyecto. El host nunca
+         *       se guarda ni se devuelve (RF-83). Un valor que no es un host es 422 con `validation.format`.
+         */
+        get: operations["listAuditLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1717,6 +1752,104 @@ export interface components {
             page: number;
             page_size: number;
         };
+        AuditLogPage: {
+            items: components["schemas"]["AuditLogEntry"][];
+            total: number;
+            page: number;
+            page_size: number;
+        };
+        /**
+         * @description Una acción sensible (RF-82). Sin credenciales, justificaciones, texto libre ni hosts en claro
+         *     (RF-83). `user_id` y `project_id` son identificadores opacos: siguen ahí aunque la cuenta o el
+         *     proyecto ya no existan.
+         */
+        AuditLogEntry: {
+            /** @description Secuencial. Sirve para citar un registro y desempatar el orden. */
+            id: number;
+            /** Format: date-time */
+            occurred_at: string;
+            action: components["schemas"]["AuditAction"];
+            /**
+             * Format: uuid
+             * @description Quien actuó, o el dueño del proyecto en las acciones del motor. `null` solo si no se conoce.
+             */
+            user_id: string | null;
+            /**
+             * Format: uuid
+             * @description `null` en las acciones de cuenta y en un bloqueo al crear un proyecto.
+             */
+            project_id: string | null;
+            /**
+             * @description IP del navegador que informó el servidor de Next.js (`X-Hindama-Client-IP`). `null` en las
+             *     acciones del motor de pruebas o si no llegó una IP válida.
+             * @example 203.0.113.25
+             * @example 2001:db8::1
+             */
+            source_ip: string | null;
+            details: components["schemas"]["AuditDetails"];
+        };
+        /**
+         * @description Catálogo de RF-81, más RN-09 y la pérdida de verificación.
+         *     - `account_created`: primer acceso de una cuenta a la API.
+         *     - `account_deleted`: reservado para la eliminación de cuentas; todavía no se emite.
+         *     - `project_created`, `project_deleted`.
+         *     - `project_verified`: verificación de propiedad exitosa. `project_verification_lost`: la
+         *       reverificación al iniciar una ejecución falló (RF-20).
+         *     - `identity_created`, `identity_deleted`.
+         *     - `run_launched` (también al volver a probar) y `run_cancelled` (cancelada por el analista).
+         *     - `finding_dismissed`: aceptar el riesgo o marcar un falso positivo (RN-09);
+         *       `finding_dismissal_reverted`: revertirlo.
+         *     - `destination_blocked`: la guardia SSRF impidió una petición o rechazó la URL de un proyecto (RF-11, RF-50).
+         * @enum {string}
+         */
+        AuditAction: "account_created" | "account_deleted" | "project_created" | "project_deleted" | "project_verified" | "project_verification_lost" | "identity_created" | "identity_deleted" | "run_launched" | "run_cancelled" | "finding_dismissed" | "finding_dismissal_reverted" | "destination_blocked";
+        /**
+         * @description Datos propios de cada acción; los que no aplican no aparecen. Nunca credenciales,
+         *     justificaciones ni texto libre del analista (RF-83).
+         */
+        AuditDetails: {
+            /**
+             * Format: uuid
+             * @description `run_launched`, `run_cancelled`, `project_verification_lost` y un `destination_blocked` del motor.
+             */
+            run_id?: string;
+            /**
+             * Format: uuid
+             * @description `run_launched` al volver a probar (RF-71).
+             */
+            source_run_id?: string;
+            /** @description `run_launched`. */
+            modules?: components["schemas"]["Module"][];
+            limits?: components["schemas"]["RunLimits"];
+            verification_method?: components["schemas"]["VerificationMethod"];
+            /**
+             * Format: uuid
+             * @description `identity_created` e `identity_deleted`.
+             */
+            identity_id?: string;
+            /**
+             * Format: uuid
+             * @description `finding_dismissed` y `finding_dismissal_reverted`.
+             */
+            finding_id?: string;
+            dismissal_reason?: components["schemas"]["DismissalReason"];
+            stage?: components["schemas"]["BlockStage"];
+            block_reason?: components["schemas"]["BlockReason"];
+        };
+        /**
+         * @description Dónde se bloqueó el destino (`destination_blocked`): al crear o editar el proyecto, al
+         *     verificarlo, al importar el contrato por URL, al probar una identidad, al descubrir recursos o
+         *     durante una ejecución.
+         * @enum {string}
+         */
+        BlockStage: "project_url" | "verification" | "contract_import" | "identity_test" | "resource_discovery" | "run";
+        /**
+         * @description Motivo del bloqueo (RF-11, RF-50): `address_not_allowed` (IP privada, loopback, enlace local,
+         *     metadatos de nube o propia de Hindama), `host_mismatch` (redirección fuera del host del
+         *     proyecto), `unresolved`, `invalid_url`, `scheme_not_allowed` o `too_many_redirects`.
+         * @enum {string}
+         */
+        BlockReason: "address_not_allowed" | "host_mismatch" | "unresolved" | "invalid_url" | "scheme_not_allowed" | "too_many_redirects";
     };
     responses: {
         /** @description `request.malformed`: cuerpo ilegible o tipo de contenido incorrecto. */
@@ -1749,6 +1882,15 @@ export interface components {
         };
         /** @description `role.forbidden`: el administrador no accede al contenido de los proyectos (RF-80). */
         RoleForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description `role.forbidden`: solo el administrador consulta el panel de administración (RF-84). */
+        AdminOnly: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3310,6 +3452,38 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    listAuditLog: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                page_size?: components["parameters"]["PageSize"];
+                occurred_from?: string;
+                occurred_to?: string;
+                action?: components["schemas"]["AuditAction"][];
+                user_id?: string;
+                host?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de la bitácora. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["AdminOnly"];
             422: components["responses"]["ValidationFailed"];
             429: components["responses"]["TooManyRequests"];
         };
