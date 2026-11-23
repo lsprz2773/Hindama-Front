@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Salida autocontenida para la imagen de Docker (deploy/Dockerfile).
+  output: "standalone",
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

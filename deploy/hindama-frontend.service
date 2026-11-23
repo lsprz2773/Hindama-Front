@@ -1,0 +1,15 @@
+[Unit]
+Description=Frontend de Hindama (Next.js + Caddy en Docker)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# /run se vacía en cada arranque: start.sh vuelve a leer los secretos de SSM y levanta los contenedores.
+ExecStart=/opt/hindama/frontend/deploy/start.sh
+ExecStop=/usr/bin/docker compose -f /opt/hindama/frontend/deploy/compose.yaml down
+
+[Install]
+WantedBy=multi-user.target

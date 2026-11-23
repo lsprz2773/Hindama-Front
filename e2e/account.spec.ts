@@ -57,34 +57,11 @@ test.describe("V-09 perfil", () => {
     await expect(page.getByText("req-e2e-503")).toBeVisible();
   });
 
-  test("activar y desactivar el 2FA (V-10) cambia el estado del perfil", async ({ page }) => {
+  test("el 2FA aparece como próximamente y no ofrece activarlo (V-10)", async ({ page }) => {
     await page.goto("/profile");
-    await expect(page.getByText("Desactivado. Te recomendamos activarlo.")).toBeVisible();
-    await page.getByRole("link", { name: "Activar 2FA" }).click();
-    await expect(page).toHaveURL(/\/profile\/two-factor$/);
-    await expect(
-      page.getByRole("heading", { name: "Activa el segundo factor", level: 1 }),
-    ).toBeVisible();
-    await expect(page.getByRole("img", { name: /Código QR/ })).toBeVisible();
-    await expect(page.getByText("JBSW Y3DP EHPK 3PXP")).toBeVisible();
-
-    const confirm = page.getByRole("button", { name: "Confirmar" });
-    await expect(confirm).toBeDisabled();
-    await page.getByLabel("Dígito 1 de 6").focus();
-    await page.keyboard.type("123456");
-    await expect(confirm).toBeEnabled();
-    await confirm.click();
-
-    await expect(page).toHaveURL(/\/profile$/);
-    await expect(page.getByText("Activado.")).toBeVisible();
-
-    await page.getByRole("button", { name: "Desactivar 2FA" }).click();
-    const dialog = page.getByRole("dialog");
-    const submit = dialog.getByRole("button", { name: "Desactivar 2FA" });
-    await expect(submit).toBeDisabled();
-    await page.keyboard.type("654321");
-    await submit.click();
-    await expect(page.getByText("Desactivado. Te recomendamos activarlo.")).toBeVisible();
+    await expect(page.getByText("Próximamente. Todavía no está disponible.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Activar 2FA" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Desactivar 2FA" })).toHaveCount(0);
   });
 
   test("el selector segmentado cambia el idioma desde el perfil", async ({ page }) => {

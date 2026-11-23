@@ -683,6 +683,7 @@
     "twoFactor": "Segundo factor (2FA)",
     "twoFactorOn": "Activado.",
     "twoFactorOff": "Desactivado. Te recomendamos activarlo.",
+    "twoFactorSoon": "Próximamente. Todavía no está disponible.",
     "enableTwoFactor": "Activar 2FA",
     "disableTwoFactor": "Desactivar 2FA",
     "twoFactorDisabled": "Segundo factor desactivado",
