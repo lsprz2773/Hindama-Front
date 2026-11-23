@@ -1,5 +1,10 @@
 import { meSchema, termsAcceptanceSchema } from "@/lib/api/schemas/account";
-import { auditLogPageSchema, listAuditLogQuerySchema } from "@/lib/api/schemas/admin";
+import {
+  adminStatsSchema,
+  auditLogPageSchema,
+  getAdminStatsQuerySchema,
+  listAuditLogQuerySchema,
+} from "@/lib/api/schemas/admin";
 import {
   deleteProjectQuerySchema,
   listProjectsQuerySchema,
@@ -201,5 +206,11 @@ export const SPECS = {
     path: ["admin", "audit-log"],
     query: listAuditLogQuerySchema,
     response: auditLogPageSchema,
+  },
+  // Solo el administrador (403 `role.forbidden` al analista). Cifras anónimas, nunca un proyecto.
+  getAdminStats: {
+    path: ["admin", "stats"],
+    query: getAdminStatsQuerySchema,
+    response: adminStatsSchema,
   },
 } satisfies Record<string, ApiRouteSpec>;
