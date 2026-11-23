@@ -7,6 +7,7 @@ import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "
 
 const PROJECT = `**/api/projects/${PROJECT_ID}`;
 const BASE = `/projects/${PROJECT_ID}`;
+const OP_ID = "0192e3a0-5555-7000-8000-000000000001";
 
 test.describe("V-25 configurar una ejecución", () => {
   test("parte de los módulos disponibles de bajo riesgo y explica los bloqueados", async ({
@@ -30,7 +31,31 @@ test.describe("V-25 configurar una ejecución", () => {
     await expect(page.getByRole("button", { name: "Ejecutar 2 módulos" })).toBeEnabled();
   });
 
+  test("un módulo que el motor aún no tiene se avisa sin enlace para resolverlo", async ({
+    page,
+  }) => {
+    await mockBff(
+      page,
+      PROJECT,
+      {
+        body: project({
+          modules: project().modules.map((m: { module: string }) =>
+            m.module === "sql_injection"
+              ? { ...m, available: false, missing: ["not_implemented"] }
+              : m,
+          ),
+        }),
+      },
+      "GET",
+    );
+    await page.goto(`${BASE}/runs/new`);
+    await expect(page.getByRole("checkbox", { name: /Inyección SQL/ })).toBeDisabled();
+    await expect(page.getByText("Disponible en una versión próxima")).toBeVisible();
+  });
+
   test("un módulo de riesgo exige confirmación antes de poder ejecutar", async ({ page }) => {
+    // El ejemplo del contrato 0.10.0 marca los tres módulos nuevos como no disponibles.
+    await mockBff(page, PROJECT, { body: project() }, "GET");
     await page.goto(`${BASE}/runs/new`);
     await page.getByRole("checkbox", { name: /^Propiedades/ }).check();
     await expect(
@@ -65,6 +90,7 @@ test.describe("V-25 configurar una ejecución", () => {
   test("ejecutar envía los módulos, los límites y la confirmación, y abre la vista en curso", async ({
     page,
   }) => {
+    await mockBff(page, PROJECT, { body: project() }, "GET");
     await mockProgress(page, [{ event: "snapshot", data: runningRun() }]);
     const calls = await mockBff(
       page,
@@ -414,7 +440,15 @@ test.describe("V-27 resultados", () => {
         body: {
           ...completedRun(),
           end_reason: "limit_reached",
-          created_resources: { pending: 0, deleted: 2, failed: 2 },
+          created_resources: {
+            pending: 0,
+            deleted: 2,
+            failed: 2,
+            failed_items: [
+              { operation_id: OP_ID, location: "/wishlist/wish-7", last_error: "status_500" },
+              { operation_id: OP_ID, location: "/wishlist", last_error: "no_identifier" },
+            ],
+          },
         },
       },
       "GET",
@@ -422,7 +456,12 @@ test.describe("V-27 resultados", () => {
     await page.goto(`${BASE}/runs/${RUN_ID}`);
     await expect(page.getByText("Fin: se alcanzó un límite")).toBeVisible();
     await expect(page.getByText("Resultado parcial")).toBeVisible();
-    await expect(page.getByText("2 recursos de prueba no se pudieron borrar")).toBeVisible();
+    await expect(page.getByText("2 recursos quedaron sin eliminar en tu API")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "/wishlist/wish-7" })).toBeVisible();
+    await expect(page.getByText("El último intento respondió 500")).toBeVisible();
+    await expect(
+      page.getByText("No se pudo leer el identificador del recurso creado"),
+    ).toBeVisible();
   });
 
   test("una ejecución que no es la última no muestra la comparación", async ({ page }) => {
@@ -913,6 +952,32 @@ test.describe("V-30 detalle de hallazgo", () => {
     await expect(page.getByText(/<img src=x onerror=/)).toBeVisible();
     await expect(page.locator("#main img")).toHaveCount(0);
     expect(await page.evaluate(() => (window as { __xss?: number }).__xss)).toBeUndefined();
+  });
+
+  test("las notas del módulo se muestran como texto", async ({ page }) => {
+    const occurrence = {
+      ...OCCURRENCE,
+      evidence: {
+        ...OCCURRENCE.evidence,
+        request: { ...OCCURRENCE.evidence.request, body: '{"role":"admin"}' },
+        context: {
+          accepted_fields: ["role", "<b>is_admin</b>"],
+          created_resource: "failed",
+          parameter: "id",
+          payload: "' OR 1=1 --",
+        },
+      },
+    };
+    await mockBff(page, DETAIL, { body: findingDetail({ last_occurrence: occurrence }) }, "GET");
+    await page.goto(URL_DETAIL);
+    await expect(
+      page.getByText("Campos protegidos que la API aceptó: role, <b>is_admin</b>"),
+    ).toBeVisible();
+    await expect(page.getByText(/no pudo borrarlo: elimínalo a mano/)).toBeVisible();
+    await expect(page.getByText("Parámetro probado: id")).toBeVisible();
+    await expect(page.getByText("Carga de prueba: ' OR 1=1 --")).toBeVisible();
+    await expect(page.getByText('{"role":"admin"}')).toBeVisible();
+    await expect(page.locator("#main ul:has-text('Campos protegidos') b")).toHaveCount(0);
   });
 
   test("aceptar el riesgo envía el motivo y la justificación y muestra el descarte", async ({

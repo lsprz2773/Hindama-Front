@@ -42,7 +42,7 @@ export function runningRun(overrides: Record<string, unknown> = {}) {
       findings_by_severity: SEVERITY,
       updated_at: "2026-11-17T09:10:41Z",
     },
-    created_resources: { pending: 0, deleted: 0, failed: 0 },
+    created_resources: { pending: 0, deleted: 0, failed: 0, failed_items: [] },
     cancel_requested_at: null,
     created_at: "2026-11-17T09:10:00Z",
     started_at: "2026-11-17T09:10:02Z",
@@ -75,7 +75,7 @@ export function completedRun() {
     status: "completed",
     end_reason: "normal",
     progress: { ...run.progress, status: "completed", current_module: null, percent: 100 },
-    created_resources: { pending: 0, deleted: 4, failed: 0 },
+    created_resources: { pending: 0, deleted: 4, failed: 0, failed_items: [] },
     finished_at: "2026-11-17T09:14:37Z",
   });
 }

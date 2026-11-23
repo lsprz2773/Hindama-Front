@@ -437,7 +437,9 @@ test.describe("V-21 y V-22 identidades", () => {
     await page.goto(`/projects/${PROJECT_ID}/identities`);
     await page.getByRole("button", { name: "Eliminar Usuario A" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText("Sus hallazgos se conservan.")).toBeVisible();
+    await expect(
+      dialog.getByText("Sus hallazgos se conservan; los abiertos pasan a resueltos."),
+    ).toBeVisible();
     await dialog.getByRole("button", { name: "Eliminar identidad" }).click();
     await expect(dialog.getByText("Hay una ejecución en cola o en curso")).toBeVisible();
 

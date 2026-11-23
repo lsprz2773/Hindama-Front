@@ -23,6 +23,7 @@ import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/http";
 import { useFindingDetails, useFindings, useRun, useRunResults } from "./api";
+import { ContextNotes } from "./context-notes";
 import { evidenceText } from "./evidence";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
@@ -278,6 +279,7 @@ function FindingEvidence({
           {t("findings.detail.explanation")}
         </h4>
         <p className="m-0 text-sm leading-[1.6] break-words">{occurrence.explanation}</p>
+        <ContextNotes context={occurrence.evidence.context} />
       </div>
       <div>
         <h4 className="text-muted text-[12.5px] font-semibold">

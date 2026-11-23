@@ -40,7 +40,10 @@ function Dashboard({ project }: { project: Project }) {
   const policyPending = project.modules.some((m) => m.missing.includes("policy_unconfirmed"));
 
   /** Motivo de cada requisito que falta y dónde se resuelve (C-13). */
-  const blockFor = (missing: Missing) =>
+  const blockFor = (
+    missing: Missing,
+  ):
+    { reason: string; label: string; href: string } | { reason: string; label: null; href: null } =>
     ({
       project_not_verified: {
         reason: t("blocked.unverified"),
@@ -72,6 +75,8 @@ function Dashboard({ project }: { project: Project }) {
         label: t("blocked.reviewPolicy"),
         href: `${base}/policy`,
       },
+      // Lo quita una versión nueva del backend, no el analista: sin enlace (contrato 0.8.0).
+      not_implemented: { reason: t("blocked.notImplemented"), label: null, href: null },
     })[missing];
 
   const minutes = run ? duration(run.started_at, run.finished_at) : null;
@@ -260,7 +265,13 @@ function Dashboard({ project }: { project: Project }) {
           <ul className="stagger m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-2.5 p-0">
             {project.modules.map((m) => {
               const { key, code } = MODULES[m.module];
-              const block = m.available ? null : blockFor(m.missing[0] ?? "project_not_verified");
+              const block = m.available
+                ? null
+                : blockFor(
+                    m.missing.includes("not_implemented")
+                      ? "not_implemented"
+                      : (m.missing[0] ?? "project_not_verified"),
+                  );
               const ran = run?.modules.includes(m.module) ?? false;
               return (
                 <li
@@ -284,9 +295,11 @@ function Dashboard({ project }: { project: Project }) {
                     {ran ? t("modules.ran") : t("modules.notRun")}
                   </span>
                   {block ? (
-                    <ButtonLink href={block.href} variant="ghost" size="sm" className="px-2">
-                      {block.label}
-                    </ButtonLink>
+                    block.href ? (
+                      <ButtonLink href={block.href} variant="ghost" size="sm" className="px-2">
+                        {block.label}
+                      </ButtonLink>
+                    ) : null
                   ) : !active ? (
                     <ButtonLink
                       href={`${base}/runs/new?module=${key}`}

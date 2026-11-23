@@ -17,6 +17,7 @@ import type { Run } from "@/lib/api/schemas/runs";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { useFindings, useRun } from "./api";
+import { FailedResources } from "./failed-resources";
 import { MODULE_ORDER, MODULE_VIEW } from "./modules";
 import { RerunButton } from "./rerun-button";
 import { RunTabs } from "./run-tabs";
@@ -112,7 +113,6 @@ function Results({ project, run }: { project: Project; run: Run }) {
     ],
   ];
   const partial = run.end_reason === "limit_reached" || run.status !== "completed";
-  const failedResources = run.created_resources.failed;
 
   return (
     <>
@@ -123,6 +123,8 @@ function Results({ project, run }: { project: Project; run: Run }) {
           {t("report")}
         </ButtonLink>
       </div>
+
+      <FailedResources projectId={project.id} items={run.created_resources.failed_items} />
 
       <div className="flex flex-wrap items-start gap-5">
         <section
@@ -250,7 +252,7 @@ function Results({ project, run }: { project: Project; run: Run }) {
         </section>
 
         <aside className="flex min-w-[280px] flex-[1_1_320px] flex-col gap-5">
-          {partial || failedResources > 0 ? (
+          {partial ? (
             <section aria-labelledby="ax-h" className={card}>
               <h2 id="ax-h" className="text-lg font-semibold">
                 {t("notices.title")}
@@ -258,12 +260,6 @@ function Results({ project, run }: { project: Project; run: Run }) {
               {partial ? (
                 <Banner title={t(`notices.partial.${status}.title`)}>
                   {t(`notices.partial.${status}.text`)}
-                </Banner>
-              ) : null}
-              {/* TODO(api): C-15 sin detalle (operación, ubicación, último error); solo el conteo. */}
-              {failedResources > 0 ? (
-                <Banner title={t("notices.pending.title", { count: failedResources })}>
-                  {t("notices.pending.text")}
                 </Banner>
               ) : null}
             </section>

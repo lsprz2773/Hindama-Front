@@ -33,6 +33,7 @@ import {
   useFinding,
   useOccurrences,
 } from "./api";
+import { ContextNotes } from "./context-notes";
 import { curlFor, evidenceText } from "./evidence";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
@@ -327,6 +328,7 @@ function FindingDetail({ project, finding }: { project: Project; finding: Findin
               : t("why.resource", { type: resource.type, value: resource.value })}
           </span>
         ) : null}
+        <ContextNotes context={occurrence.evidence.context} />
       </section>
 
       <section aria-labelledby="fd-evidence" className={card}>

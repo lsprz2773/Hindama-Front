@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hindama API
-  version: 0.7.0
+  version: 0.10.0
   summary: API privada de la plataforma Hindama. Su único cliente es el servidor de Next.js (BFF).
   description: |
     Contrato de la API de la plataforma. Es la fuente de verdad: el backend lo implementa y el
@@ -22,6 +22,14 @@ info:
     configuración y llena `source_run_id`.
     0.7.0: bitácora (CU-21, RF-81 a RF-84, RN-09): `listAuditLog` para el administrador, con filtros por
     fecha, acción, usuario y host (comparando su HMAC).
+    0.8.0: `ModuleAvailability.missing` gana `not_implemented` (el motor todavía no tiene ese módulo,
+    RF-45) y se corrige la descripción de `deleteIdentity`: sus hallazgos abiertos se resuelven con
+    `identity_deleted` (RF-69).
+    0.9.0: estadísticas del administrador (CU-20, RF-78, RF-79, RF-89): `getAdminStats`, con actividad
+    por día o semana y hallazgos por módulo, categoría OWASP y severidad, solo de métricas anónimas.
+    0.10.0: los siete módulos existen. `created_resources` gana `failed_items` (dónde quedó cada recurso
+    que el analista debe borrar a mano, CU-23 E1), y la evidencia puede traer el cuerpo enviado y nuevas
+    claves de `context` (propiedades, consumo de recursos e inyección SQL).
     Los identificadores están en inglés (ADR-017). Los textos para el usuario los elige el frontend
     según el campo `code` de errores y advertencias.
 servers:
@@ -842,7 +850,8 @@ paths:
       summary: Eliminar una identidad
       description: |
         Borrado lógico: la credencial se borra de inmediato y el nombre queda libre (ADR-015). Sus
-        recursos se eliminan. Los hallazgos que la usan se conservan.
+        recursos se eliminan. Sus hallazgos se conservan, pero los abiertos pasan a resueltos con el
+        motivo `identity_deleted` (RF-69); su historial y sus ocurrencias no cambian.
       responses:
         '204':
           description: Identidad eliminada.
@@ -1877,6 +1886,72 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /admin/stats:
+    get:
+      tags: [Admin]
+      operationId: getAdminStats
+      summary: Estadísticas agregadas de la plataforma
+      description: |
+        CU-20, RF-78 y RF-79. Solo el administrador; el analista recibe 403. Las cifras salen
+        **solo** de métricas anónimas que se escriben cuando ocurre cada hecho (RF-89): no cambian
+        al eliminarse un proyecto o una cuenta, y no traen URLs, contratos, credenciales, evidencias
+        ni identificadores de analistas, proyectos o hallazgos.
+
+        Periodo:
+        - `date_from` y `date_to` son fechas en UTC y **ambas se incluyen**. Por omisión, los 30 días
+          que terminan hoy. Un `date_from` posterior a `date_to` (en `date_to`) o un periodo de más de
+          366 días (en `date_from`) es 422 con `validation.format`.
+        - `group` agrupa la serie `activity`: `day` (por omisión) o `week`. Con `week`, cada grupo
+          empieza el lunes (`start`) y el primero y el último pueden estar incompletos. La serie trae
+          todos los grupos del periodo, también los que valen cero.
+
+        Hallazgos: para no fechar a nadie, cada hallazgo se guarda con el **lunes de la semana** en
+        que se detectó por primera vez. Cuentan los de las semanas cuyo lunes cae entre el lunes de
+        `date_from` y `date_to`. `average_days_to_resolve` promedia, entre esos hallazgos, los que una
+        ejecución confirmó corregidos (motivo `not_detected`); los cierres administrativos no cuentan
+        (modelo de datos, sección 7.3). Es `null` si no hay ninguno.
+
+        Usuarios: `users.total` son las cuentas que existían al terminar el periodo (altas menos
+        bajas desde el inicio de la plataforma).
+      parameters:
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: group
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [day, week]
+            default: day
+      responses:
+        '200':
+          description: Estadísticas del periodo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStats'
+              examples:
+                adminStats:
+                  $ref: '#/components/examples/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2102,16 +2177,16 @@ components:
             missing: [no_admin_identity, policy_unconfirmed]
           - module: property_access
             risk: medium
-            available: true
-            missing: []
+            available: false
+            missing: [not_implemented]
           - module: resource_consumption
             risk: high
-            available: true
-            missing: []
+            available: false
+            missing: [not_implemented]
           - module: sql_injection
             risk: high
-            available: true
-            missing: []
+            available: false
+            missing: [not_implemented]
         warnings: []
         created_at: '2026-11-02T15:00:00Z'
         updated_at: '2026-11-03T10:05:00Z'
@@ -2155,15 +2230,15 @@ components:
           - module: property_access
             risk: medium
             available: false
-            missing: [project_not_verified, no_contract, insufficient_identities]
+            missing: [project_not_verified, no_contract, insufficient_identities, not_implemented]
           - module: resource_consumption
             risk: high
             available: false
-            missing: [project_not_verified, no_contract]
+            missing: [project_not_verified, no_contract, not_implemented]
           - module: sql_injection
             risk: high
             available: false
-            missing: [project_not_verified, no_contract]
+            missing: [project_not_verified, no_contract, not_implemented]
         warnings:
           - code: url.no_tls
             message: La URL usa HTTP; el tráfico y las credenciales de prueba viajarán sin cifrar.
@@ -2522,7 +2597,7 @@ components:
           percent: 0
           findings_by_severity: {critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0}
           updated_at: '2026-11-17T09:10:00Z'
-        created_resources: {pending: 0, deleted: 0, failed: 0}
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
         cancel_requested_at: null
         created_at: '2026-11-17T09:10:00Z'
         started_at: null
@@ -2558,7 +2633,7 @@ components:
           percent: 0
           findings_by_severity: {critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0}
           updated_at: '2026-11-17T12:00:00Z'
-        created_resources: {pending: 0, deleted: 0, failed: 0}
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
         cancel_requested_at: null
         created_at: '2026-11-17T12:00:00Z'
         started_at: null
@@ -2594,7 +2669,7 @@ components:
           percent: 31
           findings_by_severity: {critical: 0, high: 2, medium: 0, low: 0, info: 0, total: 2}
           updated_at: '2026-11-17T09:10:41Z'
-        created_resources: {pending: 0, deleted: 0, failed: 0}
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
         cancel_requested_at: null
         created_at: '2026-11-17T09:10:00Z'
         started_at: '2026-11-17T09:10:02Z'
@@ -2837,6 +2912,37 @@ components:
         justification: >-
           El pedido 1001 es un pedido de demostración público; cualquier cliente puede leerlo por diseño.
 
+    AdminStats:
+      summary: Una semana con actividad y hallazgos
+      value:
+        period: {date_from: '2026-11-16', date_to: '2026-11-22', group: day}
+        users: {total: 18, new: 3, deleted: 0}
+        projects: {created: 4}
+        runs: {started: 12, cancelled: 1, failed: 1}
+        activity:
+          - {start: '2026-11-16', new_users: 1, deleted_accounts: 0, projects_created: 2, runs_started: 3, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-17', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-18', new_users: 2, deleted_accounts: 0, projects_created: 1, runs_started: 4, runs_cancelled: 1, runs_failed: 0}
+          - {start: '2026-11-19', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 2, runs_cancelled: 0, runs_failed: 1}
+          - {start: '2026-11-20', new_users: 0, deleted_accounts: 0, projects_created: 1, runs_started: 3, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-21', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-22', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+        findings:
+          detected: 9
+          resolved: 3
+          regressions: 1
+          average_days_to_resolve: 2.67
+          by_severity: {critical: 1, high: 3, medium: 2, low: 2, info: 1, total: 9}
+          by_module:
+            - {module: object_access, detected: 4}
+            - {module: configuration, detected: 3}
+            - {module: authentication, detected: 2}
+          by_owasp_category:
+            - {owasp_category: 'API1:2023', detected: 4}
+            - {owasp_category: 'API8:2023', detected: 3}
+            - {owasp_category: 'API2:2023', detected: 2}
+          weekly:
+            - {week: '2026-11-16', detected: 9}
     AuditLogPage:
       summary: Una ejecución lanzada y un bloqueo del motor sobre el mismo host
       value:
@@ -3233,7 +3339,11 @@ components:
           type: boolean
         missing:
           type: array
-          description: Requisitos que faltan (RF-45); vacío si `available` es `true`.
+          description: |
+            Requisitos que faltan (RF-45), en este orden; vacío si `available` es `true`.
+            `not_implemented`: el motor todavía no tiene el módulo. Se informa junto con los demás
+            requisitos y lo quita una versión nueva del backend, no el analista. Lanzarlo responde
+            `run.module_unavailable`.
           items:
             type: string
             enum:
@@ -3243,6 +3353,7 @@ components:
               - no_admin_identity
               - no_resources
               - policy_unconfirmed
+              - not_implemented
     RunSummary:
       type: object
       additionalProperties: false
@@ -4248,9 +4359,11 @@ components:
       type: object
       additionalProperties: false
       description: |
-        Recursos que la plataforma creó en la API del analista (RN-06). `failed`: no se pudieron borrar
-        tras 3 intentos y el analista debe borrarlos a mano (CU-23 E1).
-      required: [pending, deleted, failed]
+        Recursos que la plataforma creó en la API del analista (RN-06); hoy solo los crea el módulo de
+        propiedades (API3). Cada uno se anota antes de crearse y se borra en la misma prueba, también al
+        cancelar. `failed`: no se pudo borrar y el analista debe hacerlo a mano (CU-23 E1); `failed_items`
+        dice dónde.
+      required: [pending, deleted, failed, failed_items]
       properties:
         pending:
           type: integer
@@ -4261,6 +4374,31 @@ components:
         failed:
           type: integer
           minimum: 0
+        failed_items:
+          type: array
+          description: Uno por recurso en `failed`, en el orden en que se crearon.
+          items:
+            $ref: '#/components/schemas/CreatedResourceFailure'
+    CreatedResourceFailure:
+      type: object
+      additionalProperties: false
+      required: [operation_id, location, last_error]
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+          description: La operación que lo creó.
+        location:
+          type: string
+          description: |
+            La ruta para borrarlo, relativa a la URL base del proyecto (`/wishlist/wish-7`). Si no se
+            pudo leer su identificador, es la ruta con que se creó (`/wishlist`).
+        last_error:
+          type: [string, 'null']
+          description: |
+            Por qué no se borró: `status_NNN` (código del último intento), `no_answer`, `no_identifier`,
+            `budget_exhausted`, `not_deleted` (la ejecución terminó antes) o `run_interrupted` (el motor
+            se detuvo y la reconciliación la dio por perdida).
     RunPage:
       type: object
       additionalProperties: false
@@ -4575,7 +4713,9 @@ components:
                 type: string
             body:
               type: [string, 'null']
-              description: '`null` si la petición no llevó cuerpo (hoy, siempre: las pruebas son de solo lectura, RF-48).'
+              description: |
+                El cuerpo enviado, hasta 1 KB y con las credenciales enmascaradas; `null` si la petición no llevó.
+                Solo lo llevan propiedades (asignación masiva) y consumo de recursos (límite de cuerpo).
         response:
           type: object
           additionalProperties: false
@@ -4600,9 +4740,13 @@ components:
           type: object
           description: |
             Datos del módulo que ayudan a leer la evidencia. Sus claves dependen del módulo; el frontend
-            muestra las que conoce y puede ignorar las demás. Hoy: `resource` (`type`, `value`, `owner`)
-            en acceso a objetos y `control_identity` en acceso a funciones. Vacío si el módulo no agrega
-            nada.
+            muestra las que conoce y puede ignorar las demás. Vacío si el módulo no agrega nada. Hoy:
+            - acceso a objetos: `resource` (`type`, `value`, `owner`);
+            - acceso a funciones: `control_identity`;
+            - propiedades: `undeclared` (campos sobrantes) o `accepted_fields` y `created_resource`
+              (`deleted` o `failed`);
+            - consumo de recursos: `operation` y `requests` (ráfaga) o `request_body_bytes` (cuerpo);
+            - inyección SQL: `parameter` y `payload`.
           additionalProperties: true
     FindingEvent:
       type: object
@@ -4669,6 +4813,166 @@ components:
           minimum: 1
 
     # ---------- Admin ----------
+    AdminStats:
+      type: object
+      additionalProperties: false
+      description: Estadísticas agregadas y anónimas del periodo (CU-20, RF-78, RF-79, RF-89).
+      required: [period, users, projects, runs, activity, findings]
+      properties:
+        period:
+          type: object
+          additionalProperties: false
+          description: El periodo aplicado, con los valores por omisión ya resueltos.
+          required: [date_from, date_to, group]
+          properties:
+            date_from:
+              type: string
+              format: date
+            date_to:
+              type: string
+              format: date
+            group:
+              type: string
+              enum: [day, week]
+        users:
+          type: object
+          additionalProperties: false
+          required: [total, new, deleted]
+          properties:
+            total:
+              type: integer
+              minimum: 0
+              description: Cuentas al terminar el periodo.
+            new:
+              type: integer
+              minimum: 0
+            deleted:
+              type: integer
+              minimum: 0
+        projects:
+          type: object
+          additionalProperties: false
+          required: [created]
+          properties:
+            created:
+              type: integer
+              minimum: 0
+        runs:
+          type: object
+          additionalProperties: false
+          description: |
+            Lanzadas (incluye las repetidas) y, de todas las que terminaron en el periodo, cuántas se
+            cancelaron o fallaron. Una ejecución lanzada el último día puede terminar en el siguiente.
+          required: [started, cancelled, failed]
+          properties:
+            started:
+              type: integer
+              minimum: 0
+            cancelled:
+              type: integer
+              minimum: 0
+            failed:
+              type: integer
+              minimum: 0
+        activity:
+          type: array
+          description: Un elemento por día o por semana (`group`), en orden, sin huecos.
+          items:
+            $ref: '#/components/schemas/AdminStatsActivity'
+        findings:
+          $ref: '#/components/schemas/AdminStatsFindings'
+    AdminStatsActivity:
+      type: object
+      additionalProperties: false
+      required: [start, new_users, deleted_accounts, projects_created, runs_started, runs_cancelled, runs_failed]
+      properties:
+        start:
+          type: string
+          format: date
+          description: El día, o el lunes de la semana.
+        new_users:
+          type: integer
+          minimum: 0
+        deleted_accounts:
+          type: integer
+          minimum: 0
+        projects_created:
+          type: integer
+          minimum: 0
+        runs_started:
+          type: integer
+          minimum: 0
+        runs_cancelled:
+          type: integer
+          minimum: 0
+        runs_failed:
+          type: integer
+          minimum: 0
+    AdminStatsFindings:
+      type: object
+      additionalProperties: false
+      description: |
+        Hallazgos detectados por primera vez en las semanas del periodo. `by_module` y
+        `by_owasp_category` van de más a menos frecuente (el nombre desempata) y solo traen los que
+        tienen alguno.
+      required: [detected, resolved, regressions, average_days_to_resolve, by_severity, by_module, by_owasp_category, weekly]
+      properties:
+        detected:
+          type: integer
+          minimum: 0
+        resolved:
+          type: integer
+          minimum: 0
+          description: Cuántos de ellos una ejecución confirmó corregidos (`not_detected`).
+        regressions:
+          type: integer
+          minimum: 0
+          description: Veces que alguno de ellos volvió a aparecer después de resuelto.
+        average_days_to_resolve:
+          type: [number, 'null']
+          minimum: 0
+          description: Días promedio entre la primera detección y la corrección confirmada, con dos decimales.
+        by_severity:
+          $ref: '#/components/schemas/SeverityCount'
+        by_module:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [module, detected]
+            properties:
+              module:
+                $ref: '#/components/schemas/Module'
+              detected:
+                type: integer
+                minimum: 1
+        by_owasp_category:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [owasp_category, detected]
+            properties:
+              owasp_category:
+                type: string
+                description: Categoría del OWASP API Security Top 10 2023 (`API1:2023`).
+              detected:
+                type: integer
+                minimum: 1
+        weekly:
+          type: array
+          description: Detectados por semana, del lunes de `date_from` al de `date_to`, sin huecos.
+          items:
+            type: object
+            additionalProperties: false
+            required: [week, detected]
+            properties:
+              week:
+                type: string
+                format: date
+              detected:
+                type: integer
+                minimum: 0
     AuditLogPage:
       type: object
       additionalProperties: false
