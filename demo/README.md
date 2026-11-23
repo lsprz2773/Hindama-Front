@@ -39,6 +39,8 @@ Son valores de prueba que ya están en el repositorio del backend. Las operacion
 
 **Qué debe salir** con los siete módulos (ejecución de referencia del 23/11/2026, 10 peticiones por segundo): terminó en 1:03 con 114 peticiones y 28 hallazgos (11 críticos, 9 altos, 4 medios, 3 bajos y 1 informativo), repartidos entre los siete módulos. En modo seguro, la nueva ejecución queda sin hallazgos y el proyecto pasa a «Concluido».
 
+**Confirmar las fallas sin Hindama.** `.\demo\verificar-laboratorio.ps1 -Url <URL base>` hace una petición por cada falla (credenciales ausentes, JWT alterado y sin firma, acceso al pedido de otra identidad, función de administrador, CORS, cabeceras, traza de error, campos de más, ausencia de límite de peticiones e inyección SQL) y muestra lo que debe verse en modo vulnerable y en modo seguro. Compara el resultado con los hallazgos de Hindama. Es solo para el laboratorio propio.
+
 ## VAmPI
 
 ```powershell
