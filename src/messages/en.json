@@ -2267,19 +2267,19 @@
       "action": "Action type",
       "allActions": "All actions",
       "user": "User",
-      "userPlaceholder": "Identifier or email",
+      "userPlaceholder": "Full identifier",
       "host": "Reported host",
       "clear": "Clear",
       "invalidRange": "The range is reversed: the start date cannot be after the end date."
     },
     "user": {
-      "none": "No matches for that user.",
-      "deletedHint": "No matches. A deleted account no longer has an email: search for it by identifier."
+      "help": "The log keeps no names or emails: search by the full identifier (UUID) or click one in the table.",
+      "invalid": "Enter the full identifier (UUID). Emails and fragments are not searched."
     },
     "host": {
-      "help": "It is compared by its fingerprint; the host is never shown.",
-      "matches": "{count, plural, one {# match by fingerprint.} other {# matches by fingerprint.}}",
-      "none": "No matches for that fingerprint."
+      "help": "Enter the name or the URL. It is compared by its HMAC: the host is never stored or shown.",
+      "active": "Showing the actions on that host, compared by its HMAC.",
+      "invalid": "That is not a valid host."
     },
     "count": "{count, plural, =0 {No records} one {# record} other {# records}}",
     "readOnly": "Read only · kept for 6 months and then deleted",
@@ -2287,7 +2287,9 @@
       "title": "No records match these filters",
       "text": "Widen the date range or clear the filters to see more.",
       "invalidTitle": "Fix the date range",
-      "invalidText": "The log is not queried while the start date is after the end date."
+      "invalidText": "The log is not queried while the start date is after the end date.",
+      "invalidFiltersTitle": "Fix the filters",
+      "invalidFiltersText": "The log is not queried with a user that is not a full identifier or with an invalid host."
     },
     "cols": {
       "date": "Date and time",
@@ -2296,57 +2298,75 @@
       "project": "Project",
       "ip": "Source IP"
     },
+    "ipNone": "No IP: the test engine made the action or no valid IP arrived.",
     "filterByUser": "Filter by this user",
     "copyId": "Copy the full identifier of {user}",
     "copied": "Identifier copied",
     "copyFailed": "Could not copy",
-    "deletedAccount": "Deleted account",
     "detailOf": "Details of the record from {date}",
     "actions": {
-      "accountCreated": "Account created",
-      "accountDeleted": "Account deleted",
-      "projectCreated": "Project created",
-      "projectVerified": "Project verified",
-      "projectDeleted": "Project deleted",
-      "identityCreated": "Identity created",
-      "identityDeleted": "Identity deleted",
-      "runLaunched": "Run launched",
-      "runCancelled": "Run cancelled",
-      "riskAccepted": "Risk accepted or false positive",
-      "targetBlocked": "Target blocked"
+      "account_created": "Account created",
+      "account_deleted": "Account deleted",
+      "project_created": "Project created",
+      "project_deleted": "Project deleted",
+      "project_verified": "Project verified",
+      "project_verification_lost": "Verification lost when starting a run",
+      "identity_created": "Identity created",
+      "identity_deleted": "Identity deleted",
+      "run_launched": "Run launched",
+      "run_cancelled": "Run cancelled",
+      "finding_dismissed": "Risk accepted or false positive",
+      "finding_dismissal_reverted": "Dismissal reverted",
+      "destination_blocked": "Destination blocked"
+    },
+    "modules": {
+      "authentication": "Authentication",
+      "configuration": "Configuration",
+      "object_access": "Object access",
+      "function_access": "Function access",
+      "property_access": "Properties",
+      "resource_consumption": "Resource consumption",
+      "sql_injection": "SQL injection"
     },
     "detail": {
+      "none": "This action carries no additional data.",
       "modules": "Modules",
       "limits": "Limits",
-      "confirmedRisk": "Confirmed risk",
-      "reason": "Reason",
-      "reportedHost": "Reported host",
-      "requests": "Requests",
-      "method": "Method",
-      "result": "Result",
-      "role": "Role",
-      "dismissReason": "Dismissal reason",
-      "justification": "Justification",
+      "run": "Run",
+      "sourceRun": "Repeats the run",
+      "verificationMethod": "Verification method",
       "identity": "Identity",
-      "credential": "Credential",
-      "by": "By",
-      "permanentDelete": "Permanent deletion",
-      "verification": "Verification"
+      "finding": "Finding",
+      "dismissalReason": "Dismissal reason",
+      "stage": "Blocking stage",
+      "blockReason": "Blocking reason"
     },
     "values": {
-      "limits": "5 req/s · 2 concurrent · 2,000 requests · 15 min",
-      "confirmedProperties": "Yes, Properties",
-      "redirect": "Redirect outside the verified host",
-      "fingerprint": "Fingerprint {fp} (HMAC)",
-      "file": "File",
-      "verified": "Verified",
-      "analyst": "Analyst",
-      "accepted": "Risk accepted",
-      "notStored": "Not stored in the log",
-      "notRecorded": "Not recorded",
-      "user": "The user",
-      "pending": "Pending",
-      "byDate": "No later than {date}"
+      "limits": "{rps} req/s · {concurrency} concurrent · {requests} requests · {minutes} min",
+      "verificationMethod": {
+        "file": "File",
+        "dns": "DNS record"
+      },
+      "dismissalReason": {
+        "accepted_risk": "Risk accepted",
+        "false_positive": "False positive"
+      },
+      "stage": {
+        "project_url": "Project URL",
+        "verification": "Verification",
+        "contract_import": "Contract import",
+        "identity_test": "Identity test",
+        "resource_discovery": "Resource discovery",
+        "run": "Run"
+      },
+      "blockReason": {
+        "address_not_allowed": "Address not allowed (private, local or metadata)",
+        "host_mismatch": "Redirect outside the project host",
+        "unresolved": "The host does not resolve",
+        "invalid_url": "Invalid URL",
+        "scheme_not_allowed": "Scheme not allowed",
+        "too_many_redirects": "Too many redirects"
+      }
     },
     "pagination": {
       "label": "Pagination",
