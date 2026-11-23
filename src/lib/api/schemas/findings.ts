@@ -133,6 +133,12 @@ export const listFindingsQuerySchema = z.strictObject({
   operation_id: z.uuid({ message: FIELD_CODES.format }).optional(),
 });
 
+/** `exportFindings` (RF-77): los mismos filtros que `listFindings`, sin paginar. */
+export const exportFindingsQuerySchema = listFindingsQuerySchema.omit({
+  page: true,
+  page_size: true,
+});
+
 export const listOccurrencesQuerySchema = z.strictObject({
   page: queryInt(1, 10000).optional(),
   page_size: queryInt(1, 20).optional(),

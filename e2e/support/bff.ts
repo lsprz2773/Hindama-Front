@@ -56,6 +56,7 @@ export function meBody(role: "analyst" | "admin") {
     name: "Ana López",
     email: "ana@ejemplo.mx",
     role,
+    mfa_enabled: false,
     terms: {
       current_version: "2026-10-30",
       accepted_version: "2026-10-30",

@@ -261,6 +261,28 @@ export function useFindings(
 }
 
 /**
+ * `exportFindings` (RF-77): el libro de Excel con los mismos filtros de `listFindings`, sin paginar.
+ * No lleva evidencia ni credenciales (RN-11). Más de 5 000 hallazgos responde 422
+ * `finding.export_too_large`.
+ */
+export function exportFindings(
+  http: HttpClient,
+  id: string,
+  {
+    module,
+    severity,
+    status,
+    runId,
+  }: Pick<FindingFilters, "module" | "severity" | "status" | "runId">,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  return http.download(`${projectPath(id)}/findings/export`, {
+    query: { module, severity, status, run_id: runId },
+    signal,
+  });
+}
+
+/**
  * `listFindings` para una celda de la matriz (V-28): lo que esa ejecución detectó en la operación y la
  * identidad de la celda (`operation_id` e `identity_id`, guía §5.9). Una comprobación de toda la API
  * (`operationId` nulo) solo conserva los hallazgos sin operación.

@@ -20,6 +20,7 @@ import type { Project } from "@/lib/api/schemas/projects";
 import type { Schemas } from "@/lib/api/types";
 import { isUuid } from "@/lib/api/zod";
 import { useFindings, useRun } from "./api";
+import { ExportFindingsButton } from "./export-findings-button";
 import { badgeStatus, FINDING_STATUSES } from "./finding-status";
 import { MODULE_ORDER, MODULE_VIEW } from "./modules";
 
@@ -69,9 +70,8 @@ function FindingsList({ project }: { project: Project }) {
     run: runParam && isUuid(runParam) ? runParam : null,
   }));
   const [page, setPage] = useState(1);
-  const query = useFindings(project.id, {
-    page,
-    pageSize: PAGE_SIZE,
+  // Los mismos filtros alimentan la lista y la exportación a Excel (RF-77).
+  const listFilters = {
     module: filters.module === "all" ? undefined : [filters.module],
     severity: filters.severity === "all" ? undefined : [filters.severity],
     status:
@@ -81,7 +81,8 @@ function FindingsList({ project }: { project: Project }) {
           ? [...OPEN_STATUSES]
           : [filters.status],
     runId: filters.run ?? undefined,
-  });
+  };
+  const query = useFindings(project.id, { page, pageSize: PAGE_SIZE, ...listFilters });
   const active =
     filters.module !== "all" ||
     filters.severity !== "all" ||
@@ -192,6 +193,7 @@ function FindingsList({ project }: { project: Project }) {
           <Button variant="secondary" onClick={clear} disabled={!active}>
             {t("filters.clear")}
           </Button>
+          <ExportFindingsButton projectId={project.id} filters={listFilters} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-muted text-sm" role="status">
@@ -340,7 +342,7 @@ function FindingsList({ project }: { project: Project }) {
   );
 }
 
-/** V-29. Hallazgos del proyecto con filtros (RF-64, RF-65). TODO(api): exportar (RF-77) no está en el contrato. */
+/** V-29. Hallazgos del proyecto con filtros (RF-64, RF-65) y exportación a Excel (RF-77). */
 export function FindingsView({ id }: { id: string }) {
   const t = useTranslations("Findings");
   const lastRun = useProject(id).data?.last_run;

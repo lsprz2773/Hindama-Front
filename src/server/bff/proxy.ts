@@ -16,6 +16,10 @@ import {
 /** Las operaciones síncronas pueden tardar hasta 25 s; el BFF espera al menos 30 (convenciones §12). */
 export const API_TIMEOUT_MS = 35_000;
 
+/** Tipo del libro de Excel de `exportFindings` (RF-77) y nombre con el que se descarga. */
+export const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const XLSX_DISPOSITION = 'attachment; filename="hallazgos.xlsx"';
+
 /** Cabeceras de la respuesta de la API que llegan al navegador. */
 const PASS_HEADERS = ["content-type", "retry-after", "allow", "x-request-id"];
 
@@ -28,6 +32,10 @@ export interface PreparedRequest {
 }
 
 export interface ProxyOptions {
+  /** La respuesta correcta es un archivo de este tipo: se entrega sin leerlo, con tipo y nombre fijos. */
+  download?: string;
+  /** Con un 204, la cuenta ya no existe: se borra la cookie de sesión (`deleteAccount`). */
+  endsSession?: boolean;
   /** Stream SSE (ADR-006): sin búfer, sin tiempo máximo y cerrado junto con el navegador. */
   stream?: boolean;
   /**
@@ -115,6 +123,7 @@ export async function proxyToApi(
         return finish(problem(401, "auth.invalid_token", { requestId }));
       }
     }
+    if (options.endsSession && upstream.status === 204) clearSession(collector, cookies);
     return finish(await toBrowserResponse(upstream, requestId, deps, options));
   } catch (error) {
     if (error instanceof SessionExpired) {
@@ -172,7 +181,7 @@ function send(
   const headers = new Headers({
     Authorization: `Bearer ${session.accessToken}`,
     "X-Request-Id": requestId,
-    Accept: options.stream ? "text/event-stream" : "application/json",
+    Accept: options.stream ? "text/event-stream" : (options.download ?? "application/json"),
   });
   const language = request.headers.get("accept-language");
   if (language) headers.set("Accept-Language", language);
@@ -227,6 +236,18 @@ async function toBrowserResponse(
     // Retransmisión sin búfer ni transformación (ADR-006).
     headers.set("Cache-Control", "no-cache, no-transform");
     headers.set("X-Accel-Buffering", "no");
+    return new Response(upstream.body, { status: upstream.status, headers });
+  }
+
+  if (options.download) {
+    // Un archivo: debe ser del tipo del contrato; el nombre lo fija el BFF, no la API.
+    const type = upstream.headers.get("content-type")?.split(";")[0].trim();
+    if (type !== options.download) {
+      await upstream.body?.cancel();
+      return problem(502, "response.invalid", { requestId });
+    }
+    headers.set("Content-Type", options.download);
+    headers.set("Content-Disposition", XLSX_DISPOSITION);
     return new Response(upstream.body, { status: upstream.status, headers });
   }
 

@@ -1,6 +1,6 @@
 /**
- * Comprueba que los tipos de `src/lib/api/schema.d.ts` corresponden al contrato 0.10.0
- * (`contract/openapi.yaml`, copia de `hindama-docs/03-api/openapi.yaml`, commit 0f50296).
+ * Comprueba que los tipos de `src/lib/api/schema.d.ts` corresponden al contrato 0.12.0
+ * (`contract/openapi.yaml`, copia de `hindama-docs/03-api/openapi.yaml`, commit 556ba98).
  * Falla si el contrato no es la versión fijada o si los tipos generados no coinciden.
  * Uso: `npm run contract:check` (corre antes de `npm test`). Para regenerar: `npm run contract:types`.
  */
@@ -10,8 +10,8 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const EXPECTED_VERSION = "0.10.0";
-const EXPECTED_SHA256 = "bc19df417612521b7797ca016f261d2dbb8a5d55b3f0193fadb747a756313cbc";
+const EXPECTED_VERSION = "0.12.0";
+const EXPECTED_SHA256 = "8784fedcb39c8c67295c4eba2397dba7a7cc3c6503eda40849b929169f775fb7";
 const CONTRACT = "contract/openapi.yaml";
 const TYPES = "src/lib/api/schema.d.ts";
 

@@ -24,6 +24,7 @@ import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/http";
 import { useFindingDetails, useFindings, useRun, useRunResults } from "./api";
 import { ContextNotes } from "./context-notes";
+import { ExportFindingsButton } from "./export-findings-button";
 import { evidenceText } from "./evidence";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
@@ -473,11 +474,16 @@ function Report({ project, run }: { project: Project; run: Run }) {
             </button>
           ))}
         </div>
-        {/* TODO(api): el contrato no tiene exportación a Excel (RF-77). */}
-        <Button onClick={print}>
-          <Icon name="file" size={18} />
-          {t("print")}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <ExportFindingsButton
+            projectId={project.id}
+            filters={variant === "run" ? { runId: run.id } : { status: [...OPEN] }}
+          />
+          <Button onClick={print}>
+            <Icon name="file" size={18} />
+            {t("print")}
+          </Button>
+        </div>
       </div>
 
       <article className="print-sheet border-line bg-panel mx-auto flex max-w-[1000px] flex-col gap-8 rounded-[28px] border px-6 py-10 backdrop-blur-lg sm:px-16 sm:py-14">

@@ -64,6 +64,47 @@ test.describe("V-09 perfil", () => {
     await expect(page.getByRole("button", { name: "Desactivar 2FA" })).toHaveCount(0);
   });
 
+  test("eliminar la cuenta (C-14) pide el correo y llama a deleteAccount", async ({ page }) => {
+    const calls: string[] = [];
+    await page.route(/\/api\/me\?confirmation=/, async (route) => {
+      calls.push(`${route.request().method()} ${new URL(route.request().url()).search}`);
+      await route.fulfill({ status: 204 });
+    });
+    await page.goto("/profile");
+    await page.getByRole("button", { name: "Eliminar cuenta" }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog.getByRole("heading", { name: "Eliminar tu cuenta" })).toBeVisible();
+    const confirm = dialog.getByRole("button", { name: "Eliminar mi cuenta" });
+    await expect(confirm).toBeDisabled();
+    await dialog.getByRole("textbox").fill("ana@ejemplo.com");
+    await expect(confirm).toBeEnabled();
+    await confirm.click();
+    await expect.poll(() => calls).toEqual(["DELETE ?confirmation=ana%40ejemplo.com"]);
+  });
+
+  test("eliminar la cuenta con una ejecución activa explica qué hacer", async ({ page }) => {
+    await page.route(/\/api\/me\?confirmation=/, async (route) => {
+      await route.fulfill({
+        status: 409,
+        contentType: "application/problem+json",
+        body: JSON.stringify(problem(409, "account.active_run")),
+      });
+    });
+    await page.goto("/profile");
+    await page.getByRole("button", { name: "Eliminar cuenta" }).click();
+    const dialog = page.getByRole("alertdialog");
+    await dialog.getByRole("textbox").fill("ana@ejemplo.com");
+    await dialog.getByRole("button", { name: "Eliminar mi cuenta" }).click();
+    await expect(dialog.getByText("Hay una ejecución en curso")).toBeVisible();
+  });
+
+  test("un administrador no ve la baja de cuenta", async ({ page }) => {
+    await mockBff(page, "**/api/me", { body: meBody("admin") }, "GET");
+    await page.goto("/profile");
+    await expect(page.getByText("Administrador", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Eliminar cuenta" })).toHaveCount(0);
+  });
+
   test("el selector segmentado cambia el idioma desde el perfil", async ({ page }) => {
     await page.goto("/profile");
     await page.getByRole("button", { name: "English", exact: true }).click();

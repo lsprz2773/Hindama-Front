@@ -59,6 +59,7 @@ test.describe("área pública", () => {
         name: "Ana López",
         email: "ana@ejemplo.com",
         role: "analyst",
+        mfa_enabled: false,
         terms: {
           current_version: "2026-12-01",
           accepted_version: null,

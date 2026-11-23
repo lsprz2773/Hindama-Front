@@ -243,8 +243,37 @@ export function createHttpClient(options: HttpClientOptions) {
     }
   }
 
+  /**
+   * Descarga un archivo (`exportFindings`): un `GET` que devuelve el cuerpo como `Blob`. Un error
+   * llega como Problem Details y se traduce igual que en las demás llamadas. No se reintenta.
+   */
+  async function download(
+    path: string,
+    { query, signal }: Pick<RequestOptions, "query" | "signal"> = {},
+  ): Promise<Blob> {
+    const timeout = AbortSignal.timeout(timeoutMs);
+    let response: Response;
+    try {
+      response = await doFetch(buildUrl(baseUrl, path, query), {
+        method: "GET",
+        headers: { "Accept-Language": options.getLocale() },
+        credentials: "same-origin",
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+      });
+    } catch (cause) {
+      if (signal?.aborted) throw signal.reason ?? cause;
+      if (timeout.aborted)
+        throw new ApiError({ status: 0, kind: "network", code: "request.timeout" });
+      throw new ApiError({ status: 0, kind: "network" });
+    }
+    if (!response.ok)
+      throw toApiError(response.status, await parseBody(response), response.headers);
+    return response.blob();
+  }
+
   return {
     request,
+    download,
     get: <T>(path: string, o?: RequestOptions) => request<T>("GET", path, o),
     /** `GET` validado: el tipo del resultado sale del esquema. */
     read: <S extends z.ZodType>(path: string, schema: S, o?: Omit<RequestOptions, "schema">) =>
