@@ -1,0 +1,10 @@
+[Unit]
+Description=Despliega el último commit del frontend de Hindama si cambió
+Requires=docker.service
+After=docker.service network-online.target hindama-frontend.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hindama/bin/frontend-update.sh
+# Una construcción en t4g.small tarda varios minutos.
+TimeoutStartSec=30min

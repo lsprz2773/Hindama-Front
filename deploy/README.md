@@ -10,6 +10,8 @@ Cómo se pone el frontend (Next.js como BFF) en su propia instancia, junto a la 
 | `deploy/compose.yaml` | Dos servicios: `frontend` (Next.js, sistema de archivos de solo lectura, `cap_drop: ALL`) y `caddy` (TLS público con Let's Encrypt) |
 | `deploy/start.sh` | Lee los secretos de SSM y los deja en `/run/hindama/frontend.env` (tmpfs, modo 600); después levanta los contenedores |
 | `deploy/hindama-frontend.service` | Unidad de systemd que ejecuta `start.sh` en cada arranque |
+| `deploy/update.sh` y `hindama-frontend-update.{service,timer}` | Actualización automática: despliega cada commit nuevo de `dev` que compila y responde |
+| `deploy/bootstrap.sh` | Prepara una EC2 nueva: Docker, Compose, Buildx, swap, código y unidades |
 
 El navegador solo habla con Caddy por HTTPS. Next.js llama a la API del backend por `https://backend.internal:8443` (red privada, certificado de la CA interna de Caddy del backend) y a Cognito por internet.
 
@@ -89,14 +91,47 @@ La primera vez construye la imagen en la instancia (varios minutos). Caddy pide 
 | `docker compose -f deploy/compose.yaml logs frontend` | Sin errores `[bff] Falta la variable…` ni de certificado |
 | En el backend: bitácora de auditoría | `source_ip` es la del navegador, no la de la EC2 del frontend (RF-82) |
 
-## Actualizar
+## Preparar la instancia con un solo script
+
+`deploy/bootstrap.sh` hace los pasos 2 y 3 dentro de la EC2: instala Docker, Compose y Buildx verificados por SHA-256, crea 4 GB de swap (Next.js no compila con los 2 GB de una `t4g.small`), clona el código y deja instaladas las unidades de systemd:
 
 ```bash
-cd /opt/hindama/frontend && sudo git fetch && sudo git checkout <sha nuevo>
-sudo systemctl restart hindama-frontend
+curl -fsSLO https://raw.githubusercontent.com/lsprz2773/Hindama-Front/<sha>/deploy/bootstrap.sh
+sudo HINDAMA_FRONTEND_REF=<sha> bash bootstrap.sh
+# después: /etc/hindama/frontend.conf y /etc/hindama/caddy-root.crt (pasos 3 y 4)
+sudo systemctl enable --now hindama-frontend hindama-frontend-update.timer
 ```
 
-Un cambio de contrato exige actualizar primero el backend (ADR-016) y después el frontend.
+## Actualización automática
+
+**Cada push a `dev` llega solo a producción.** El timer `hindama-frontend-update` corre `deploy/update.sh` cada 3 minutos:
+
+1. Si `origin/dev` no cambió, no hace nada.
+2. Construye la imagen del commit nuevo mientras la anterior sigue sirviendo.
+3. Si no compila, sigue la versión anterior y ese commit no se vuelve a intentar: hay que subir otro.
+4. Reinicia y comprueba `/api/health` por Caddy con el dominio. Si en 2 minutos no responde, regresa al commit y a la imagen anteriores.
+
+Una construcción tarda unos minutos, y el reinicio deja el sitio sin servicio unos segundos. Para ver qué pasó:
+
+```bash
+sudo journalctl -u hindama-frontend-update --since today   # cada intento
+cat /var/lib/hindama/frontend-deployed                       # último commit desplegado
+cat /var/lib/hindama/frontend-failed                         # último commit rechazado, si hay
+```
+
+Para cambiar de rama, agrega `HINDAMA_FRONTEND_BRANCH=<rama>` a `frontend.conf`. Para pausar las actualizaciones: `sudo systemctl stop hindama-frontend-update.timer`.
+
+`update.sh` y las unidades se copian a la instancia al prepararla. Si los cambias, vuelve a correr `bootstrap.sh` con el SHA nuevo.
+
+**Contrato:** un cambio de contrato exige actualizar primero el backend (ADR-016). Sube a `dev` el frontend que usa un contrato nuevo solo cuando el backend desplegado ya lo implementa.
+
+## Actualizar a mano
+
+```bash
+sudo systemctl stop hindama-frontend-update.timer
+cd /opt/hindama/frontend && sudo git fetch && sudo git checkout <sha>
+sudo systemctl restart hindama-frontend
+```
 
 ## Problemas comunes
 

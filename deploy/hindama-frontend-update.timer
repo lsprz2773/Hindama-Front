@@ -1,0 +1,9 @@
+[Unit]
+Description=Revisa cada 3 minutos si hay un commit nuevo del frontend de Hindama
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=3min
+
+[Install]
+WantedBy=timers.target
