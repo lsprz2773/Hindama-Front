@@ -47,13 +47,17 @@ Son valores de prueba que ya están en el repositorio del backend. Las operacion
 .\demo\vampi.ps1 -Action stop
 ```
 
-Caddy va delante porque VAmPI no sirve el archivo de verificación. Identidades (inicio de sesión automático en `POST /users/v1/login`; **su token dura 60 segundos**, por eso no sirve un token fijo):
+Caddy va delante porque VAmPI no sirve el archivo de verificación.
 
-| Identidad     | Usuario | Contraseña |
-| ------------- | ------- | ---------- |
-| Usuario 1     | `name1` | `pass1`    |
-| Usuario 2     | `name2` | `pass2`    |
-| Administrador | `admin` | `pass1`    |
+**Identidades: usa «Token Bearer», no «Inicio de sesión automático».** El script imprime un token para cada usuario (los obtiene con `POST /users/v1/login`) y estos duran **1 hora** (VAmPI los emite por 60 segundos, y el script lo sube con `tokentimetolive`). Hindama busca el token de un inicio de sesión en los campos `access_token`, `accessToken`, `token`, `jwt`, `id_token` e `idToken`, y VAmPI lo entrega en `auth_token`, así que, según el código del backend, el inicio de sesión automático no lo encontraría (no lo probé).
+
+| Identidad     | Rol           | Usuario | Contraseña |
+| ------------- | ------------- | ------- | ---------- |
+| Usuario 1     | Usuario       | `name1` | `pass1`    |
+| Usuario 2     | Usuario       | `name2` | `pass2`    |
+| Administrador | Administrador | `admin` | `pass1`    |
+
+Pega el token de cada uno en una identidad nueva. Si apagas y enciendes VAmPI, los tokens cambian.
 
 ## Guion (unos 10 minutos)
 
