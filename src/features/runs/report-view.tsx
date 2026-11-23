@@ -1,9 +1,11 @@
 "use client";
 
+import type { UseQueryResult } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { DashboardSkeleton, TablePageSkeleton } from "@/components/skeletons/page-skeletons";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { HttpViewer } from "@/components/ui/http-viewer";
 import { Icon } from "@/components/ui/icon";
 import { QueryState } from "@/components/ui/query-state";
 import { SEVERITIES, SeverityMeter } from "@/components/ui/severity";
@@ -13,12 +15,15 @@ import { useMe } from "@/features/account/api";
 import { useIsClient } from "@/features/account/browser-store";
 import { ErrorPanel } from "@/features/errors/error-panel";
 import { useProject } from "@/features/projects/api";
-import type { FindingStatus } from "@/lib/api/schemas/findings";
+import { Link } from "@/i18n/navigation";
+import type { Finding, FindingStatus } from "@/lib/api/schemas/findings";
 import type { Project } from "@/lib/api/schemas/projects";
 import type { Run } from "@/lib/api/schemas/runs";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
-import { useFindings, useRun, useRunResults } from "./api";
+import { ApiError } from "@/lib/http";
+import { useFindingDetails, useFindings, useRun, useRunResults } from "./api";
+import { evidenceText } from "./evidence";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
 
@@ -36,6 +41,11 @@ const OPEN: FindingStatus[] = ["new", "persistent", "regression"];
 /** RF-64 y `PageSize`: discrepancias hasta 500 por página y hallazgos hasta 100. */
 const RESULTS_PAGE = 500;
 const FINDINGS_PAGE = 100;
+/**
+ * Hallazgos de los que se pide el detalle (`getFinding`) por tanda. Cada petición cuenta para el
+ * límite de 100 por minuto (RNF-09): una tanda de 30 deja margen para el resto de la pantalla.
+ */
+const DETAIL_BATCH = 30;
 
 /** Códigos de `Result.expected`/`observed` que el contrato nombra como ejemplo (igual que V-28). */
 const CODES = ["allowed", "denied", "own_data_only", "no_sql_error"] as const;
@@ -208,20 +218,110 @@ function Discrepancies({ project, run }: { project: Project; run: Run }) {
   );
 }
 
+/** Evidencia, explicación y recomendación de un hallazgo (`getFinding`). Todo se pinta como texto. */
+function FindingEvidence({
+  projectId,
+  findingId,
+  state,
+}: {
+  projectId: string;
+  findingId: string;
+  /** `undefined`: el detalle de este hallazgo todavía no se pidió. */
+  state: UseQueryResult<Finding> | undefined;
+}) {
+  const t = useTranslations("Report");
+  const tf = useTranslations("FindingDetail");
+  if (!state)
+    return (
+      <p className="text-muted text-sm">
+        {t("findings.detail.notLoaded")}{" "}
+        <Link
+          href={`/projects/${projectId}/findings/${findingId}`}
+          className="text-link print-hidden"
+        >
+          {t("findings.detail.open")}
+        </Link>
+      </p>
+    );
+  if (state.status === "pending")
+    return (
+      <p role="status" className="text-muted text-sm">
+        {t("findings.detail.loading")}
+      </p>
+    );
+  if (state.status === "error") {
+    const limited = state.error instanceof ApiError && state.error.status === 429;
+    return (
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <span role="alert">
+          {limited ? t("findings.detail.rateLimited") : t("findings.detail.failed")}
+        </span>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="print-hidden"
+          loading={state.isFetching}
+          onClick={() => void state.refetch()}
+        >
+          {t("findings.detail.retry")}
+        </Button>
+      </div>
+    );
+  }
+  const finding = state.data;
+  const occurrence = finding.last_occurrence;
+  const text = evidenceText(occurrence.evidence);
+  return (
+    <div className="flex flex-col gap-3.5">
+      <div>
+        <h4 className="text-muted text-[12.5px] font-semibold">
+          {t("findings.detail.explanation")}
+        </h4>
+        <p className="m-0 text-sm leading-[1.6] break-words">{occurrence.explanation}</p>
+      </div>
+      <div>
+        <h4 className="text-muted text-[12.5px] font-semibold">
+          {t("findings.detail.recommendation")}
+        </h4>
+        <p className="m-0 text-sm leading-[1.6] break-words">{finding.recommendation}</p>
+      </div>
+      <div className="print-avoid grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-3">
+        <HttpViewer
+          title={tf("evidence.request")}
+          note={tf("evidence.masked")}
+          content={text.request}
+        />
+        <HttpViewer
+          title={tf("evidence.response", { status: occurrence.evidence.response.status_code })}
+          note={occurrence.evidence.response.body_truncated ? tf("evidence.truncated") : undefined}
+          content={text.response}
+        />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Hallazgos detectados en la ejecución (`run_id`) o abiertos en el proyecto, por severidad.
- * TODO(api): `listFindings` no trae la evidencia ni la recomendación de `Finding`; el reporte
- * lista solo su clasificación.
+ * `listFindings` solo trae la clasificación: la evidencia, la explicación y la recomendación salen
+ * de `getFinding`, de `DETAIL_BATCH` en `DETAIL_BATCH` para cuidar el límite de peticiones
+ * (RF-75, RNF-09).
  */
 function Findings({ project, run, variant }: { project: Project; run: Run; variant: Variant }) {
   const t = useTranslations("Report");
   const tm = useTranslations("Dashboard.modules");
   const ts = useTranslations("Severity");
   const tst = useTranslations("Status");
+  const [limit, setLimit] = useState(DETAIL_BATCH);
   const query = useFindings(project.id, {
     pageSize: FINDINGS_PAGE,
     ...(variant === "run" ? { runId: run.id } : { status: OPEN }),
   });
+  const items = query.data?.items ?? [];
+  const details = useFindingDetails(
+    project.id,
+    items.slice(0, limit).map((f) => f.id),
+  );
   return (
     <section aria-labelledby="r3" className="flex flex-col gap-4">
       <h2 id="r3" className="text-[22px] font-semibold">
@@ -281,8 +381,29 @@ function Findings({ project, run, variant }: { project: Project; run: Run; varia
                       </div>
                     ))}
                   </dl>
+                  <FindingEvidence
+                    projectId={project.id}
+                    findingId={f.id}
+                    state={index < limit ? details[index] : undefined}
+                  />
                 </article>
               ))}
+              {data.items.length > limit ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="secondary"
+                    className="print-hidden"
+                    onClick={() => setLimit((n) => n + DETAIL_BATCH)}
+                  >
+                    {t("findings.detail.loadMore", {
+                      count: Math.min(DETAIL_BATCH, data.items.length - limit),
+                    })}
+                  </Button>
+                  <span className="text-muted text-sm">
+                    {t("findings.detail.partial", { shown: limit, total: data.items.length })}
+                  </span>
+                </div>
+              ) : null}
               {data.total > data.items.length ? (
                 <p className="text-muted text-sm">
                   {t("findings.more", { count: data.total - data.items.length })}

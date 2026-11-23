@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   dismissalCreateSchema,
@@ -10,6 +10,7 @@ import {
   type DismissalCreate,
   type Finding,
   type FindingStatus,
+  type FindingSummary,
   type Severity,
 } from "@/lib/api/schemas/findings";
 import {
@@ -256,6 +257,50 @@ export function useFindings(
     enabled,
     placeholderData: keepPreviousData,
     retry: false,
+  });
+}
+
+/**
+ * `listFindings` para una celda de la matriz (V-28): lo que esa ejecución detectó en la operación y la
+ * identidad de la celda (`operation_id` e `identity_id`, guía §5.9). Una comprobación de toda la API
+ * (`operationId` nulo) solo conserva los hallazgos sin operación.
+ */
+export async function findCellFindings(
+  http: HttpClient,
+  id: string,
+  cell: { runId: string; identityId: string; operationId: string | null; module: Module },
+): Promise<FindingSummary[]> {
+  const page = (
+    await http.read(`${projectPath(id)}/findings`, findingPageSchema, {
+      query: {
+        page_size: 100,
+        module: [cell.module],
+        run_id: cell.runId,
+        identity_id: cell.identityId,
+        operation_id: cell.operationId ?? undefined,
+      },
+    })
+  ).data;
+  return page.items.filter((f) =>
+    cell.operationId === null ? f.operation === null : f.operation?.id === cell.operationId,
+  );
+}
+
+/**
+ * `getFinding` de varios hallazgos a la vez (V-32): evidencia, esperado y recomendación de cada uno.
+ * Comparte el caché con V-30. Cada petición cuenta para el límite de 100 por minuto (RNF-09): quien
+ * llama decide cuántos pide.
+ */
+export function useFindingDetails(id: string, findingIds: string[]) {
+  const http = useHttpClient();
+  return useQueries({
+    queries: findingIds.map((findingId) => ({
+      queryKey: [...findingsKey(id), "detail", findingId],
+      queryFn: async ({ signal }: { signal: AbortSignal }) =>
+        (await http.read(findingPath(id, findingId), findingSchema, { signal })).data,
+      retry: false,
+      staleTime: 60_000,
+    })),
   });
 }
 

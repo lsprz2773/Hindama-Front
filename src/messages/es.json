@@ -1918,6 +1918,13 @@
       "own_data_only": "solo sus datos",
       "no_sql_error": "sin error SQL"
     },
+    "finding": {
+      "open": "Ver hallazgo",
+      "openLabel": "Ver el hallazgo de {identity}",
+      "none": "No encontramos el hallazgo de esta celda: puede que se haya resuelto o descartado desde entonces.",
+      "failed": "No se pudo buscar el hallazgo",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo."
+    },
     "previous": "Anterior",
     "next": "Siguiente",
     "page": "Página {page} de {pages}"
@@ -2168,7 +2175,19 @@
       "noneRun": "Esta ejecución no detectó hallazgos",
       "operation": "Operación",
       "runs": "Detectado",
-      "runRange": "De la n.º {first} a la n.º {last}"
+      "runRange": "De la n.º {first} a la n.º {last}",
+      "detail": {
+        "explanation": "Qué se detectó",
+        "recommendation": "Recomendación",
+        "loading": "Cargando la evidencia…",
+        "failed": "No se pudo cargar la evidencia de este hallazgo.",
+        "rateLimited": "Demasiadas solicitudes: espera un momento antes de cargar más evidencia.",
+        "retry": "Reintentar",
+        "notLoaded": "La evidencia de este hallazgo no se cargó en el reporte.",
+        "open": "Ábrelo en su detalle",
+        "loadMore": "{count, plural, one {Cargar la evidencia del siguiente hallazgo} other {Cargar la evidencia de los siguientes # hallazgos}}",
+        "partial": "Con evidencia: {shown} de {total} hallazgos. La API limita las peticiones por minuto, por eso se cargan por tandas."
+      }
     },
     "active": {
       "title": "La ejecución sigue en curso",
