@@ -5,11 +5,6 @@
  * construir y probar las vistas; al conectar el BFF conservan sus firmas.
  */
 
-/** Nombre simulado que aún usan V-13 y V-31 hasta conectarlas (fases 3 y 6). */
-export const SESSION_STUB = {
-  name: "Luis Selvas",
-} as const;
-
 const LATENCY_MS = 500;
 const wait = (ms = LATENCY_MS) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
