@@ -17,6 +17,7 @@ import type { Run } from "@/lib/api/schemas/runs";
 import { isUuid } from "@/lib/api/zod";
 import { cn } from "@/lib/cn";
 import { useFindings, useRun } from "./api";
+import { ExportFindingsButton } from "./export-findings-button";
 import { FailedResources } from "./failed-resources";
 import { MODULE_ORDER, MODULE_VIEW } from "./modules";
 import { RerunButton } from "./rerun-button";
@@ -172,6 +173,9 @@ function Results({ project, run }: { project: Project; run: Run }) {
             <ButtonLink href={`${base}/findings?run=${run.id}`} variant="secondary" size="lg">
               {t("viewFindings")}
             </ButtonLink>
+            {counts.total > 0 ? (
+              <ExportFindingsButton projectId={project.id} filters={{ runId: run.id }} />
+            ) : null}
           </div>
           <dl className="border-line bg-panel-2 m-0 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4 rounded-[22px] border px-[22px] py-[18px]">
             {stats.map(([value, label]) => (

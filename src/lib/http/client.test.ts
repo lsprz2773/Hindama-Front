@@ -366,4 +366,40 @@ describe("cliente HTTP central", () => {
     const { data } = await client.read("/x", schema);
     expect(data).toEqual({ id: "a" });
   });
+
+  it("descarga un archivo como Blob, con la consulta y sin reintentos", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(
+      async () => new Response(new Uint8Array([0x50, 0x4b, 3, 4]), { status: 200 }),
+    );
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl });
+
+    const blob = await client.download("/projects/p1/findings/export", {
+      query: { status: ["new", "persistent"] },
+    });
+
+    expect(blob.size).toBe(4);
+    expect(String(fetchImpl.mock.calls[0][0])).toBe(
+      "/api/projects/p1/findings/export?status=new&status=persistent",
+    );
+    expect(headersOf(fetchImpl.mock.calls[0])["Accept-Language"]).toBe("es");
+  });
+
+  it("traduce el Problem Details de una descarga fallida", async () => {
+    const fetchImpl = respond(422, {
+      type: "urn:hindama:error:finding.export_too_large",
+      title: "finding.export_too_large",
+      status: 422,
+      code: "finding.export_too_large",
+      request_id: "req-9",
+      errors: [],
+    });
+    const client = createHttpClient({ getLocale: () => "es", fetchImpl });
+
+    const error = await client.download("/projects/p1/findings/export").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).code).toBe("finding.export_too_large");
+    expect((error as ApiError).requestId).toBe("req-9");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
 });

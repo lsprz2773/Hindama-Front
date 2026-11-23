@@ -33,6 +33,10 @@ export interface ApiRouteSpec {
   /** Esquema de la respuesta correcta (contrato). */
   response?: z.ZodType;
   maxBodyBytes?: number;
+  /** La respuesta es un archivo de este tipo (no JSON): se releva con el tipo y nombre fijos. */
+  download?: string;
+  /** La operación cierra la cuenta (`deleteAccount`): al responder 204 se borra la cookie de sesión. */
+  endsSession?: boolean;
   /**
    * Cuerpo `multipart/form-data` (solo `importContract`): valida el formulario recibido y
    * devuelve el que se reenvía, o los errores por campo.
@@ -206,6 +210,8 @@ export async function handleApiRoute(
   return proxyToApi(request, path, deps, {
     prepare: prepareWith(spec),
     transform: transformWith(spec.response),
+    download: spec.download,
+    endsSession: spec.endsSession,
   });
 }
 

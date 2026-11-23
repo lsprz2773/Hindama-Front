@@ -9,6 +9,48 @@ const PROJECT = `**/api/projects/${PROJECT_ID}`;
 const BASE = `/projects/${PROJECT_ID}`;
 const OP_ID = "0192e3a0-5555-7000-8000-000000000001";
 
+test.describe("V-29 exportar hallazgos a Excel (RF-77)", () => {
+  const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+  test("descarga el libro con los filtros de la lista", async ({ page }) => {
+    const urls: string[] = [];
+    await page.route(new RegExp(`/api/projects/${PROJECT_ID}/findings/export`), async (route) => {
+      urls.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        headers: {
+          "content-type": XLSX,
+          "content-disposition": 'attachment; filename="hallazgos.xlsx"',
+        },
+        body: Buffer.from([0x50, 0x4b, 3, 4]),
+      });
+    });
+    await mockBff(page, PROJECT, { body: project() }, "GET");
+    await page.goto(`${BASE}/findings`);
+    await expect(page.getByRole("heading", { name: "Filtros" })).toBeVisible();
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Exportar a Excel" }).click();
+    expect((await download).suggestedFilename()).toMatch(/^hallazgos-\d{4}-\d{2}-\d{2}\.xlsx$/);
+    const query = new URL(urls[0]).searchParams;
+    expect(query.getAll("status")).toEqual(["new", "persistent", "regression"]);
+    expect(query.has("page")).toBe(false);
+  });
+
+  test("con más de 5 000 hallazgos pide filtrar", async ({ page }) => {
+    await page.route(new RegExp(`/api/projects/${PROJECT_ID}/findings/export`), async (route) => {
+      await route.fulfill({
+        status: 422,
+        contentType: "application/problem+json",
+        body: JSON.stringify(problem(422, "finding.export_too_large")),
+      });
+    });
+    await mockBff(page, PROJECT, { body: project() }, "GET");
+    await page.goto(`${BASE}/findings`);
+    await page.getByRole("button", { name: "Exportar a Excel" }).click();
+    await expect(page.getByText("Hay demasiados hallazgos para exportar")).toBeVisible();
+  });
+});
+
 test.describe("V-25 configurar una ejecución", () => {
   test("parte de los módulos disponibles de bajo riesgo y explica los bloqueados", async ({
     page,

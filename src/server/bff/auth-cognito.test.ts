@@ -208,6 +208,7 @@ describe("inicio de sesión (V-04) y rol de /me", () => {
         name: "Ana",
         email: "ana@ejemplo.mx",
         role: "admin",
+        mfa_enabled: false,
         terms: {
           current_version: "v",
           accepted_version: null,

@@ -39,7 +39,22 @@ export interface paths {
         get: operations["getMe"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Eliminar la cuenta
+         * @description CU-25, RF-88. Borra de forma permanente la cuenta del analista en Cognito, su registro de usuario y
+         *     todos sus proyectos con su contenido (ADR-015). Solo se conservan las métricas anónimas (RF-89) y la
+         *     bitácora durante su plazo de retención (RF-90): registra `account_deleted` y suma
+         *     `deleted_accounts`.
+         *
+         *     Primero se confirma el borrado en la base de datos y después se borra la cuenta de Cognito con
+         *     `DeleteUser` y el access token de la sesión (modelo de datos, sección 7.2). Si Cognito no responde
+         *     (CU-25 E3), los datos ya se borraron: responde 503 `account.deletion_incomplete` y el analista
+         *     repite la acción, que entra a una cuenta vacía y termina la baja. Al terminar, el token deja de
+         *     valer; Next.js debe borrar la cookie de sesión.
+         *
+         *     El correo va en la consulta, que la API no escribe en sus registros (convenciones, sección 11).
+         */
+        delete: operations["deleteAccount"];
         options?: never;
         head?: never;
         patch?: never;
@@ -675,6 +690,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/findings/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Exportar hallazgos a Excel
+         * @description CU-19, RF-77. Los mismos hallazgos y el mismo orden que `listFindings` con los mismos filtros, sin
+         *     paginar, en un libro `.xlsx` con una hoja «Hallazgos» y una fila por hallazgo. Columnas: título,
+         *     severidad, estado, módulo, tipo de falla (`finding_type`), categoría OWASP, CWE, método, ruta,
+         *     identidad, detectado, última detección, resuelto y recomendación. Las fechas van en UTC. Los
+         *     valores de severidad, estado y módulo van en español.
+         *
+         *     No incluye evidencia ni credenciales (RN-11). Toda celda de texto se escribe como texto, nunca como
+         *     fórmula, aunque empiece con `=`, `+`, `-` o `@` (CWE-1236): las rutas y los nombres vienen del
+         *     contrato y de la configuración del analista.
+         *
+         *     Máximo 5 000 hallazgos: si los filtros dejan más, responde 422 `finding.export_too_large` y el
+         *     frontend pide filtrar.
+         */
+        get: operations["exportFindings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/findings/{finding_id}": {
         parameters: {
             query?: never;
@@ -933,6 +981,12 @@ export interface components {
              */
             email: string;
             role: components["schemas"]["Role"];
+            /**
+             * @description El usuario tiene activo el TOTP en Cognito (RF-85), así que Cognito lo pide en cada inicio de
+             *     sesión. Se lee de Cognito en cada petición; no se guarda. Un administrador sin él no entra al
+             *     panel (RF-86): Next.js lo lleva a activarlo.
+             */
+            mfa_enabled: boolean;
             terms: components["schemas"]["TermsStatus"];
         };
         TermsStatus: {
@@ -1656,10 +1710,12 @@ export interface components {
             /**
              * @description Código estable del tipo de falla en el catálogo del módulo, con su calificador cuando hace
              *     falta (`object_access.unauthorized_read`, `configuration.missing_header.hsts`). Forma parte de la
-             *     huella (RF-68). El frontend lo puede usar para agrupar.
+             *     huella (RF-68). Todos los hallazgos con el mismo `finding_type` tienen el mismo `title`: es la
+             *     llave para agruparlos («N operaciones afectadas»), porque el título no incluye la operación ni la
+             *     identidad (B21).
              */
             finding_type: string;
-            /** @description Título en español, escrito por la plataforma. */
+            /** @description Título en español, escrito por la plataforma. Depende solo de `finding_type`. */
             title: string;
             severity: components["schemas"]["Severity"];
             /**
@@ -1942,7 +1998,7 @@ export interface components {
         /**
          * @description Catálogo de RF-81, más RN-09 y la pérdida de verificación.
          *     - `account_created`: primer acceso de una cuenta a la API.
-         *     - `account_deleted`: reservado para la eliminación de cuentas; todavía no se emite.
+         *     - `account_deleted`: el analista eliminó su cuenta (CU-25, RF-88). `user_id` queda como UUID opaco.
          *     - `project_created`, `project_deleted`.
          *     - `project_verified`: verificación de propiedad exitosa. `project_verification_lost`: la
          *       reverificación al iniciar una ejecución falló (RF-20).
@@ -2040,7 +2096,10 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description `role.forbidden`: solo el administrador consulta el panel de administración (RF-84). */
+        /**
+         * @description `role.forbidden`: solo el administrador consulta el panel de administración (RF-84).
+         *     `auth.mfa_required`: el administrador no tiene activo el segundo factor, obligatorio para él (RF-86).
+         */
         AdminOnly: {
             headers: {
                 [name: string]: unknown;
@@ -2140,6 +2199,69 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             429: components["responses"]["TooManyRequests"];
+        };
+    };
+    deleteAccount: {
+        parameters: {
+            query: {
+                /** @description El correo de la cuenta, escrito por el analista. No distingue mayúsculas. */
+                confirmation: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cuenta eliminada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description `role.forbidden`: el administrador no elimina su cuenta desde la plataforma. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `account.active_run`: uno de sus proyectos tiene una ejecución en cola o en curso; cancelarla primero (CU-25 E1). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `account.confirmation_mismatch`: el correo no coincide (CU-25 E2); no se borra nada. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            /**
+             * @description `service.unavailable`: la base de datos o Cognito no respondieron antes de borrar; no se borró nada.
+             *     `account.deletion_incomplete`: los datos ya se borraron, pero Cognito no respondió al borrar la
+             *     cuenta (CU-25 E3); repetir la acción.
+             */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     acceptTerms: {
@@ -3468,6 +3590,53 @@ export interface operations {
             403: components["responses"]["RoleForbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    exportFindings: {
+        parameters: {
+            query?: {
+                module?: components["schemas"]["Module"][];
+                severity?: components["schemas"]["Severity"][];
+                status?: components["schemas"]["FindingStatus"][];
+                run_id?: string;
+                identity_id?: string;
+                operation_id?: string;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El libro de Excel. `Content-Disposition: attachment; filename="hallazgos.xlsx"`. */
+            200: {
+                headers: {
+                    /** @description Siempre `attachment; filename="hallazgos.xlsx"`. */
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["RoleForbidden"];
+            404: components["responses"]["NotFound"];
+            /**
+             * @description `finding.export_too_large`: los filtros dejan más de 5 000 hallazgos. `validation.*`: un
+             *     parámetro no es válido.
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             429: components["responses"]["TooManyRequests"];
         };
     };

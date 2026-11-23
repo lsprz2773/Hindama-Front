@@ -1,14 +1,19 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
+import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { QueryState } from "@/components/ui/query-state";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { useMe } from "./api";
+import { useRouter } from "@/i18n/navigation";
+import { ApiError } from "@/lib/http";
+import { useHttpClient } from "@/lib/http/browser";
+import { deleteAccount, useMe } from "./api";
 import { TWO_FACTOR_KEY, useFlag, writeFlag } from "./browser-store";
 import { DisableTwoFactorDialog } from "./disable-two-factor-dialog";
 
@@ -73,9 +78,13 @@ export function ProfileView() {
   const format = useFormatter();
   const toast = useToast();
   const twoFactor = useFlag(TWO_FACTOR_KEY) === "on";
-  const [dialog, setDialog] = useState<"disable" | null>(null);
+  const [dialog, setDialog] = useState<"disable" | "delete" | null>(null);
+  const router = useRouter();
+  const http = useHttpClient();
+  const client = useQueryClient();
 
   const me = useMe();
+  const account = me.data;
 
   return (
     <div className="flex flex-wrap items-start gap-5">
@@ -164,6 +173,22 @@ export function ProfileView() {
           />
         </Card>
 
+        {/* El administrador no elimina su cuenta desde la plataforma (403 `role.forbidden`). */}
+        {account?.role === "analyst" ? (
+          <Card id="profile-account" title={t("account")}>
+            <Row
+              icon="trash"
+              title={t("deleteAccount.row")}
+              text={t("deleteAccount.rowText")}
+              action={
+                <Button variant="danger" onClick={() => setDialog("delete")}>
+                  {t("deleteAccount.button")}
+                </Button>
+              }
+            />
+          </Card>
+        ) : null}
+
         <Card id="profile-prefs" title={t("preferences")}>
           <Row
             icon="globe"
@@ -173,6 +198,33 @@ export function ProfileView() {
           />
         </Card>
       </div>
+
+      {account ? (
+        <DeleteDialog
+          open={dialog === "delete"}
+          onOpenChange={(open) => setDialog(open ? "delete" : null)}
+          title={t("deleteAccount.title")}
+          description={t("deleteAccount.description")}
+          confirmText={account.email}
+          consequences={{
+            heading: t("deleteAccount.removed"),
+            items: [t("deleteAccount.removed1"), t("deleteAccount.removed2")],
+          }}
+          keeps={{
+            heading: t("deleteAccount.kept"),
+            items: [t("deleteAccount.kept1"), t("deleteAccount.kept2")],
+          }}
+          confirmLabel={t("deleteAccount.confirm")}
+          mapError={(e) => deleteAccountError(e, t)}
+          onConfirm={async () => {
+            await deleteAccount(http, account.email);
+            // La cookie ya la borró el BFF: se olvidan los datos en memoria y se vuelve al inicio.
+            client.clear();
+            toast.show({ type: "success", title: t("deleteAccount.done") });
+            router.replace("/");
+          }}
+        />
+      ) : null}
 
       <DisableTwoFactorDialog
         open={dialog === "disable"}
@@ -184,4 +236,25 @@ export function ProfileView() {
       />
     </div>
   );
+}
+
+/** Errores de `deleteAccount` que la persona puede resolver (CU-25 E1 a E3). */
+function deleteAccountError(error: unknown, t: ReturnType<typeof useTranslations<"Profile">>) {
+  if (error instanceof ApiError) {
+    if (error.code === "account.active_run")
+      return { title: t("deleteAccount.activeRun"), text: t("deleteAccount.activeRunText") };
+    if (error.code === "account.confirmation_mismatch")
+      return { title: t("deleteAccount.mismatch") };
+    if (error.code === "account.deletion_incomplete")
+      return { title: t("deleteAccount.incomplete"), text: t("deleteAccount.incompleteText") };
+    if (error.status === 429) return { title: t("deleteAccount.rateLimited") };
+    if (error.code === "role.forbidden") return { title: t("deleteAccount.forbidden") };
+  }
+  return {
+    title: t("deleteAccount.failed"),
+    text:
+      error instanceof ApiError && error.requestId
+        ? t("deleteAccount.reference", { id: error.requestId })
+        : undefined,
+  };
 }

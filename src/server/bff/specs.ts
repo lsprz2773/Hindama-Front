@@ -1,4 +1,8 @@
-import { meSchema, termsAcceptanceSchema } from "@/lib/api/schemas/account";
+import {
+  deleteAccountQuerySchema,
+  meSchema,
+  termsAcceptanceSchema,
+} from "@/lib/api/schemas/account";
 import {
   adminStatsSchema,
   auditLogPageSchema,
@@ -54,6 +58,7 @@ import {
 } from "@/lib/api/schemas/runs";
 import {
   dismissalCreateSchema,
+  exportFindingsQuerySchema,
   findingOccurrencePageSchema,
   findingPageSchema,
   findingSchema,
@@ -61,6 +66,7 @@ import {
   listOccurrencesQuerySchema,
 } from "@/lib/api/schemas/findings";
 import { CONTRACT_FORM_MAX_BYTES, validateContractImport } from "./contract-import";
+import { XLSX_TYPE } from "./proxy";
 import type { ApiRouteSpec } from "./route";
 
 /**
@@ -72,6 +78,8 @@ const project = ["projects", { param: "projectId" }] as const;
 export const SPECS = {
   getMe: { path: ["me"], response: meSchema },
   acceptTerms: { path: ["me", "terms"], body: termsAcceptanceSchema, response: meSchema },
+  /** CU-25: borra la cuenta; al terminar el token deja de valer y el BFF borra la cookie. */
+  deleteAccount: { path: ["me"], query: deleteAccountQuerySchema, endsSession: true },
   listProjects: { path: ["projects"], query: listProjectsQuerySchema, response: projectPageSchema },
   createProject: { path: ["projects"], body: projectCreateSchema, response: projectSchema },
   getProject: { path: project, response: projectSchema },
@@ -187,6 +195,12 @@ export const SPECS = {
     path: [...project, "findings"],
     query: listFindingsQuerySchema,
     response: findingPageSchema,
+  },
+  /** RF-77: libro `.xlsx` con los mismos filtros de `listFindings`; el BFF lo releva sin leerlo. */
+  exportFindings: {
+    path: [...project, "findings", "export"],
+    query: exportFindingsQuerySchema,
+    download: XLSX_TYPE,
   },
   getFinding: { path: [...project, "findings", { param: "findingId" }], response: findingSchema },
   listFindingOccurrences: {
