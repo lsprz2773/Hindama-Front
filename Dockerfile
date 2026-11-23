@@ -24,9 +24,10 @@ ENV NODE_ENV=production \
 # Usuario sin privilegios; `node` ya existe en la imagen oficial (uid 1000).
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-# La caché de Next se escribe en tiempo de ejecución: la carpeta es del usuario `node`, y en
-# producción se monta como volumen para que el sistema de archivos del resto quede de solo lectura.
-RUN mkdir -p /app/.next/cache && chown node:node /app/.next/cache
+# Next escribe sus cachés en tiempo de ejecución (`cache` y `server/route-cache`): son del usuario
+# `node` y en producción se montan como volúmenes, para que el resto del sistema de archivos quede
+# de solo lectura.
+RUN mkdir -p /app/.next/cache /app/.next/server/route-cache     && chown node:node /app/.next/cache /app/.next/server/route-cache
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
