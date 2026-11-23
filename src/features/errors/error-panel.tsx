@@ -21,7 +21,8 @@ interface ErrorPanelProps {
   /** Con `false` se muestra solo la tarjeta, sin el marco público (p. ej. dentro de un layout autenticado). */
   standalone?: boolean;
   /** 403 de un analista que abre una pantalla de administración (otro texto y otra salida). */
-  audience?: "analyst";
+  /** `mfa`: un administrador sin segundo factor (403 `auth.mfa_required`, RF-86). */
+  audience?: "analyst" | "mfa";
 }
 
 const DEFAULT_HREF: Record<ErrorCode, string | null> = {
@@ -46,7 +47,12 @@ export function ErrorPanel({
   const t = useTranslations("Errors");
   const countdown = useCountdown(code === 429 ? retryAfter : 0);
   const target = href ?? DEFAULT_HREF[code];
-  const key = code === 403 && audience === "analyst" ? "403analyst" : code;
+  const key =
+    code === 403 && audience === "analyst"
+      ? "403analyst"
+      : code === 403 && audience === "mfa"
+        ? "403mfa"
+        : code;
   const waiting = code === 429 && !countdown.done;
 
   const card = (

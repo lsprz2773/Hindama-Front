@@ -26,6 +26,7 @@ import { useFindingDetails, useFindings, useRun, useRunResults } from "./api";
 import { ContextNotes } from "./context-notes";
 import { ExportFindingsButton } from "./export-findings-button";
 import { evidenceText } from "./evidence";
+import { groupByType } from "./finding-groups";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
 
@@ -304,6 +305,30 @@ function FindingEvidence({
   );
 }
 
+function TypeSummary({ items }: { items: Parameters<typeof groupByType>[0] }) {
+  const t = useTranslations("Report");
+  const ts = useTranslations("Severity");
+  const groups = groupByType(items);
+  return (
+    <div className="print-avoid border-line bg-panel-2 flex flex-col gap-3 rounded-[20px] border px-5 py-4">
+      <h3 className="text-base font-semibold">
+        {t("findings.types.title", { types: groups.length, count: items.length })}
+      </h3>
+      <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[14.5px]">
+        {groups.map((g) => (
+          <li key={g.type} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <SeverityMeter severity={g.severity} />
+            <span className="font-semibold">{g.title}</span>
+            <span className="text-muted">
+              {ts(g.severity)} · {t("findings.types.count", { count: g.count })}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /**
  * Hallazgos detectados en la ejecución (`run_id`) o abiertos en el proyecto, por severidad.
  * `listFindings` solo trae la clasificación: la evidencia, la explicación y la recomendación salen
@@ -343,6 +368,7 @@ function Findings({ project, run, variant }: { project: Project; run: Run; varia
             />
           ) : (
             <>
+              {data.items.length > 1 ? <TypeSummary items={data.items} /> : null}
               {data.items.map((f, index) => (
                 <article
                   key={f.id}

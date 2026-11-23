@@ -450,6 +450,11 @@
       "title": "This section is not for your role",
       "text": "The administration panel is for administrators only. Your account is an analyst account.",
       "action": "Go to my projects"
+    },
+    "403mfa": {
+      "title": "Your second factor is missing",
+      "text": "As an administrator you must enable it before entering the panel. It takes a minute with an authenticator app.",
+      "action": "Enable the second factor"
     }
   },
   "Status": {
@@ -683,7 +688,6 @@
     "twoFactor": "Two-factor authentication (2FA)",
     "twoFactorOn": "Enabled.",
     "twoFactorOff": "Disabled. We recommend enabling it.",
-    "twoFactorSoon": "Coming soon. Not available yet.",
     "enableTwoFactor": "Enable 2FA",
     "disableTwoFactor": "Disable 2FA",
     "twoFactorDisabled": "Two-factor authentication disabled",
@@ -716,7 +720,8 @@
     "language": "Interface language",
     "languageNote": "It is remembered in this browser. Dates and deadlines follow the chosen language.",
     "subject": "your profile",
-    "loading": "Loading your profile"
+    "loading": "Loading your profile",
+    "twoFactorLoading": "Checking…"
   },
   "DisableTwoFactor": {
     "title": "Disable two-factor authentication",
@@ -740,7 +745,9 @@
       "title": "Scan this code",
       "qrLabel": "QR code to add Hindama to your app",
       "manual": "Can't scan? Type this key into the app:",
-      "keyLabel": "key"
+      "keyLabel": "key",
+      "failed": "We could not generate the key. Try again.",
+      "loading": "Generating the QR code"
     },
     "step3": {
       "title": "Confirm with a code",
@@ -779,7 +786,8 @@
       "locked": "Too many attempts. Wait a few minutes before trying again.",
       "networkTitle": "We couldn't verify the code",
       "networkText": "Check your connection and try again.",
-      "retry": "Retry"
+      "retry": "Retry",
+      "sessionExpired": "More than 3 minutes passed since you typed your password. Sign in again."
     }
   },
   "AdminSignIn": {
@@ -2242,6 +2250,10 @@
         "open": "Open it in its detail",
         "loadMore": "{count, plural, one {Load the evidence of the next finding} other {Load the evidence of the next # findings}}",
         "partial": "With evidence: {shown} of {total} findings. The API limits requests per minute, so they load in batches."
+      },
+      "types": {
+        "title": "{types, plural, one {# type of failure} other {# types of failure}} across {count, plural, one {# finding} other {# findings}}",
+        "count": "{count, plural, one {# operation or identity affected} other {# operations or identities affected}}"
       }
     },
     "active": {

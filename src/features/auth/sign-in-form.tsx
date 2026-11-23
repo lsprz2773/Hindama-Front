@@ -15,6 +15,14 @@ import { signIn } from "./service";
 
 type Errors = { email?: string; password?: string };
 
+/** Pantalla que sigue a cada resultado del inicio de sesión (V-04 → V-05, V-11 o el inicio). */
+const HOME = {
+  projects: "/projects",
+  admin: "/admin",
+  "two-factor": "/sign-in/two-factor",
+  "setup-two-factor": "/setup-two-factor",
+} as const;
+
 export function SignInForm() {
   const t = useTranslations("SignIn");
   const router = useRouter();
@@ -52,7 +60,7 @@ export function SignInForm() {
     setPending(true);
     try {
       const result = await signIn(http, parsed.data);
-      router.push(result.next === "admin" ? "/admin" : "/projects");
+      router.push(HOME[result.next]);
     } catch (error) {
       setPending(false);
       if (error instanceof ApiError && error.code === "auth.user_not_confirmed") {

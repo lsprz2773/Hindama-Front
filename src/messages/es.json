@@ -450,6 +450,11 @@
       "title": "Esta sección no es para tu rol",
       "text": "El panel de administración es solo para administradores. Tu cuenta es de analista.",
       "action": "Ir a mis proyectos"
+    },
+    "403mfa": {
+      "title": "Falta tu segundo factor",
+      "text": "Como administrador debes activarlo antes de entrar al panel. Se configura en un minuto con una app de autenticación.",
+      "action": "Activar el segundo factor"
     }
   },
   "Status": {
@@ -683,7 +688,6 @@
     "twoFactor": "Segundo factor (2FA)",
     "twoFactorOn": "Activado.",
     "twoFactorOff": "Desactivado. Te recomendamos activarlo.",
-    "twoFactorSoon": "Próximamente. Todavía no está disponible.",
     "enableTwoFactor": "Activar 2FA",
     "disableTwoFactor": "Desactivar 2FA",
     "twoFactorDisabled": "Segundo factor desactivado",
@@ -716,7 +720,8 @@
     "language": "Idioma de la interfaz",
     "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido.",
     "subject": "tu perfil",
-    "loading": "Cargando tu perfil"
+    "loading": "Cargando tu perfil",
+    "twoFactorLoading": "Consultando…"
   },
   "DisableTwoFactor": {
     "title": "Desactivar el segundo factor",
@@ -740,7 +745,9 @@
       "title": "Escanea este código",
       "qrLabel": "Código QR para agregar Hindama a tu app",
       "manual": "¿No puedes escanear? Escribe esta clave en la app:",
-      "keyLabel": "clave"
+      "keyLabel": "clave",
+      "failed": "No pudimos generar la clave. Inténtalo de nuevo.",
+      "loading": "Generando el código QR"
     },
     "step3": {
       "title": "Confirma con un código",
@@ -779,7 +786,8 @@
       "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
       "networkTitle": "No pudimos verificar el código",
       "networkText": "Revisa tu conexión e inténtalo de nuevo.",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "sessionExpired": "Pasaron más de 3 minutos desde que escribiste tu contraseña. Vuelve a iniciar sesión."
     }
   },
   "AdminSignIn": {
@@ -2242,6 +2250,10 @@
         "open": "Ábrelo en su detalle",
         "loadMore": "{count, plural, one {Cargar la evidencia del siguiente hallazgo} other {Cargar la evidencia de los siguientes # hallazgos}}",
         "partial": "Con evidencia: {shown} de {total} hallazgos. La API limita las peticiones por minuto, por eso se cargan por tandas."
+      },
+      "types": {
+        "title": "{types, plural, one {# tipo de falla} other {# tipos de falla}} en {count, plural, one {# hallazgo} other {# hallazgos}}",
+        "count": "{count, plural, one {# operación o identidad afectada} other {# operaciones o identidades afectadas}}"
       }
     },
     "active": {

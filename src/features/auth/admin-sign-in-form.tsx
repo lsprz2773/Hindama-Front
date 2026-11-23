@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { PasswordField, TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toast";
-import { adminSignIn } from "@/features/account/service";
+import { signIn } from "./service";
+import { useHttpClient } from "@/lib/http/browser";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/http";
 import { isEmail } from "@/lib/validation";
@@ -19,6 +20,7 @@ export function AdminSignInForm() {
   const t = useTranslations("AdminSignIn");
   const router = useRouter();
   const toast = useToast();
+  const http = useHttpClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -38,8 +40,17 @@ export function AdminSignInForm() {
 
     setPending(true);
     try {
-      await adminSignIn({ email: email.trim(), password });
-      router.push("/admin/sign-in/two-factor");
+      // El mismo inicio de sesión que V-04: el rol y el segundo factor los decide Cognito y la API.
+      const result = await signIn(http, { email: email.trim(), password });
+      router.push(
+        result.next === "two-factor"
+          ? "/admin/sign-in/two-factor"
+          : result.next === "setup-two-factor"
+            ? "/setup-two-factor"
+            : result.next === "admin"
+              ? "/admin"
+              : "/projects",
+      );
     } catch (e) {
       setPending(false);
       // Mensaje genérico: no revela si la cuenta existe ni si es de administrador (RF-06).

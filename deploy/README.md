@@ -4,12 +4,12 @@ Cómo se pone el frontend (Next.js como BFF) en su propia instancia, junto a la 
 
 ## Qué se despliega
 
-| Pieza | Qué es |
-| --- | --- |
-| `Dockerfile` | Imagen de Next.js en modo `standalone`, usuario `node`, sin secretos |
-| `deploy/compose.yaml` | Dos servicios: `frontend` (Next.js, sistema de archivos de solo lectura, `cap_drop: ALL`) y `caddy` (TLS público con Let's Encrypt) |
-| `deploy/start.sh` | Lee los secretos de SSM y los deja en `/run/hindama/frontend.env` (tmpfs, modo 600); después levanta los contenedores |
-| `deploy/hindama-frontend.service` | Unidad de systemd que ejecuta `start.sh` en cada arranque |
+| Pieza                             | Qué es                                                                                                                              |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Dockerfile`                      | Imagen de Next.js en modo `standalone`, usuario `node`, sin secretos                                                                |
+| `deploy/compose.yaml`             | Dos servicios: `frontend` (Next.js, sistema de archivos de solo lectura, `cap_drop: ALL`) y `caddy` (TLS público con Let's Encrypt) |
+| `deploy/start.sh`                 | Lee los secretos de SSM y los deja en `/run/hindama/frontend.env` (tmpfs, modo 600); después levanta los contenedores               |
+| `deploy/hindama-frontend.service` | Unidad de systemd que ejecuta `start.sh` en cada arranque                                                                           |
 
 El navegador solo habla con Caddy por HTTPS. Next.js llama a la API del backend por `https://backend.internal:8443` (red privada, certificado de la CA interna de Caddy del backend) y a Cognito por internet.
 
@@ -80,14 +80,14 @@ La primera vez construye la imagen en la instancia (varios minutos). Caddy pide 
 
 ## 6. Verificar
 
-| Comprobación | Esperado |
-| --- | --- |
-| `curl -s https://<dominio>/api/health` | `{"status":"ok"}` |
-| `curl -sI https://<dominio>/` | `Strict-Transport-Security`, `Content-Security-Policy` y `X-Content-Type-Options: nosniff`; sin `X-Powered-By` |
-| Registrarse y entrar desde el navegador | Se llega a «Proyectos»; la cookie `__Host-…` es `HttpOnly`, `Secure` y `SameSite=Lax` |
-| Crear un proyecto con una URL pública | Se crea; con `http://127.0.0.1` responde 422 `url.destination_not_allowed` |
-| `docker compose -f deploy/compose.yaml logs frontend` | Sin errores `[bff] Falta la variable…` ni de certificado |
-| En el backend: bitácora de auditoría | `source_ip` es la del navegador, no la de la EC2 del frontend (RF-82) |
+| Comprobación                                          | Esperado                                                                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `curl -s https://<dominio>/api/health`                | `{"status":"ok"}`                                                                                              |
+| `curl -sI https://<dominio>/`                         | `Strict-Transport-Security`, `Content-Security-Policy` y `X-Content-Type-Options: nosniff`; sin `X-Powered-By` |
+| Registrarse y entrar desde el navegador               | Se llega a «Proyectos»; la cookie `__Host-…` es `HttpOnly`, `Secure` y `SameSite=Lax`                          |
+| Crear un proyecto con una URL pública                 | Se crea; con `http://127.0.0.1` responde 422 `url.destination_not_allowed`                                     |
+| `docker compose -f deploy/compose.yaml logs frontend` | Sin errores `[bff] Falta la variable…` ni de certificado                                                       |
+| En el backend: bitácora de auditoría                  | `source_ip` es la del navegador, no la de la EC2 del frontend (RF-82)                                          |
 
 ## Actualizar
 
@@ -100,11 +100,11 @@ Un cambio de contrato exige actualizar primero el backend (ADR-016) y después e
 
 ## Problemas comunes
 
-| Síntoma | Causa probable |
-| --- | --- |
-| `[bff] Falta la variable de entorno …` | `/run/hindama/frontend.env` incompleto: revisa `frontend.conf` y los parámetros de SSM |
-| Errores de certificado al llamar a la API | Falta `NODE_EXTRA_CA_CERTS` o `/etc/hindama/caddy-root.crt` no es la raíz del backend |
-| 403 `csrf.invalid` o `origin` rechazado | `HINDAMA_DOMAIN` no coincide con el dominio con el que se entra |
-| Sin sesión tras iniciar | Se entró por HTTP o por IP (la cookie `__Host-` lo impide) |
-| `AccessDenied` al arrancar | El rol de la instancia no tiene permiso sobre `/hindama/<entorno>/frontend/*` |
-| La caché de Next no se escribe | El volumen `next-cache` debe ser del usuario `node` (uid 1000) |
+| Síntoma                                   | Causa probable                                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| `[bff] Falta la variable de entorno …`    | `/run/hindama/frontend.env` incompleto: revisa `frontend.conf` y los parámetros de SSM |
+| Errores de certificado al llamar a la API | Falta `NODE_EXTRA_CA_CERTS` o `/etc/hindama/caddy-root.crt` no es la raíz del backend  |
+| 403 `csrf.invalid` o `origin` rechazado   | `HINDAMA_DOMAIN` no coincide con el dominio con el que se entra                        |
+| Sin sesión tras iniciar                   | Se entró por HTTP o por IP (la cookie `__Host-` lo impide)                             |
+| `AccessDenied` al arrancar                | El rol de la instancia no tiene permiso sobre `/hindama/<entorno>/frontend/*`          |
+| La caché de Next no se escribe            | El volumen `next-cache` debe ser del usuario `node` (uid 1000)                         |
