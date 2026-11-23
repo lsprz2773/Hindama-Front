@@ -1,0 +1,11 @@
+# Delante de VAmPI: sirve el archivo de verificacion de Hindama (VAmPI no lo trae) y reenvia lo demas.
+:8080 {
+	handle /.well-known/hindama-verificacion.txt {
+		root * /data
+		rewrite * /verificacion.txt
+		file_server
+	}
+	handle {
+		reverse_proxy hindama-demo-vampi:5000
+	}
+}
