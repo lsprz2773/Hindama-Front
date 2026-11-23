@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { mockBff, problem } from "./support/bff";
 import { finding, FINDING_ID, findingDetail, OCCURRENCE } from "./support/findings";
@@ -551,6 +552,152 @@ test.describe("V-28 matriz", () => {
   test("un id de ejecución inválido muestra 404", async ({ page }) => {
     await page.goto(`${BASE}/runs/3/matrix`);
     await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
+  });
+});
+
+test.describe("V-28 celda con discrepancia → hallazgo", () => {
+  const RESULTS = new RegExp(`/api/projects/${PROJECT_ID}/runs/${RUN_ID}/results`);
+  const FINDINGS = new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`);
+  const MATRIX = `${BASE}/runs/${RUN_ID}/matrix`;
+  const OPERATION = {
+    id: "0192e3a0-5555-7000-8000-000000000003",
+    method: "GET",
+    path: "/orders/{orderId}",
+  };
+  const IDENTITY = {
+    id: "0192e3a0-6666-7000-8000-000000000004",
+    name: "Cliente B",
+    deleted: false,
+  };
+  const cell = (verdict: string, overrides: Record<string, unknown> = {}) => ({
+    module: "object_access",
+    operation: OPERATION,
+    identity: IDENTITY,
+    expected: "denied",
+    observed: "200 allowed",
+    verdict,
+    evaluated_at: "2026-11-17T09:10:21Z",
+    ...overrides,
+  });
+  const resultsPage = (items: unknown[]) => ({
+    items,
+    total: items.length,
+    page: 1,
+    page_size: 500,
+  });
+  const findingsPage = (items: unknown[]) => ({
+    items,
+    total: items.length,
+    page: 1,
+    page_size: 100,
+  });
+  const OTHER_FINDING_ID = "0192e3a0-8888-7000-8000-000000000002";
+
+  async function mockCell(page: Page, items: unknown[] = [cell("fail")]) {
+    await page.route(RESULTS, (route) => route.fulfill({ json: resultsPage(items) }));
+  }
+
+  test("abre el hallazgo de la celda buscándolo por operación e identidad", async ({ page }) => {
+    await mockCell(page);
+    const urls: string[] = [];
+    await page.route(FINDINGS, async (route) => {
+      urls.push(route.request().url());
+      await route.fulfill({ json: findingsPage([finding()]) });
+    });
+    await page.goto(MATRIX);
+    await page.getByRole("button", { name: "Ver el hallazgo de Cliente B" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/findings/${FINDING_ID}$`));
+    const params = new URL(urls[0]).searchParams;
+    expect(params.get("run_id")).toBe(RUN_ID);
+    expect(params.get("identity_id")).toBe(IDENTITY.id);
+    expect(params.get("operation_id")).toBe(OPERATION.id);
+    expect(params.getAll("module")).toEqual(["object_access"]);
+  });
+
+  test("solo las celdas con discrepancia ofrecen el hallazgo", async ({ page }) => {
+    await mockCell(page, [
+      cell("fail"),
+      cell("pass", {
+        identity: { ...IDENTITY, id: "0192e3a0-6666-7000-8000-000000000005", name: "Cliente A" },
+      }),
+    ]);
+    await page.goto(MATRIX);
+    await expect(page.getByRole("button", { name: /Ver el hallazgo de/ })).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Ver el hallazgo de Cliente B" })).toBeVisible();
+  });
+
+  test("si la celda tiene varios hallazgos los lista", async ({ page }) => {
+    await mockCell(page);
+    await page.route(FINDINGS, (route) =>
+      route.fulfill({
+        json: findingsPage([finding(), finding({ id: OTHER_FINDING_ID, title: "Otro hallazgo" })]),
+      }),
+    );
+    await page.goto(MATRIX);
+    await page.getByRole("button", { name: "Ver el hallazgo de Cliente B" }).click();
+    await expect(page.getByRole("link", { name: "Otro hallazgo" })).toHaveAttribute(
+      "href",
+      new RegExp(`${BASE}/findings/${OTHER_FINDING_ID}$`),
+    );
+    await expect(
+      page.getByRole("link", { name: "Acceso a un objeto de otra identidad" }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${MATRIX}$`));
+  });
+
+  test("ignora los hallazgos de otra operación y avisa si no hay ninguno", async ({ page }) => {
+    await mockCell(page);
+    await page.route(FINDINGS, (route) =>
+      route.fulfill({
+        json: findingsPage([
+          finding({ operation: { ...OPERATION, id: "0192e3a0-5555-7000-8000-0000000000ff" } }),
+        ]),
+      }),
+    );
+    await page.goto(MATRIX);
+    await page.getByRole("button", { name: "Ver el hallazgo de Cliente B" }).click();
+    await expect(page.getByText(/No encontramos el hallazgo de esta celda/)).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${MATRIX}$`));
+  });
+
+  test("una comprobación de toda la API solo conserva los hallazgos sin operación", async ({
+    page,
+  }) => {
+    await mockCell(page, [cell("fail", { module: "configuration", operation: null })]);
+    const urls: string[] = [];
+    await page.route(FINDINGS, async (route) => {
+      urls.push(route.request().url());
+      await route.fulfill({
+        json: findingsPage([
+          finding({ module: "configuration", operation: OPERATION }),
+          finding({ id: OTHER_FINDING_ID, module: "configuration", operation: null }),
+        ]),
+      });
+    });
+    await page.goto(MATRIX);
+    await page.getByRole("button", { name: "Ver el hallazgo de Cliente B" }).click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/findings/${OTHER_FINDING_ID}$`));
+    expect(new URL(urls[0]).searchParams.has("operation_id")).toBe(false);
+  });
+
+  test("explica un error de la búsqueda y el límite de peticiones", async ({ page }) => {
+    await mockCell(page);
+    let answer = 0;
+    await page.route(FINDINGS, async (route) => {
+      answer += 1;
+      const status = answer === 1 ? 500 : 429;
+      await route.fulfill({
+        status,
+        contentType: "application/problem+json",
+        body: JSON.stringify(problem(status, status === 500 ? "internal" : "rate_limit.exceeded")),
+      });
+    });
+    await page.goto(MATRIX);
+    const open = page.getByRole("button", { name: "Ver el hallazgo de Cliente B" });
+    await open.click();
+    await expect(page.getByText("No se pudo buscar el hallazgo")).toBeVisible();
+    await open.click();
+    await expect(page.getByText(/Demasiadas solicitudes/)).toBeVisible();
   });
 });
 

@@ -1894,6 +1894,13 @@
       "own_data_only": "own data only",
       "no_sql_error": "no SQL error"
     },
+    "finding": {
+      "open": "View finding",
+      "openLabel": "View the finding of {identity}",
+      "none": "We could not find the finding of this cell: it may have been resolved or dismissed since.",
+      "failed": "The finding could not be searched",
+      "rateLimited": "Too many requests. Wait a moment and try again."
+    },
     "previous": "Previous",
     "next": "Next",
     "page": "Page {page} of {pages}"
@@ -2144,7 +2151,19 @@
       "noneRun": "This run detected no findings",
       "operation": "Operation",
       "runs": "Detected",
-      "runRange": "From no. {first} to no. {last}"
+      "runRange": "From no. {first} to no. {last}",
+      "detail": {
+        "explanation": "What was detected",
+        "recommendation": "Recommendation",
+        "loading": "Loading the evidence…",
+        "failed": "The evidence of this finding could not be loaded.",
+        "rateLimited": "Too many requests: wait a moment before loading more evidence.",
+        "retry": "Retry",
+        "notLoaded": "The evidence of this finding was not loaded in the report.",
+        "open": "Open it in its detail",
+        "loadMore": "{count, plural, one {Load the evidence of the next finding} other {Load the evidence of the next # findings}}",
+        "partial": "With evidence: {shown} of {total} findings. The API limits requests per minute, so they load in batches."
+      }
     },
     "active": {
       "title": "The run is still in progress",

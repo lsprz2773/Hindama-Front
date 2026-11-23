@@ -1,5 +1,6 @@
 import { expect, test } from "./fixtures";
 import { mockBff, problem } from "./support/bff";
+import { finding, findingDetail } from "./support/findings";
 import { project, PROJECT_ID } from "./support/projects";
 import { completedRun, mockProgress, RUN_ID, runningRun, runningSummary } from "./support/runs";
 
@@ -335,5 +336,106 @@ test.describe("V-32 reporte imprimible", () => {
     await mockBff(page, RUN, { status: 404, body: problem(404, "resource.not_found") }, "GET");
     await page.goto(REPORT);
     await expect(page.getByText("No encontramos esta página")).toBeVisible();
+  });
+});
+
+test.describe("V-32 evidencia y recomendación de cada hallazgo", () => {
+  const LIST = new RegExp(`/api/projects/${PROJECT_ID}/findings\\?`);
+  const DETAIL = new RegExp(`/api/projects/${PROJECT_ID}/findings/[0-9a-f-]{36}$`);
+  const id = (n: number) => `0192e3a0-8888-7000-8000-${String(n).padStart(12, "0")}`;
+  const listOf = (count: number) => ({
+    items: Array.from({ length: count }, (_, i) =>
+      finding({ id: id(i + 1), title: `Hallazgo ${i + 1}` }),
+    ),
+    total: count,
+    page: 1,
+    page_size: 100,
+  });
+
+  test("cada hallazgo trae su explicación, recomendación y evidencia de getFinding", async ({
+    page,
+  }) => {
+    await finished(page);
+    await page.route(LIST, (route) => route.fulfill({ json: listOf(1) }));
+    const calls: string[] = [];
+    await page.route(DETAIL, async (route) => {
+      calls.push(route.request().url());
+      await route.fulfill({ json: findingDetail({ id: id(1) }) });
+    });
+    await page.goto(REPORT);
+    await expect(page.getByRole("heading", { name: "3.1 Hallazgo 1" })).toBeVisible();
+    await expect(page.getByText("Qué se detectó")).toBeVisible();
+    await expect(page.getByText(/obtuvo el recurso «1001»/)).toBeVisible();
+    await expect(page.getByText(/Comprueba en el servidor, en cada petición/)).toBeVisible();
+    // La evidencia es texto de la API del analista, ya enmascarado.
+    await expect(page.getByText("GET https://api.ejemplo.com/v1/orders/1001")).toBeVisible();
+    await expect(page.getByText("authorization: ****x9Qz")).toBeVisible();
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain(`/findings/${id(1)}`);
+  });
+
+  test("pide el detalle por tandas de 30 para cuidar el límite de peticiones", async ({ page }) => {
+    await finished(page);
+    await page.route(LIST, (route) => route.fulfill({ json: listOf(35) }));
+    const calls: string[] = [];
+    await page.route(DETAIL, async (route) => {
+      const url = route.request().url();
+      calls.push(url);
+      await route.fulfill({ json: findingDetail({ id: url.slice(-36) }) });
+    });
+    await page.goto(REPORT);
+    await expect(page.getByRole("heading", { name: "3.30 Hallazgo 30" })).toBeVisible();
+    await expect(page.getByText("Con evidencia: 30 de 35 hallazgos")).toBeVisible();
+    await expect.poll(() => calls.length).toBe(30);
+    // Los últimos cinco quedan sin pedir y enlazan a su detalle.
+    await expect(
+      page.getByText("La evidencia de este hallazgo no se cargó en el reporte."),
+    ).toHaveCount(5);
+    await page
+      .getByRole("button", { name: "Cargar la evidencia de los siguientes 5 hallazgos" })
+      .click();
+    await expect.poll(() => calls.length).toBe(35);
+    await expect(page.getByText("Con evidencia:")).toHaveCount(0);
+  });
+
+  test("si la API limita las peticiones, ofrece reintentar ese hallazgo", async ({ page }) => {
+    await finished(page);
+    await page.route(LIST, (route) => route.fulfill({ json: listOf(1) }));
+    let answer = 0;
+    await page.route(DETAIL, async (route) => {
+      answer += 1;
+      // El cliente reintenta un GET dos veces: los tres intentos de la primera carga fallan.
+      if (answer <= 3)
+        return route.fulfill({
+          status: 429,
+          contentType: "application/problem+json",
+          headers: { "retry-after": "0" },
+          body: JSON.stringify(problem(429, "rate_limit.exceeded")),
+        });
+      await route.fulfill({ json: findingDetail({ id: id(1) }) });
+    });
+    await page.goto(REPORT);
+    await expect(page.getByText(/Demasiadas solicitudes: espera un momento/)).toBeVisible();
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByText(/obtuvo el recurso «1001»/)).toBeVisible();
+  });
+
+  test("un error al cargar un hallazgo no rompe el reporte", async ({ page }) => {
+    await finished(page);
+    await page.route(LIST, (route) => route.fulfill({ json: listOf(2) }));
+    await page.route(DETAIL, async (route) => {
+      const url = route.request().url();
+      if (url.endsWith(id(1)))
+        return route.fulfill({
+          status: 500,
+          contentType: "application/problem+json",
+          body: JSON.stringify(problem(500, "internal")),
+        });
+      await route.fulfill({ json: findingDetail({ id: id(2) }) });
+    });
+    await page.goto(REPORT);
+    await expect(page.getByText("No se pudo cargar la evidencia de este hallazgo.")).toBeVisible();
+    await expect(page.getByText(/obtuvo el recurso «1001»/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "3.2 Hallazgo 2" })).toBeVisible();
   });
 });
