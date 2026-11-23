@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { QueryState } from "@/components/ui/query-state";
@@ -150,17 +150,16 @@ export function ProfileView() {
                   aria-hidden="true"
                   className={`size-2 rounded-full ${twoFactor ? "bg-success" : "bg-warning"}`}
                 />
-                {twoFactor ? t("twoFactorOn") : t("twoFactorOff")}
+                {twoFactor ? t("twoFactorOn") : t("twoFactorSoon")}
               </span>
             }
+            // TODO(api): sin contrato de MFA (A5): no se ofrece activarlo hasta que exista el flujo real.
             action={
               twoFactor ? (
                 <Button variant="secondary" onClick={() => setDialog("disable")}>
                   {t("disableTwoFactor")}
                 </Button>
-              ) : (
-                <ButtonLink href="/profile/two-factor">{t("enableTwoFactor")}</ButtonLink>
-              )
+              ) : null
             }
           />
         </Card>

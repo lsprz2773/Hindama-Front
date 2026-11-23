@@ -683,6 +683,7 @@
     "twoFactor": "Two-factor authentication (2FA)",
     "twoFactorOn": "Enabled.",
     "twoFactorOff": "Disabled. We recommend enabling it.",
+    "twoFactorSoon": "Coming soon. Not available yet.",
     "enableTwoFactor": "Enable 2FA",
     "disableTwoFactor": "Disable 2FA",
     "twoFactorDisabled": "Two-factor authentication disabled",
