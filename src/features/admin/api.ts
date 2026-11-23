@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { auditLogPageSchema, type AuditAction } from "@/lib/api/schemas/admin";
+import { adminStatsSchema, auditLogPageSchema, type AuditAction } from "@/lib/api/schemas/admin";
 import { useHttpClient } from "@/lib/http/browser";
 
 export interface AuditLogFilters {
@@ -54,6 +54,33 @@ export function useAuditLog({
       ).data,
     enabled,
     placeholderData: keepPreviousData,
+    retry: false,
+  });
+}
+
+export const ADMIN_STATS_KEY = ["admin", "stats"] as const;
+
+export interface AdminStatsFilters {
+  /** `YYYY-MM-DD` en UTC; ambas fechas se incluyen. */
+  dateFrom?: string;
+  dateTo?: string;
+  group: "day" | "week";
+  enabled?: boolean;
+}
+
+/** `getAdminStats` (V-33): cifras anónimas del periodo, solo para el administrador. */
+export function useAdminStats({ dateFrom, dateTo, group, enabled = true }: AdminStatsFilters) {
+  const http = useHttpClient();
+  return useQuery({
+    queryKey: [...ADMIN_STATS_KEY, { dateFrom, dateTo, group }],
+    queryFn: async ({ signal }) =>
+      (
+        await http.read("/admin/stats", adminStatsSchema, {
+          query: { date_from: dateFrom, date_to: dateTo, group },
+          signal,
+        })
+      ).data,
+    enabled,
     retry: false,
   });
 }

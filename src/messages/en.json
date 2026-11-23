@@ -2228,7 +2228,7 @@
     "custom": {
       "from": "From",
       "to": "To",
-      "invalid": "Enter a valid range: the start date cannot be after the end date or after today."
+      "invalid": "Enter a valid range: the start date cannot be after the end date, the end date cannot be after today and the range spans up to 366 days."
     },
     "empty": {
       "title": "No data in this period",
@@ -2236,12 +2236,12 @@
     },
     "kpi": {
       "users": {
-        "label": "Active users",
+        "label": "Registered users",
         "note": "{count, plural, one {# new account} other {# new accounts}}"
       },
       "projects": {
-        "label": "Projects",
-        "note": "{count} verified"
+        "label": "Projects created",
+        "note": "In the period"
       },
       "runs": {
         "label": "Runs",
@@ -2266,9 +2266,12 @@
       "week": "Runs per week"
     },
     "unit": {
-      "day": "runs",
-      "week": "runs"
+      "runs": "runs",
+      "findings": "findings"
     },
+    "findingsByWeek": "Findings detected per week",
+    "weekStart": "Each point is the week starting that Monday",
+    "noFindings": "No findings in this period",
     "chart": {
       "summary": "{label}: {items}.",
       "tip": "{label}: {value} {unit}"

@@ -3,7 +3,7 @@ import type { Schemas } from "../types";
 import { assertType, FIELD_CODES, zText, type Equal } from "../zod";
 import { moduleSchema, pageSchema, verificationMethodSchema } from "./common";
 import { dismissalReasonSchema } from "./findings";
-import { queryInt } from "./projects";
+import { queryInt, severityCountSchema } from "./projects";
 import { queryList, runLimitsSchema } from "./runs";
 
 /**
@@ -103,3 +103,76 @@ export const listAuditLogQuerySchema = z
       new Date(query.occurred_from) <= new Date(query.occurred_to),
     { path: ["occurred_to"], message: FIELD_CODES.format },
   );
+
+/* ---------- Estadísticas (V-33, F-13) ---------- */
+
+/**
+ * `getAdminStats`: cifras anónimas de la plataforma, solo para el administrador. Salen de métricas
+ * que se escriben al ocurrir cada hecho (RF-89): no traen URLs, contratos, credenciales ni
+ * identificadores de analistas, proyectos o hallazgos.
+ */
+export const statsGroupSchema = z.enum(["day", "week"]);
+
+export const adminStatsActivitySchema = z.object({
+  /** El día, o el lunes de la semana. */
+  start: z.string(),
+  new_users: z.number().int().min(0),
+  deleted_accounts: z.number().int().min(0),
+  projects_created: z.number().int().min(0),
+  runs_started: z.number().int().min(0),
+  runs_cancelled: z.number().int().min(0),
+  runs_failed: z.number().int().min(0),
+});
+
+export const adminStatsFindingsSchema = z.object({
+  detected: z.number().int().min(0),
+  resolved: z.number().int().min(0),
+  regressions: z.number().int().min(0),
+  /** Días promedio entre la detección y la corrección confirmada; `null` si no hay ninguna. */
+  average_days_to_resolve: z.number().min(0).nullable(),
+  by_severity: severityCountSchema,
+  by_module: z.array(z.object({ module: moduleSchema, detected: z.number().int().min(1) })),
+  by_owasp_category: z.array(
+    z.object({ owasp_category: z.string(), detected: z.number().int().min(1) }),
+  ),
+  /** Detectados por semana (lunes), del lunes de `date_from` al de `date_to`, sin huecos. */
+  weekly: z.array(z.object({ week: z.string(), detected: z.number().int().min(0) })),
+});
+
+export const adminStatsSchema = z.object({
+  period: z.object({ date_from: z.string(), date_to: z.string(), group: statsGroupSchema }),
+  users: z.object({
+    total: z.number().int().min(0),
+    new: z.number().int().min(0),
+    deleted: z.number().int().min(0),
+  }),
+  projects: z.object({ created: z.number().int().min(0) }),
+  runs: z.object({
+    started: z.number().int().min(0),
+    cancelled: z.number().int().min(0),
+    failed: z.number().int().min(0),
+  }),
+  activity: z.array(adminStatsActivitySchema),
+  findings: adminStatsFindingsSchema,
+});
+assertType<Equal<z.output<typeof adminStatsSchema>, Schemas["AdminStats"]>>();
+export type AdminStats = z.output<typeof adminStatsSchema>;
+
+/** Más de 366 días es 422 en la API (`validation.format`). */
+export const MAX_STATS_DAYS = 366;
+const DAY_MS = 86_400_000;
+const statsDate = z.iso.date({ message: FIELD_CODES.format });
+
+export const getAdminStatsQuerySchema = z
+  .strictObject({
+    date_from: statsDate.optional(),
+    date_to: statsDate.optional(),
+    group: statsGroupSchema.optional(),
+  })
+  .superRefine((query, ctx) => {
+    if (!query.date_from || !query.date_to) return;
+    const days = (Date.parse(query.date_to) - Date.parse(query.date_from)) / DAY_MS + 1;
+    if (days < 1) ctx.addIssue({ code: "custom", path: ["date_to"], message: FIELD_CODES.format });
+    else if (days > MAX_STATS_DAYS)
+      ctx.addIssue({ code: "custom", path: ["date_from"], message: FIELD_CODES.format });
+  });

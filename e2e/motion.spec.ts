@@ -100,7 +100,7 @@ test.describe("animaciones", () => {
     const bar = page.locator("span.animate-grow-x").first();
     expect(await bar.evaluate((el) => getComputedStyle(el).animationName)).toBe("grow-x");
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
     const line = page.locator("svg polyline").first();
     expect(await line.evaluate((el) => getComputedStyle(el).animationName)).toBe("draw");
   });
@@ -173,8 +173,15 @@ test.describe("esqueletos de carga", () => {
   });
 
   test("las estadísticas muestran su esqueleto al cambiar de periodo", async ({ page }) => {
+    // La API real tarda: el simulador responde al instante y el esqueleto no llegaría a verse.
+    let slow = false;
+    await page.route("**/api/admin/stats**", async (route) => {
+      if (slow) await new Promise((resolve) => setTimeout(resolve, 1_500));
+      await route.fallback();
+    });
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
+    slow = true;
     await page.getByRole("radio", { name: "Últimos 7 días" }).click();
     await expect(page.getByRole("status", { name: "Cargando estadísticas" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();

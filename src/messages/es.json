@@ -2228,7 +2228,7 @@
     "custom": {
       "from": "Desde",
       "to": "Hasta",
-      "invalid": "Escribe un rango válido: la fecha inicial no puede ser posterior a la final ni al día de hoy."
+      "invalid": "Escribe un rango válido: la fecha inicial no puede ser posterior a la final, la final no puede ser posterior a hoy y el rango abarca hasta 366 días."
     },
     "empty": {
       "title": "Sin datos en este periodo",
@@ -2236,12 +2236,12 @@
     },
     "kpi": {
       "users": {
-        "label": "Usuarios activos",
+        "label": "Usuarios registrados",
         "note": "{count, plural, one {# cuenta nueva} other {# cuentas nuevas}}"
       },
       "projects": {
-        "label": "Proyectos",
-        "note": "{count} verificados"
+        "label": "Proyectos creados",
+        "note": "En el periodo"
       },
       "runs": {
         "label": "Ejecuciones",
@@ -2266,9 +2266,12 @@
       "week": "Ejecuciones por semana"
     },
     "unit": {
-      "day": "ejecuciones",
-      "week": "ejecuciones"
+      "runs": "ejecuciones",
+      "findings": "hallazgos"
     },
+    "findingsByWeek": "Hallazgos detectados por semana",
+    "weekStart": "Cada punto es la semana que empieza ese lunes",
+    "noFindings": "Sin hallazgos en este periodo",
     "chart": {
       "summary": "{label}: {items}.",
       "tip": "{label}: {value} {unit}"
