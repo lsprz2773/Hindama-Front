@@ -32,7 +32,7 @@ const LIMITS = [
 ] as const;
 
 /** Dónde se resuelve cada requisito que falta (`ModuleAvailability.missing`, RF-45). */
-const FIX: Record<Missing, string> = {
+const FIX: Record<Exclude<Missing, "not_implemented">, string> = {
   project_not_verified: "verification",
   no_contract: "contract",
   insufficient_identities: "identities/new",
@@ -197,7 +197,7 @@ function ConfigureRun({ project }: { project: Project }) {
                       {t(`risk.${m.risk}`)}
                     </span>
                   ) : null}
-                  {blocked && reason ? (
+                  {blocked && reason && reason !== "not_implemented" ? (
                     <Link href={`${base}/${FIX[reason]}`} className="text-link text-sm font-bold">
                       {t(`modules.fix.${reason}`)}
                     </Link>

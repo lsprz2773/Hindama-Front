@@ -542,13 +542,38 @@
   },
   "PendingResources": {
     "title": "{count, plural, one {# recurso quedó sin eliminar en tu API} other {# recursos quedaron sin eliminar en tu API}}",
-    "text": "Hindama los creó durante esta ejecución y no pudo borrarlos tras 3 intentos. Elimínalos a mano para dejar tu entorno limpio. Los errores se muestran sin credenciales.",
+    "text": "Hindama los creó durante esta ejecución y no pudo borrarlos. Elimínalos a mano para dejar tu entorno limpio. Los errores se muestran sin credenciales.",
     "tableLabel": "Recursos pendientes de eliminar",
     "operation": "Operación",
     "location": "Ubicación",
     "attempts": "Intentos",
     "attemptsOf": "{done} de {total}",
     "lastError": "Último error"
+  },
+  "FailedResources": {
+    "operationUnknown": "Operación que ya no está en el contrato",
+    "errors": {
+      "status": "El último intento respondió {status}",
+      "no_answer": "La API no respondió",
+      "no_identifier": "No se pudo leer el identificador del recurso creado",
+      "budget_exhausted": "Se agotó el límite de peticiones antes de borrarlo",
+      "not_deleted": "La ejecución terminó antes de borrarlo",
+      "run_interrupted": "La ejecución se interrumpió antes de borrarlo",
+      "unknown": "No se pudo borrar"
+    }
+  },
+  "EvidenceContext": {
+    "undeclared": "Campos que la respuesta trae sin declararlos: {names}",
+    "acceptedFields": "Campos protegidos que la API aceptó: {names}",
+    "createdResource": {
+      "deleted": "Hindama creó un recurso de prueba y lo borró.",
+      "failed": "Hindama creó un recurso de prueba y no pudo borrarlo: elimínalo a mano."
+    },
+    "requests": "{count, plural, one {Se envió # petición seguida} other {Se enviaron # peticiones seguidas}}",
+    "bodyBytes": "Cuerpo enviado de {count, number} bytes",
+    "operation": "Operación probada: {value}",
+    "parameter": "Parámetro probado: {value}",
+    "payload": "Carga de prueba: {value}"
   },
   "Dialogs": {
     "cancel": "Cancelar",
@@ -988,7 +1013,8 @@
       "reviewPolicy": "Revisar política",
       "resources": "Registra los recursos de cada identidad.",
       "goResources": "Registrar recursos",
-      "policyPending": "Confirma la política de acceso propuesta."
+      "policyPending": "Confirma la política de acceso propuesta.",
+      "notImplemented": "Disponible en una versión próxima."
     },
     "stats": {
       "requests": "Peticiones",
@@ -1367,11 +1393,11 @@
       "text": "Esta acción no se puede deshacer.",
       "heading": "Qué pasa",
       "item1": "Se borran su credencial y sus recursos.",
-      "item2": "Sus hallazgos se conservan.",
+      "item2": "Sus hallazgos se conservan; los abiertos pasan a resueltos.",
       "confirm": "Eliminar identidad",
       "done": "Identidad «{name}» eliminada"
     },
-    "deleteNote": "Al eliminar una identidad se borran su credencial y sus recursos; sus hallazgos se conservan.",
+    "deleteNote": "Al eliminar una identidad se borran su credencial y sus recursos; sus hallazgos se conservan, pero los abiertos pasan a resueltos.",
     "subject": "las identidades",
     "tested": "probada {time}",
     "errors": {
@@ -1678,7 +1704,8 @@
         "insufficient_identities": "Requiere al menos dos identidades",
         "no_admin_identity": "Requiere una identidad administradora",
         "no_resources": "Requiere recursos asignados a las identidades",
-        "policy_unconfirmed": "Requiere confirmar la política de acceso"
+        "policy_unconfirmed": "Requiere confirmar la política de acceso",
+        "not_implemented": "Disponible en una versión próxima"
       },
       "fix": {
         "project_not_verified": "Verificar",
@@ -1782,10 +1809,6 @@
       "title": "Se perdió la conexión en vivo",
       "text": "Recarga la página para ver el estado actual de la ejecución."
     },
-    "pending": {
-      "title": "{count, plural, one {# recurso de prueba no se pudo borrar} other {# recursos de prueba no se pudieron borrar}}",
-      "text": "Hindama lo intentó 3 veces. Bórralos a mano en tu API."
-    },
     "cancelRequested": "Se pidió cancelar la ejecución n.º {number}",
     "ended": {
       "cancelled": "Ejecución n.º {number} cancelada",
@@ -1857,10 +1880,6 @@
           "title": "La ejecución no terminó",
           "text": "Los resultados son parciales: solo incluyen lo que se evaluó antes de la falla."
         }
-      },
-      "pending": {
-        "title": "{count, plural, one {# recurso de prueba no se pudo borrar} other {# recursos de prueba no se pudieron borrar}}",
-        "text": "Hindama lo intentó 3 veces. Bórralos a mano en tu API."
       }
     },
     "top": "Más graves",

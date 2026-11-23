@@ -3,19 +3,21 @@ import { useTranslations } from "next-intl";
 export interface PendingResource {
   operation: string;
   location: string;
-  attempts: number;
+  /** Solo si se conoce: el contrato 0.10.0 no informa los intentos. */
+  attempts?: number;
   maxAttempts?: number;
-  /** Último error, siempre sin credenciales. */
+  /** Por qué no se borró, siempre sin credenciales. */
   lastError: string;
 }
 
 /**
- * C-15. Recursos que la plataforma creó en la API del analista y no pudo borrar tras 3 intentos.
+ * C-15. Recursos que la plataforma creó en la API del analista y no pudo borrar.
  * El analista debe eliminarlos a mano (CU-23 E1, RN-06).
  */
 export function PendingResources({ resources }: { resources: PendingResource[] }) {
   const t = useTranslations("PendingResources");
   if (resources.length === 0) return null;
+  const showAttempts = resources.some((r) => r.attempts !== undefined);
 
   return (
     <section
@@ -60,9 +62,11 @@ export function PendingResources({ resources }: { resources: PendingResource[] }
               <th scope="col" className="px-[18px] py-3 font-bold">
                 {t("location")}
               </th>
-              <th scope="col" className="px-[18px] py-3 font-bold">
-                {t("attempts")}
-              </th>
+              {showAttempts ? (
+                <th scope="col" className="px-[18px] py-3 font-bold">
+                  {t("attempts")}
+                </th>
+              ) : null}
               <th scope="col" className="px-[18px] py-3 font-bold">
                 {t("lastError")}
               </th>
@@ -76,9 +80,13 @@ export function PendingResources({ resources }: { resources: PendingResource[] }
               >
                 <td className="px-[18px] py-3.5 font-mono text-[13px]">{r.operation}</td>
                 <td className="px-[18px] py-3.5 font-mono text-[13px] break-words">{r.location}</td>
-                <td className="px-[18px] py-3.5">
-                  {t("attemptsOf", { done: r.attempts, total: r.maxAttempts ?? 3 })}
-                </td>
+                {showAttempts ? (
+                  <td className="px-[18px] py-3.5">
+                    {r.attempts === undefined
+                      ? "—"
+                      : t("attemptsOf", { done: r.attempts, total: r.maxAttempts ?? 3 })}
+                  </td>
+                ) : null}
                 <td className="text-muted px-[18px] py-3.5">{r.lastError}</td>
               </tr>
             ))}

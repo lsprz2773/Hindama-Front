@@ -18,6 +18,7 @@ import type { Run } from "@/lib/api/schemas/runs";
 import { cn } from "@/lib/cn";
 import { ApiError } from "@/lib/http";
 import { useHttpClient } from "@/lib/http/browser";
+import { FailedResources } from "./failed-resources";
 import { cancelRun, useAfterRun, useFindings, useRun, useRunStream } from "./api";
 import { MODULE_VIEW } from "./modules";
 
@@ -69,12 +70,7 @@ function Progress({
           {t("lost.text")}
         </Banner>
       ) : null}
-      {run.created_resources.failed > 0 ? (
-        // TODO(api): el contrato solo da el conteo; no qué recursos ni en qué ruta (C-15).
-        <Banner title={t("pending.title", { count: run.created_resources.failed })}>
-          {t("pending.text")}
-        </Banner>
-      ) : null}
+      <FailedResources projectId={project.id} items={run.created_resources.failed_items} />
 
       <div className="flex flex-wrap items-start gap-5">
         <section
