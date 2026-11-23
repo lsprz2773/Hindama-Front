@@ -18,6 +18,7 @@ services:
     volumes:
       - /etc/hindama/caddy-root.crt:/etc/hindama/caddy-root.crt:ro
       - next-cache:/app/.next/cache
+      - next-route-cache:/app/.next/server/route-cache
     read_only: true
     tmpfs:
       - /tmp
@@ -48,5 +49,6 @@ services:
 
 volumes:
   next-cache:
+  next-route-cache:
   caddy-data:
   caddy-config:
