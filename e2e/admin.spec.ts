@@ -551,7 +551,11 @@ test.describe("estados de carga, error y permiso del panel", () => {
     for (const path of ["/admin", "/admin/audit-log"]) {
       await page.goto(path);
       await expect(page.getByText("Esta sección no es para tu rol")).toBeVisible();
-      await expect(page.getByRole("link", { name: "Ir a mis proyectos" })).toBeVisible();
+      await expect(
+        page
+          .getByRole("region", { name: "Esta sección no es para tu rol" })
+          .getByRole("link", { name: "Ir a mis proyectos" }),
+      ).toBeVisible();
     }
   });
 

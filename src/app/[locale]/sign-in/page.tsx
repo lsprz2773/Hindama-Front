@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { SeverityBadge } from "@/components/ui/severity";
 import { resolveLocale } from "@/i18n/params";
+import { RedirectIfSignedIn } from "@/features/auth/redirect-if-signed-in";
 import { SignInForm } from "@/features/auth/sign-in-form";
 
 export async function generateMetadata({
@@ -33,6 +34,7 @@ export default async function SignInPage({ params }: PageProps<"/[locale]/sign-i
         </figure>
       }
     >
+      <RedirectIfSignedIn />
       <SignInForm />
     </AuthShell>
   );

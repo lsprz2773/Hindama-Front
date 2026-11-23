@@ -167,7 +167,11 @@ function ImportPanel({ project, versions }: { project: Project; versions: number
       if (result.status === 200) {
         toast.show({ type: "info", title: t("unchanged") });
       } else {
-        toast.show({ type: "success", title: t("imported"), text: t("importedText") });
+        toast.show({
+          type: "success",
+          title: t("imported"),
+          text: result.data.warnings.length > 0 ? t("importedText") : t("importedTextClean"),
+        });
       }
     } catch (e) {
       if (!(e instanceof ApiError)) throw e;

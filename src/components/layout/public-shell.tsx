@@ -1,7 +1,7 @@
 import { PageTransition } from "./page-transition";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { ButtonLink } from "@/components/ui/button";
+import { AccountNav } from "./account-nav";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { Logo } from "@/components/ui/logo";
 import { Link } from "@/i18n/navigation";
@@ -17,14 +17,7 @@ export function PublicShell({ children, notice }: { children: ReactNode; notice?
           <Logo label={t("homeLink")} />
           <div className="flex flex-wrap items-center gap-2.5">
             <LanguageSelector />
-            <nav aria-label={t("accountNav")} className="flex flex-wrap gap-2.5">
-              <ButtonLink href="/sign-in" variant="secondary" size="sm">
-                {t("signIn")}
-              </ButtonLink>
-              <ButtonLink href="/sign-up" size="sm">
-                {t("signUp")}
-              </ButtonLink>
-            </nav>
+            <AccountNav />
           </div>
         </header>
         {notice}

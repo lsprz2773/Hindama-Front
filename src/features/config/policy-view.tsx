@@ -226,7 +226,7 @@ function Policy({ project, data }: { project: Project; data: OperationPage }) {
             />
           </div>
           <p className="text-muted text-sm leading-[1.55]">
-            {t("progress.text", { count: proposed })}{" "}
+            {proposed > 0 ? `${t("progress.text", { count: proposed })} ` : null}
             {/* TODO(api): `Operation` no dice quién la modificó (RF-43); solo `modified_at`. */}
             {lastModified
               ? t("progress.modified", {

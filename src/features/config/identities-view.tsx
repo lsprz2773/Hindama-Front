@@ -54,8 +54,19 @@ function Identities({ project, identities }: { project: Project; identities: Ide
   const missing = (module: string, reason: string) =>
     project.modules.some((m) => m.module === module && m.missing.includes(reason as never));
   const requirements = [
-    { key: "objects", ok: !missing("object_access", "insufficient_identities") },
-    { key: "functions", ok: !missing("function_access", "no_admin_identity") },
+    {
+      key: "objects",
+      // Dos identidades no bastan: cada una necesita recursos propios (F-21).
+      state: missing("object_access", "insufficient_identities")
+        ? "missing"
+        : missing("object_access", "no_resources")
+          ? "noResources"
+          : "ok",
+    },
+    {
+      key: "functions",
+      state: missing("function_access", "no_admin_identity") ? "missing" : "ok",
+    },
   ] as const;
 
   async function test(identity: Identity) {
@@ -104,14 +115,16 @@ function Identities({ project, identities }: { project: Project; identities: Ide
               className="border-line bg-panel-2 flex items-start gap-3 rounded-[20px] border p-4"
             >
               <Icon
-                name={r.ok ? "check" : "alert"}
+                name={r.state === "ok" ? "check" : "alert"}
                 strokeWidth={2.4}
-                className={r.ok ? "text-success" : "text-warning"}
+                className={r.state === "ok" ? "text-success" : "text-warning"}
               />
               <span className="flex flex-col gap-0.5">
                 <b className="text-[15px]">{t(`requirements.${r.key}.title`)}</b>
                 <span className="text-muted text-[13.5px] leading-[1.45]">
-                  {t(`requirements.${r.key}.${r.ok ? "ok" : "missing"}`)}
+                  {r.key === "objects"
+                    ? t(`requirements.objects.${r.state}`)
+                    : t(`requirements.functions.${r.state === "ok" ? "ok" : "missing"}`)}
                 </span>
               </span>
             </li>

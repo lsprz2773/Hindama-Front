@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDuration } from "@/lib/format-duration";
 import { useFormatter, useTranslations } from "next-intl";
 import { ApiWarnings } from "@/components/ui/api-warnings";
 import { Banner } from "@/components/ui/banner";
@@ -20,13 +21,6 @@ const card = "border-line bg-panel flex flex-col gap-4 rounded-[28px] border p-6
 const MODULES = MODULE_VIEW;
 
 type Missing = ModuleAvailability["missing"][number];
-
-/** Duración `m:ss` entre el inicio y el fin de la ejecución. */
-function duration(start: string | null, end: string | null): string | null {
-  if (!start || !end) return null;
-  const seconds = Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 1000));
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 function Dashboard({ project }: { project: Project }) {
   const t = useTranslations("Dashboard");
@@ -79,7 +73,7 @@ function Dashboard({ project }: { project: Project }) {
       not_implemented: { reason: t("blocked.notImplemented"), label: null, href: null },
     })[missing];
 
-  const minutes = run ? duration(run.started_at, run.finished_at) : null;
+  const minutes = run ? formatDuration(run.started_at, run.finished_at) : null;
   const stats = run
     ? [
         [format.number(run.requests_sent), t("stats.requests")],

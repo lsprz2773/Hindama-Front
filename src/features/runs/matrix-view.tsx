@@ -22,6 +22,7 @@ import { ApiError } from "@/lib/http";
 import { useHttpClient } from "@/lib/http/browser";
 import { findCellFindings, useRun, useRunResults } from "./api";
 import { MODULE_VIEW } from "./modules";
+import { isResultCode } from "./result-codes";
 import { RunTabs } from "./run-tabs";
 
 type Verdict = Schemas["Verdict"];
@@ -41,11 +42,6 @@ const CELL_STYLE: Record<Verdict, string> = {
 };
 
 const VERDICTS: Verdict[] = ["pass", "fail", "error", "skipped"];
-
-/** Códigos de `Result.expected`/`observed` que el contrato nombra como ejemplo. */
-const CODES = ["allowed", "denied", "own_data_only", "no_sql_error"] as const;
-const isCode = (part: string): part is (typeof CODES)[number] =>
-  (CODES as readonly string[]).includes(part);
 
 function Switch({
   checked,
@@ -200,7 +196,7 @@ function Matrix({ project, run }: { project: Project; run: Run }) {
   const code = (value: string) =>
     value
       .split(" ")
-      .map((part) => (isCode(part) ? t(`codes.${part}`) : part))
+      .map((part) => (isResultCode(part) ? t(`codes.${part}`) : part))
       .join(" ");
 
   return (

@@ -25,7 +25,9 @@ import { ApiError } from "@/lib/http";
 import { useFindingDetails, useFindings, useRun, useRunResults } from "./api";
 import { ContextNotes } from "./context-notes";
 import { ExportFindingsButton } from "./export-findings-button";
+import { formatDuration } from "@/lib/format-duration";
 import { evidenceText } from "./evidence";
+import { isResultCode } from "./result-codes";
 import { groupByType } from "./finding-groups";
 import { badgeStatus } from "./finding-status";
 import { MODULE_VIEW } from "./modules";
@@ -50,20 +52,10 @@ const FINDINGS_PAGE = 100;
  */
 const DETAIL_BATCH = 30;
 
-/** Códigos de `Result.expected`/`observed` que el contrato nombra como ejemplo (igual que V-28). */
-const CODES = ["allowed", "denied", "own_data_only", "no_sql_error"] as const;
-const isCode = (part: string): part is (typeof CODES)[number] =>
-  (CODES as readonly string[]).includes(part);
-
 const isActive = (run: Run) => run.status === "queued" || run.status === "running";
 
 function duration(run: Run) {
-  if (!run.started_at || !run.finished_at) return "—";
-  const seconds = Math.max(
-    0,
-    Math.round((Date.parse(run.finished_at) - Date.parse(run.started_at)) / 1000),
-  );
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  return formatDuration(run.started_at, run.finished_at) ?? "—";
 }
 
 /** Cuántos hallazgos tienen hoy el estado `status` (solo se lee `total`), de la ejecución o del proyecto. */
@@ -150,7 +142,7 @@ function Discrepancies({ project, run }: { project: Project; run: Run }) {
   const code = (value: string) =>
     value
       .split(" ")
-      .map((part) => (isCode(part) ? tx(`codes.${part}`) : part))
+      .map((part) => (isResultCode(part) ? tx(`codes.${part}`) : part))
       .join(" ");
   return (
     <section aria-labelledby="r2" className="flex flex-col gap-3.5">

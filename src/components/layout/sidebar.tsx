@@ -57,7 +57,7 @@ export function Sidebar({ role, project, collapsed = false }: SidebarProps) {
     <nav
       aria-label={t("label")}
       className={cn(
-        "bg-sidebar flex min-h-[820px] flex-none flex-col gap-1.5 rounded-[26px] px-3 py-4 text-[#c9c1b8] transition-[width] duration-200",
+        "bg-sidebar sticky top-4 flex max-h-[calc(100vh-2rem)] min-h-[min(820px,calc(100vh-2rem))] flex-none flex-col gap-1.5 self-start overflow-y-auto rounded-[26px] px-3 py-4 text-[#c9c1b8] transition-[width] duration-200 sm:top-6 sm:max-h-[calc(100vh-3rem)] sm:min-h-[min(820px,calc(100vh-3rem))]",
         open ? "w-[248px]" : "w-[72px]",
       )}
     >

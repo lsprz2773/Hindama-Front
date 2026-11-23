@@ -35,7 +35,7 @@ export function useProjectNav(project: ApiProject | undefined): SidebarProject |
       history: project.last_run ? { text: String(project.last_run.number) } : undefined,
       findings: findings > 0 ? { text: String(findings) } : undefined,
     },
-    locked: verified ? undefined : { resources: t("availableAfterVerification") },
+    // «Recursos» siempre abre: solo «Descubrir recursos» exige verificar y lo explica (F-04).
   };
 }
 
