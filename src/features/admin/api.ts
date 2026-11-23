@@ -81,7 +81,6 @@ export function useAdminStats({ dateFrom, dateTo, group, enabled = true }: Admin
         })
       ).data,
     enabled,
-    placeholderData: keepPreviousData,
     retry: false,
   });
 }

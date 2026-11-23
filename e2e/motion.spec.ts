@@ -100,7 +100,7 @@ test.describe("animaciones", () => {
     const bar = page.locator("span.animate-grow-x").first();
     expect(await bar.evaluate((el) => getComputedStyle(el).animationName)).toBe("grow-x");
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
     const line = page.locator("svg polyline").first();
     expect(await line.evaluate((el) => getComputedStyle(el).animationName)).toBe("draw");
   });
@@ -174,7 +174,7 @@ test.describe("esqueletos de carga", () => {
 
   test("las estadísticas muestran su esqueleto al cambiar de periodo", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Ejecuciones por semana" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();
     await page.getByRole("radio", { name: "Últimos 7 días" }).click();
     await expect(page.getByRole("status", { name: "Cargando estadísticas" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Ejecuciones por día" })).toBeVisible();

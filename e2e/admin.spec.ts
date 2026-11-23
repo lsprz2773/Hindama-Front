@@ -81,9 +81,9 @@ test.describe("V-33 estadísticas de uso", () => {
     await expect(kpis).toContainText("Usuarios registrados");
     await expect(kpis).toContainText("18");
     await expect(kpis).toContainText("3 cuentas nuevas");
-    await expect(kpis).toContainText("1,032");
+    await expect(kpis).toContainText("1032");
     await expect(kpis).toContainText("41 canceladas · 6 fallidas");
-    await expect(kpis).toContainText("2.7 días");
+    await expect(kpis).toContainText("2,7 días");
     await expect(kpis).toContainText("Cuentas eliminadas");
     await expect(kpis).toContainText("37");
     // Sin `date_to` ni `group=week`: la API termina hoy y 30 días van por día.
