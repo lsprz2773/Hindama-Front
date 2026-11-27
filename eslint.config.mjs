@@ -7,6 +7,11 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
+  {
+    // Los datos del analista (cabeceras, cuerpos, URL de evidencia) se muestran como texto,
+    // nunca como HTML (convenciones §5, guía del frontend §5.9).
+    rules: { "react/no-danger": "error" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -17,6 +22,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
+    // Tipos generados desde el contrato (`npm run contract:types`).
+    "src/lib/api/schema.d.ts",
   ]),
 ]);
 

@@ -1,26 +1,472 @@
 @import "tailwindcss";
 
+/*
+ * Tokens del diseño «vidrio cálido» (lienzo «Diseño de pantallas Hindama»).
+ * Oscuro por defecto; el claro sigue la preferencia del sistema y puede forzarse
+ * con data-theme="light" | "dark" en <html>.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --accent: #ff6b1a;
+  --on-accent: #16110d;
+
+  --bg:
+    radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.1), transparent 60%),
+    radial-gradient(800px 700px at 85% 90%, rgba(110, 112, 118, 0.28), transparent 60%),
+    linear-gradient(160deg, #3b3c40 0%, #242528 55%, #18191b 100%);
+  --frame: rgba(255, 255, 255, 0.03);
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel-2: rgba(255, 255, 255, 0.08);
+  --hero:
+    radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.42), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05));
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --text: #f5f2ee;
+  --muted: #b3aba3;
+  --link: #ff9a5c;
+  --field: rgba(0, 0, 0, 0.25);
+  --menu: rgba(42, 43, 47, 0.98);
+  --toast: rgba(48, 49, 54, 0.97);
+  --track: rgba(255, 255, 255, 0.12);
+  --code-bg: rgba(0, 0, 0, 0.28);
+
+  --danger: #ff4d5e;
+  --danger-bg: rgba(255, 77, 94, 0.14);
+  --success: #7fd1c1;
+  --success-bg: rgba(127, 209, 193, 0.16);
+  --warning: #ffb020;
+  --warning-bg: rgba(255, 176, 32, 0.16);
+  --info: #a7a29c;
+  --info-bg: rgba(167, 162, 156, 0.16);
+  --progress: #ff9a5c;
+  --progress-bg: rgba(255, 107, 26, 0.18);
+  --selected: rgba(255, 107, 26, 0.18);
+  --sev-1: #ff4d5e;
+  --sev-2: #ffb020;
+  --sev-3: #eee07a;
+  --sev-4: #7fd1c1;
+  --sev-5: #a7a29c;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg:
+      radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.8), transparent 60%),
+      radial-gradient(800px 700px at 85% 90%, rgba(140, 142, 148, 0.3), transparent 60%),
+      linear-gradient(160deg, #eeeff1 0%, #d8d9dc 60%, #c6c7cb 100%);
+    --frame: rgba(255, 255, 255, 0.4);
+    --panel: rgba(255, 255, 255, 0.66);
+    --panel-2: rgba(255, 255, 255, 0.8);
+    --hero:
+      radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
+      linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
+    --border: rgba(40, 30, 20, 0.1);
+    --border-strong: rgba(40, 30, 20, 0.26);
+    --text: #1c1915;
+    --muted: #5f574f;
+    --link: #a8420a;
+    --field: #ffffff;
+    --menu: rgba(250, 250, 251, 0.97);
+    --toast: rgba(250, 250, 251, 0.97);
+    --track: rgba(40, 30, 20, 0.12);
+    --code-bg: rgba(255, 255, 255, 0.8);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --danger: #d92d3f;
+    --danger-bg: rgba(217, 45, 63, 0.1);
+    --success: #2e8a6e;
+    --success-bg: rgba(46, 138, 110, 0.14);
+    --warning: #b4541a;
+    --warning-bg: rgba(224, 138, 0, 0.16);
+    --info: #5f574f;
+    --info-bg: rgba(95, 87, 79, 0.12);
+    --progress: #a8420a;
+    --progress-bg: rgba(255, 107, 26, 0.16);
+    --selected: rgba(255, 107, 26, 0.14);
+    --sev-1: #d92d3f;
+    --sev-2: #e08a00;
+    --sev-3: #c7b21e;
+    --sev-4: #3fa894;
+    --sev-5: #a39b92;
   }
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:
+    radial-gradient(900px 600px at 18% 8%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(800px 700px at 85% 90%, rgba(140, 142, 148, 0.3), transparent 60%),
+    linear-gradient(160deg, #eeeff1 0%, #d8d9dc 60%, #c6c7cb 100%);
+  --frame: rgba(255, 255, 255, 0.4);
+  --panel: rgba(255, 255, 255, 0.66);
+  --panel-2: rgba(255, 255, 255, 0.8);
+  --hero:
+    radial-gradient(620px 460px at 80% 70%, rgba(255, 107, 26, 0.38), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
+  --border: rgba(40, 30, 20, 0.1);
+  --border-strong: rgba(40, 30, 20, 0.26);
+  --text: #1c1915;
+  --muted: #5f574f;
+  --link: #a8420a;
+  --field: #ffffff;
+  --menu: rgba(250, 250, 251, 0.97);
+  --toast: rgba(250, 250, 251, 0.97);
+  --track: rgba(40, 30, 20, 0.12);
+  --code-bg: rgba(255, 255, 255, 0.8);
+
+  --danger: #d92d3f;
+  --danger-bg: rgba(217, 45, 63, 0.1);
+  --success: #2e8a6e;
+  --success-bg: rgba(46, 138, 110, 0.14);
+  --warning: #b4541a;
+  --warning-bg: rgba(224, 138, 0, 0.16);
+  --info: #5f574f;
+  --info-bg: rgba(95, 87, 79, 0.12);
+  --progress: #a8420a;
+  --progress-bg: rgba(255, 107, 26, 0.16);
+  --selected: rgba(255, 107, 26, 0.14);
+  --sev-1: #d92d3f;
+  --sev-2: #e08a00;
+  --sev-3: #c7b21e;
+  --sev-4: #3fa894;
+  --sev-5: #a39b92;
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-frame: var(--frame);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-link: var(--link);
+  --color-field: var(--field);
+  --color-menu: var(--menu);
+  --color-toast: var(--toast);
+  --color-track: var(--track);
+  --color-code-bg: var(--code-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-progress: var(--progress);
+  --color-progress-bg: var(--progress-bg);
+  --color-selected: var(--selected);
+  --color-sidebar: #161514;
+  --color-sev-1: var(--sev-1);
+  --color-sev-2: var(--sev-2);
+  --color-sev-3: var(--sev-3);
+  --color-sev-4: var(--sev-4);
+  --color-sev-5: var(--sev-5);
+  --font-sans: var(--font-jakarta), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-lexend), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
+}
+
+html {
+  background: var(--bg);
+  background-attachment: fixed;
+  min-height: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: var(--font-sans);
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/*
+ * Sistema de movimiento. Todo usa estas curvas y duraciones; con «reducir movimiento» el bloque
+ * de más abajo las deja casi instantáneas (el estado final se conserva con `both`).
+ */
+@theme {
+  --ease-out-soft: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ease-in-soft: cubic-bezier(0.4, 0, 0.8, 0.3);
+
+  --animate-page-in: page-in 320ms var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 220ms ease-out both;
+  --animate-rise: rise 420ms var(--ease-out-soft) both;
+  --animate-overlay-in: fade-in 180ms ease-out both;
+  --animate-overlay-out: fade-out 160ms ease-in both;
+  --animate-modal-in: modal-in 240ms var(--ease-out-soft) both;
+  --animate-modal-out: modal-out 160ms var(--ease-in-soft) both;
+  --animate-menu-in: menu-in 160ms var(--ease-out-soft) both;
+  --animate-menu-out: menu-out 120ms ease-in both;
+  --animate-toast-in: toast-in 320ms var(--ease-out-soft) both;
+  --animate-toast-out: toast-out 200ms var(--ease-in-soft) both;
+  --animate-grow-x: grow-x 600ms var(--ease-out-soft) both;
+  --animate-grow-y: grow-y 700ms var(--ease-out-soft) both;
+  --animate-draw: draw 900ms var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-pop: pop 260ms var(--ease-out-soft) both;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes modal-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 14px)) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes modal-out {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 8px)) scale(0.97);
+    }
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menu-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.97);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateX(28px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes toast-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(28px) scale(0.96);
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes grow-y {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.06);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* Entrada escalonada de listas y rejillas: los hijos suben uno tras otro. */
+.stagger > * {
+  animation: rise 420ms var(--ease-out-soft) both;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 225ms;
+}
+.stagger > *:nth-child(7) {
+  animation-delay: 270ms;
+}
+.stagger > *:nth-child(8) {
+  animation-delay: 315ms;
+}
+.stagger > *:nth-child(n + 9) {
+  animation-delay: 360ms;
+}
+
+/* Esqueleto de carga: barrido de luz sobre el color de las pistas. */
+.skeleton {
+  background-color: color-mix(in srgb, var(--text) 11%, transparent);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--text) 16%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .skeleton {
+    background-image: none;
+  }
+}
+
+/*
+ * Impresión del reporte (V-32): siempre en claro y sobre papel, sea cual sea el tema de la pantalla.
+ * Se redefinen los tokens para que los textos tenue y de enlace sigan siendo legibles en blanco.
+ */
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --text: #1c1915;
+    --muted: #5f574f;
+    --link: #a8420a;
+    --panel: #ffffff;
+    --panel-2: #f6f5f3;
+    --border: rgba(40, 30, 20, 0.18);
+    --border-strong: rgba(40, 30, 20, 0.4);
+    --code-bg: #f3f1ee;
+    --danger: #d92d3f;
+    --success: #2e8a6e;
+    --warning: #b4541a;
+    --sev-1: #d92d3f;
+    --sev-2: #e08a00;
+    --sev-3: #c7b21e;
+    --sev-4: #3fa894;
+    --sev-5: #a39b92;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .print-break {
+    break-before: page;
+  }
+
+  .print-avoid {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  size: auto;
+  margin: 16mm;
 }

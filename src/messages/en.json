@@ -1,0 +1,2544 @@
+{
+  "Meta": {
+    "title": "Hindama",
+    "description": "Assess your API before you publish it: security tests guided by the OpenAPI contract and by who should be able to do what."
+  },
+  "Common": {
+    "appName": "Hindama",
+    "skipToContent": "Skip to content",
+    "homeLink": "Hindama, home",
+    "accountNav": "Account",
+    "legalNav": "Legal",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "terms": "Terms of use",
+    "privacy": "Privacy notice",
+    "goProjects": "Go to my projects",
+    "goAdmin": "Go to the panel"
+  },
+  "LanguageSelector": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English",
+    "groupLabel": "Interface language",
+    "current": "Interface language: {language}",
+    "esNote": "Main language",
+    "enNote": "English (/en route)"
+  },
+  "Fields": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "digit": "Digit {index} of {total}"
+  },
+  "PasswordRules": {
+    "label": "Password requirements",
+    "length": "12 characters or more",
+    "upper": "One uppercase letter",
+    "lower": "One lowercase letter",
+    "digit": "One number",
+    "symbol": "One symbol",
+    "met": " (met)",
+    "pending": " (pending)"
+  },
+  "Toast": {
+    "notifications": "Notifications",
+    "close": "Dismiss notification",
+    "progress": "Progress"
+  },
+  "Modal": {
+    "close": "Close"
+  },
+  "Severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "Informational"
+  },
+  "SignIn": {
+    "meta": "Sign in",
+    "heroTitle": "Assess your API before you publish it",
+    "heroLead": "Security tests guided by the OpenAPI contract and by who should be able to do what. “Hindama” means “to assess” in Estonian.",
+    "exampleCategory": "Object access · API1",
+    "exampleTitle": "One user can read another user's orders",
+    "exampleRequest": "GET /orders/'{orderId}' · User B · 200 OK",
+    "exampleCaption": "Sample finding, with the request that reproduces it.",
+    "heading": "Sign in",
+    "subheading": "Sign in to see your projects and their findings.",
+    "email": "Email address",
+    "emailPlaceholder": "name@company.com",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "Don't have an account yet?",
+    "createAccount": "Create account",
+    "legal": "You may only test your own APIs or APIs you have written authorization from the owner to test.",
+    "terms": "Terms of use",
+    "and": "and",
+    "privacy": "Privacy notice",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Enter your password.",
+      "invalidCredentials": "The email or password is not correct.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't sign you in",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "SignUp": {
+    "meta": "Create account",
+    "heroTitle": "Your first assessment in four steps",
+    "heroLead": "Every new account is an analyst account. Only you will see your projects and their results.",
+    "steps": {
+      "one": {
+        "title": "Create the project",
+        "text": "Name and base URL of your API"
+      },
+      "two": {
+        "title": "Upload the contract",
+        "text": "OpenAPI 3 in JSON or YAML"
+      },
+      "three": {
+        "title": "Prove it's yours",
+        "text": "With a file or a DNS record"
+      },
+      "four": {
+        "title": "Run the tests",
+        "text": "And fix what we find"
+      }
+    },
+    "heading": "Create your account",
+    "subheading": "We'll send a code to your email to confirm it.",
+    "name": "Name",
+    "email": "Email address",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "acceptance": "I accept the <terms>Terms of use</terms> and the <privacy>Privacy notice</privacy>. I will only test my own APIs or APIs I have written authorization to test.",
+    "submit": "Create account",
+    "submitting": "Creating account…",
+    "existsTitle": "Check your email",
+    "existsText": "If we can create the account, we've sent you a code to confirm it. If you already have an account with this email, <signIn>sign in</signIn> or <recover>recover your password</recover>.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "errors": {
+      "nameRequired": "Enter your name.",
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Choose a password.",
+      "passwordWeak": "The password doesn't meet all the requirements yet.",
+      "confirmRequired": "Repeat the password.",
+      "confirmMismatch": "The passwords don't match.",
+      "termsRequired": "To create your account you must accept the terms of use and the privacy notice.",
+      "rateLimitTitle": "Too many attempts",
+      "rateLimitText": "Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't create your account",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry",
+      "nameInvalid": "Enter a name of up to 100 characters, without control characters."
+    }
+  },
+  "VerifyEmail": {
+    "meta": "Verify email",
+    "heroTitle": "Check your email",
+    "heroLead": "We'll activate your account as soon as you confirm the email is yours.",
+    "tipTitle": "Look for an email from Hindama",
+    "tipText": "It arrives in under a minute. If you don't see it, check your spam or promotions folder.",
+    "heading": "Enter the code",
+    "subheading": "We sent a 6-digit code to <b>{email}</b>.",
+    "subheadingNoEmail": "We sent a 6-digit code to the email you signed up with.",
+    "legend": "Verification code",
+    "submit": "Verify",
+    "submitting": "Verifying…",
+    "noCode": "Didn't get it?",
+    "resend": "Resend code",
+    "resending": "Sending…",
+    "resendIn": "Resend code in {time}",
+    "resentTitle": "Code resent",
+    "resentText": "Check your email; the previous code no longer works.",
+    "wrongEmail": "Typed the wrong email?",
+    "backToSignUp": "Back to sign up",
+    "successTitle": "Account confirmed",
+    "successText": "You can now sign in.",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The code has expired. Request a new one.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't verify the code",
+      "networkText": "Check your connection and try again.",
+      "resendTitle": "We couldn't resend the code",
+      "retry": "Retry",
+      "emailInvalid": "Enter the email you signed up with."
+    },
+    "email": "Email"
+  },
+  "ForgotPassword": {
+    "meta": "Recover password",
+    "heroTitle": "Get back in",
+    "heroLead": "First we confirm the code we sent you. Then you set the new password.",
+    "stepsLabel": "Steps",
+    "steps": {
+      "email": "Your email",
+      "code": "Code",
+      "password": "New password"
+    },
+    "email": "Email address",
+    "codeLegend": "Code from the email",
+    "step1": {
+      "heading": "Forgot your password?",
+      "text": "Enter your account email and we'll send you a code.",
+      "submit": "Send code"
+    },
+    "step2": {
+      "heading": "Enter the code",
+      "text": "If the email is registered, you'll receive a code. Check <b>{email}</b>.",
+      "useOther": "Use another email",
+      "hint": "You can't set the new password until the code is valid.",
+      "submit": "Verify code",
+      "noCode": "Code didn't arrive or already expired?",
+      "resend": "Request another code",
+      "resendIn": "Request another code in {time}"
+    },
+    "step3": {
+      "heading": "Set your new password",
+      "text": "Choose a password that meets the requirements.",
+      "password": "New password",
+      "confirm": "Confirm password",
+      "submit": "Change password"
+    },
+    "verified": "Code entered",
+    "sending": "Sending…",
+    "verifying": "Verifying…",
+    "saving": "Saving…",
+    "backToSignIn": "Back to sign in",
+    "resentTitle": "Code sent",
+    "resentText": "If the email is registered, you'll receive a new code.",
+    "successTitle": "Password changed",
+    "successText": "You can now sign in with your new password.",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "rateLimit": "Too many requests. Wait a few minutes before requesting another code.",
+      "codeInvalid": "The code isn't correct. Check it and try again.",
+      "codeExpired": "The code has expired. Request a new one.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "passwordRequired": "Choose a password.",
+      "passwordWeak": "The password doesn't meet all the requirements yet.",
+      "confirmRequired": "Repeat the password.",
+      "confirmMismatch": "The passwords don't match.",
+      "networkTitle": "We couldn't complete the step",
+      "networkText": "Check your connection and try again.",
+      "resendTitle": "We couldn't send the code",
+      "retry": "Retry",
+      "passwordRejected": "The password doesn't meet the policy or is one of your last 5. Choose another."
+    }
+  },
+  "Terms": {
+    "title": "Terms of use",
+    "badge": "Current version {version} · draft pending legal review",
+    "lead": "These rules apply to everyone who uses Hindama. By creating your account, and before your first project, you confirm that you accept them.",
+    "tocLabel": "Contents",
+    "tocHeading": "Contents",
+    "noteTitle": "The most important thing",
+    "noteText": "You may only test APIs you own or have written authorization to test. If you can't prove it, don't use Hindama on that API.",
+    "sections": {
+      "service": {
+        "title": "Purpose of the service",
+        "text": "Hindama runs automated security tests on REST APIs based on their OpenAPI 3 contract and on the access policy declared by their owner."
+      },
+      "responsible": {
+        "title": "Responsible use",
+        "text": "You may only register and test APIs you own or for which you hold written authorization from their owner. Testing third-party APIs without authorization is prohibited and may be a crime."
+      },
+      "ownership": {
+        "title": "Ownership verification",
+        "text": "Before any test you must prove that you control the API's domain. The verification is checked again before every run."
+      },
+      "limits": {
+        "title": "Limits and test environment",
+        "text": "We recommend using a test environment. The rate, concurrency, volume and duration limits you configure are respected at all times."
+      },
+      "activity": {
+        "title": "Activity log",
+        "text": "Sensitive actions, such as creating projects, launching runs or accepting risks, are recorded in a log that cannot be altered."
+      },
+      "suspension": {
+        "title": "Suspension",
+        "text": "We may suspend accounts that breach these terms and keep the information needed to answer requests from authorities."
+      }
+    }
+  },
+  "Privacy": {
+    "title": "Privacy notice",
+    "badge": "Draft pending legal review · version 1.0 · 30 Oct 2026",
+    "lead": "How we handle your personal data under Mexico's Federal Law on the Protection of Personal Data Held by Private Parties.",
+    "tocLabel": "Contents",
+    "tocHeading": "Contents",
+    "retentionLabel": "Retention periods",
+    "retention": {
+      "database": {
+        "where": "Database",
+        "term": "Immediate"
+      },
+      "backups": {
+        "where": "Backups",
+        "term": "7 days (max. 30)"
+      },
+      "audit": {
+        "where": "Audit log",
+        "term": "6 months"
+      }
+    },
+    "sections": {
+      "data": {
+        "title": "Data we collect",
+        "text": "Name, email address and activity records of your account. From your projects we store the contract, the test identities with encrypted credentials and the results of the runs."
+      },
+      "purpose": {
+        "title": "Purpose",
+        "text": "To operate the platform, run the tests you request, generate reports and keep the service secure. We do not sell or share your data for commercial purposes."
+      },
+      "credentials": {
+        "title": "Test credentials",
+        "text": "They are stored encrypted and never shown in full: only their last 4 characters. In evidence and reports they appear masked."
+      },
+      "retention": {
+        "title": "Retention and deletion",
+        "text": "When you delete a project or your account, the data is deleted from the database immediately. Backups overwrite it within 7 days and, at most, 30. The audit log is kept for 6 months."
+      },
+      "audit": {
+        "title": "Log and anonymous metrics",
+        "text": "The log records what action happened and when, with an internal user identifier and a host fingerprint, never passwords or free text. Usage metrics are anonymous, are not personal data and are kept even if you delete your account."
+      },
+      "rights": {
+        "title": "ARCO rights",
+        "text": "You exercise cancellation yourself by deleting your account from Profile. To access your data, correct it or object to its processing, write to the team's email: privacidad@hindama.mx. We respond within 20 business days at most."
+      },
+      "changes": {
+        "title": "Changes to this notice",
+        "text": "We will publish any change on this page with its version date."
+      }
+    }
+  },
+  "Home": {
+    "meta": "Hindama · Assess your API before you publish it",
+    "badge": "For teams that publish REST APIs",
+    "title": "Find your API's flaws before someone else does",
+    "lead": "Hindama tests your API's security from its OpenAPI 3 contract and from who should be able to do what. Every flaw comes with the request that reproduces it and stays with you until you fix it.",
+    "ctaPrimary": "Create account",
+    "ctaSecondary": "See what it tests",
+    "example": {
+      "title": "One user can read another user's orders",
+      "request": "GET /orders/8f21 · User B → 200 OK",
+      "advice": "Recommendation: check that the order belongs to the token's user.",
+      "caption": "Sample finding and how it is tracked across runs."
+    },
+    "cycle": {
+      "detected": "Detected",
+      "resolved": "Resolved",
+      "regressions": "Regressions"
+    },
+    "benefits": {
+      "title": "What you get",
+      "early": {
+        "title": "Early detection",
+        "text": "Test in your test environment before you publish, not after an incident."
+      },
+      "contract": {
+        "title": "Guided by your contract",
+        "text": "Tests come from your OpenAPI 3 and from the access policy you confirm."
+      },
+      "evidence": {
+        "title": "Actionable evidence",
+        "text": "Every finding includes the request, the response, its OWASP and CWE category, and how to fix it."
+      },
+      "followUp": {
+        "title": "Follow-up until closure",
+        "text": "Test again and see what was resolved, what persists and what came back."
+      }
+    },
+    "modules": {
+      "title": "Seven test modules",
+      "subtitle": "Based on the OWASP API Security Top 10 and CWE",
+      "auth": {
+        "name": "Authentication",
+        "text": "Missing, tampered or expired tokens."
+      },
+      "config": {
+        "name": "Configuration",
+        "text": "Security headers, CORS and error messages."
+      },
+      "objects": {
+        "name": "Object access",
+        "text": "A user who reads or changes another user's objects."
+      },
+      "functions": {
+        "name": "Function access",
+        "text": "Regular users who reach administrator functions."
+      },
+      "properties": {
+        "name": "Properties",
+        "text": "Exposed or assignable fields that shouldn't be."
+      },
+      "resources": {
+        "name": "Resource consumption",
+        "text": "Unbounded pagination and sizes."
+      },
+      "sql": {
+        "name": "SQL injection",
+        "text": "Parameters that reach the database unfiltered."
+      }
+    },
+    "steps": {
+      "title": "From flaw to closure",
+      "detect": {
+        "title": "Detect",
+        "text": "Run the modules with the rate limits you define."
+      },
+      "fix": {
+        "title": "Fix",
+        "text": "Use each finding's evidence and recommendation."
+      },
+      "retest": {
+        "title": "Test again",
+        "text": "Repeat the run with the same configuration in one step."
+      },
+      "close": {
+        "title": "Close",
+        "text": "The project is marked as concluded when no open flaws remain."
+      }
+    },
+    "responsible": {
+      "title": "Responsible use",
+      "text": "You may only test your own APIs or APIs you have written authorization from the owner to test. Before running tests, Hindama asks you to prove that you control the domain."
+    }
+  },
+  "Errors": {
+    "reference": "Reference: {id}",
+    "401": {
+      "title": "Your session ended",
+      "text": "For security we end your session after a period of inactivity. Sign in again to continue.",
+      "action": "Sign in"
+    },
+    "403": {
+      "title": "This section isn't for your role",
+      "text": "Administrators see statistics and the audit log, but not the content of projects.",
+      "action": "Go to the dashboard"
+    },
+    "404": {
+      "title": "We couldn't find this page",
+      "text": "The link may be mistyped, or what you are looking for no longer exists or isn't yours.",
+      "action": "Go to my projects"
+    },
+    "429": {
+      "title": "Too many requests",
+      "text": "You made more than 100 requests in a minute. Wait a moment and try again.",
+      "action": "Retry",
+      "wait": "You can retry in {time}."
+    },
+    "500": {
+      "title": "Something went wrong on our side",
+      "text": "It's not your fault. We've already logged it. If it keeps happening, write to us with this reference code.",
+      "action": "Retry"
+    },
+    "503": {
+      "title": "Service unavailable",
+      "text": "Part of Hindama isn't responding right now. Your data is safe; try again in a few minutes.",
+      "action": "Retry"
+    },
+    "403analyst": {
+      "title": "This section is not for your role",
+      "text": "The administration panel is for administrators only. Your account is an analyst account.",
+      "action": "Go to my projects"
+    },
+    "403mfa": {
+      "title": "Your second factor is missing",
+      "text": "As an administrator you must enable it before entering the panel. It takes a minute with an authenticator app.",
+      "action": "Enable the second factor"
+    }
+  },
+  "Status": {
+    "project": {
+      "verified": "Verified",
+      "pendingVerification": "Pending verification",
+      "verificationLost": "Verification lost",
+      "concluded": "Concluded"
+    },
+    "run": {
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "identity": {
+      "active": "Active",
+      "expiredCredential": "Credential expired",
+      "untested": "Not tested"
+    },
+    "finding": {
+      "open": "Open",
+      "new": "New",
+      "persistent": "Persistent",
+      "regression": "Regression",
+      "resolved": "Resolved",
+      "acceptedRisk": "Accepted risk"
+    }
+  },
+  "States": {
+    "reference": "Reference {id}",
+    "retry": "Retry",
+    "retrying": "Retrying…",
+    "noResults": {
+      "title": "Nothing matches your filters",
+      "text": "Try another severity or clear the filters to see everything.",
+      "action": "Clear filters"
+    },
+    "loadError": {
+      "title": "We couldn't load {subject}",
+      "text": "It's a problem on our side. Your data is safe."
+    },
+    "forbidden": {
+      "title": "You don't have permission to see this",
+      "text": "This content belongs to another account or another role.",
+      "action": "Back to my projects"
+    },
+    "rateLimited": {
+      "title": "Too many requests",
+      "text": "Wait a moment before trying again.",
+      "retryIn": "Retry in {time}"
+    },
+    "unavailable": {
+      "title": "The service is unavailable",
+      "text": "We're restoring it. Your runs in progress are not lost."
+    }
+  },
+  "Warnings": {
+    "persistent": "Persistent",
+    "momentary": "Right now",
+    "url_no_tls": {
+      "title": "The base URL uses unencrypted HTTP",
+      "text": "Test credentials would travel unprotected. Use HTTPS if your API allows it; you can continue with HTTP if the environment is for testing."
+    },
+    "url_unresolved": {
+      "title": "The host doesn't resolve in DNS yet",
+      "text": "We saved the project anyway. You'll be able to verify ownership once the DNS record exists."
+    },
+    "project_verification_lost": {
+      "title": "You changed the host and verification was lost",
+      "text": "Verify ownership again before running tests. Changing only the path or port doesn't affect verification."
+    },
+    "contract_servers_mismatch": {
+      "title": "The contract declares servers different from your base URL",
+      "text": "Tests always target the project's base URL. Confirm it's the right one."
+    },
+    "contract_external_reference": {
+      "title": "The contract uses external references",
+      "text": "We don't download references to other files or sites, so those parts aren't analyzed."
+    },
+    "contract_unparsed_element": {
+      "title": "An element of the contract couldn't be interpreted",
+      "text": "We skipped it and imported the rest. Location in the document:"
+    },
+    "contract_unchanged": {
+      "title": "This version is identical to the previous one",
+      "text": "There are no changes to record, so we didn't create a new version."
+    }
+  },
+  "PendingResources": {
+    "title": "{count, plural, one {# resource was left undeleted in your API} other {# resources were left undeleted in your API}}",
+    "text": "Hindama created them during this run and couldn't delete them. Delete them by hand to leave your environment clean. Errors are shown without credentials.",
+    "tableLabel": "Resources pending deletion",
+    "operation": "Operation",
+    "location": "Location",
+    "attempts": "Attempts",
+    "attemptsOf": "{done} of {total}",
+    "lastError": "Last error"
+  },
+  "FailedResources": {
+    "operationUnknown": "Operation no longer in the contract",
+    "errors": {
+      "status": "The last attempt answered {status}",
+      "no_answer": "Your API did not answer",
+      "no_identifier": "The identifier of the created resource could not be read",
+      "budget_exhausted": "The request limit ran out before it was deleted",
+      "not_deleted": "The run ended before it was deleted",
+      "run_interrupted": "The run was interrupted before it was deleted",
+      "unknown": "It could not be deleted"
+    }
+  },
+  "EvidenceContext": {
+    "undeclared": "Fields the response returns without declaring them: {names}",
+    "acceptedFields": "Protected fields your API accepted: {names}",
+    "createdResource": {
+      "deleted": "Hindama created a test resource and deleted it.",
+      "failed": "Hindama created a test resource and could not delete it: delete it by hand."
+    },
+    "requests": "{count, plural, one {# request in a row was sent} other {# requests in a row were sent}}",
+    "bodyBytes": "Body sent of {count, number} bytes",
+    "operation": "Operation tested: {value}",
+    "parameter": "Parameter tested: {value}",
+    "payload": "Test payload: {value}"
+  },
+  "Dialogs": {
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "genericError": "The action couldn't be completed",
+    "genericErrorText": "Try again.",
+    "typeToConfirm": "Type <code>{text}</code> to confirm",
+    "unsaved": {
+      "title": "Leave without saving?",
+      "text": "You have unsaved changes on this screen. If you leave now, they are lost.",
+      "heading": "You would lose",
+      "stay": "Keep editing",
+      "leave": "Leave without saving"
+    }
+  },
+  "AcceptRisk": {
+    "title": "Dismiss this finding",
+    "description": "It moves to “Accepted risk” and stops counting among the open ones. Choose the reason.",
+    "reason": "Reason",
+    "reasons": {
+      "accepted_risk": "Accepted risk",
+      "false_positive": "False positive"
+    },
+    "justification": "Justification",
+    "required": "(required)",
+    "placeholder": "Explain why this risk is accepted",
+    "help": "It is saved in the finding's history, not in the audit log.",
+    "missing": "Write a justification.",
+    "submit": "Dismiss finding",
+    "reasonText": {
+      "accepted_risk": "The finding is real and you decide not to fix it for now.",
+      "false_positive": "The finding is not real: the API behaves as expected."
+    },
+    "notes": {
+      "audit": "The audit log records the action, not your justification: free text is never stored.",
+      "stays": "If a run detects it again, it stays accepted.",
+      "revert": "You can revert it and it will go back to “Persistent”."
+    }
+  },
+  "Sidebar": {
+    "label": "Main navigation",
+    "home": "Hindama, home",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu",
+    "projects": "Projects",
+    "administration": "Administration",
+    "statistics": "Statistics",
+    "auditLog": "Audit log",
+    "profile": "Profile",
+    "signOut": "Sign out",
+    "project": {
+      "summary": "Summary",
+      "verification": "Verification",
+      "contract": "Contract",
+      "identities": "Identities",
+      "resources": "Resources",
+      "policy": "Policy",
+      "history": "History",
+      "findings": "Findings",
+      "settings": "Settings"
+    }
+  },
+  "Breadcrumb": {
+    "label": "Breadcrumb"
+  },
+  "UserMenu": {
+    "profile": "Profile",
+    "language": "Language",
+    "signOut": "Sign out",
+    "signOutError": "We couldn't sign you out. Try again.",
+    "loading": "Loading your account"
+  },
+  "Copy": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyWhat": "Copy {what}",
+    "failed": "Couldn't copy",
+    "failedText": "Select the text and copy it by hand."
+  },
+  "HttpViewer": {
+    "truncated": "trimmed beyond 10 KB · {kb} KB in total"
+  },
+  "RiskConfirmation": {
+    "title": "You enabled modules that modify data or load the server",
+    "explanation": "They only act on resources that Hindama creates and deletes when finished. Confirm each module: confirmation is requested on every run.",
+    "confirmModule": "Confirm {name}",
+    "understand": "I understand the risk and confirm this is a test environment.",
+    "pending": "{count, plural, one {# module still needs confirmation.} other {# modules still need confirmation.}}"
+  },
+  "HomeNotice": {
+    "dismiss": "Dismiss",
+    "local_sign_out": {
+      "title": "You signed out of this browser only",
+      "text": "We couldn't notify the sign-in service. If you use a shared computer, try signing out again later."
+    }
+  },
+  "Profile": {
+    "title": "Profile",
+    "role": "Role",
+    "analyst": "Analyst",
+    "admin": "Administrator",
+    "terms": "Responsible-use terms",
+    "termsValue": "Version {version}, accepted on {date}",
+    "termsPending": "You haven't accepted version {version} yet.",
+    "roleNote": "The role is assigned by the platform and can't be changed from here.",
+    "security": "Security",
+    "twoFactor": "Two-factor authentication (2FA)",
+    "twoFactorOn": "Enabled.",
+    "twoFactorOff": "Disabled. We recommend enabling it.",
+    "enableTwoFactor": "Enable 2FA",
+    "disableTwoFactor": "Disable 2FA",
+    "twoFactorDisabled": "Two-factor authentication disabled",
+    "account": "Account",
+    "deleteAccount": {
+      "row": "Delete my account",
+      "rowText": "Deletes your account and all your projects. This cannot be undone.",
+      "button": "Delete account",
+      "title": "Delete your account",
+      "description": "This action is permanent. To confirm, type your account email.",
+      "removed": "Deleted",
+      "removed1": "Your account and your access to Hindama.",
+      "removed2": "All your projects with their contracts, identities, runs and findings.",
+      "kept": "Kept",
+      "kept1": "Anonymous platform statistics, with no data that identifies you.",
+      "kept2": "The sensitive-action log for its retention period.",
+      "confirm": "Delete my account",
+      "done": "Your account was deleted",
+      "activeRun": "A run is in progress",
+      "activeRunText": "Cancel the queued or running runs in your projects and try again.",
+      "mismatch": "The email does not match",
+      "incomplete": "Your data was deleted, the account still has to be closed",
+      "incompleteText": "The deletion could not finish. Press “Retry”: it completes without losing anything else.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "forbidden": "Your role cannot delete the account from here.",
+      "failed": "The account could not be deleted",
+      "reference": "Reference: {id}"
+    },
+    "preferences": "Preferences",
+    "language": "Interface language",
+    "languageNote": "It is remembered in this browser. Dates and deadlines follow the chosen language.",
+    "subject": "your profile",
+    "loading": "Loading your profile",
+    "twoFactorLoading": "Checking…"
+  },
+  "DisableTwoFactor": {
+    "title": "Disable two-factor authentication",
+    "description": "Enter a current code from your authenticator app to confirm it's you.",
+    "legend": "App code",
+    "submit": "Disable 2FA",
+    "invalid": "The code isn't correct or has expired."
+  },
+  "TwoFactorSetup": {
+    "title": "Enable two-factor authentication",
+    "crumb": "Two-factor authentication",
+    "adminCrumb": "Administration",
+    "mandatoryHeading": "Set up two-factor authentication to continue",
+    "mandatoryTitle": "Your role requires two-factor authentication",
+    "mandatoryText": "As an administrator you must set it up before entering the panel. It can't be skipped.",
+    "step1": {
+      "title": "Install an authenticator app",
+      "text": "Any app that generates 6-digit codes (TOTP) works."
+    },
+    "step2": {
+      "title": "Scan this code",
+      "qrLabel": "QR code to add Hindama to your app",
+      "manual": "Can't scan? Type this key into the app:",
+      "keyLabel": "key",
+      "failed": "We could not generate the key. Try again.",
+      "loading": "Generating the QR code"
+    },
+    "step3": {
+      "title": "Confirm with a code",
+      "text": "Enter the code the app shows to check it was set up correctly.",
+      "legend": "6-digit code"
+    },
+    "confirm": "Confirm",
+    "confirming": "Confirming…",
+    "cancel": "Cancel",
+    "enabled": "Two-factor authentication enabled",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The code has expired. Enter the one your app shows now.",
+      "networkTitle": "We couldn't enable two-factor authentication",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "SecondFactor": {
+    "meta": "Two-factor code",
+    "metaAdmin": "Two-factor code · administrators",
+    "heroTitle": "One more step",
+    "intro": "Your account has two-factor authentication enabled. We ask for it on every sign-in.",
+    "introAdmin": "Administrator accounts always use two-factor authentication. Enter the code from your app to enter the panel.",
+    "tipTitle": "Open your authenticator app",
+    "tipText": "For example Google Authenticator, Microsoft Authenticator or 1Password. Look for the “Hindama” entry.",
+    "heading": "6-digit code",
+    "subheading": "The code changes every 30 seconds.",
+    "legend": "App code",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "back": "Back to sign in",
+    "errors": {
+      "invalid": "The code isn't correct. Check it and try again.",
+      "expired": "The previous code has expired. Enter the one your app shows now.",
+      "locked": "Too many attempts. Wait a few minutes before trying again.",
+      "networkTitle": "We couldn't verify the code",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry",
+      "sessionExpired": "More than 3 minutes passed since you typed your password. Sign in again."
+    }
+  },
+  "AdminSignIn": {
+    "meta": "Administrator sign-in",
+    "heroTitle": "Administration panel",
+    "heroLead": "Platform usage statistics and the audit log. Access is separate from analysts' and always asks for a second factor.",
+    "steps": {
+      "credentials": {
+        "title": "Email and password",
+        "text": "Your administrator account."
+      },
+      "code": {
+        "title": "Verification code",
+        "text": "Required on every sign-in."
+      },
+      "panel": {
+        "title": "Statistics panel",
+        "text": "With the audit log one click away."
+      }
+    },
+    "noSelfAssign": "No self-assigned roles: administrator accounts are created by the platform team.",
+    "heading": "Administrator sign-in",
+    "subheading": "Sign in with your administrator account. Then we'll ask for the verification code.",
+    "email": "Email address",
+    "emailPlaceholder": "name@company.com",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "submit": "Continue",
+    "submitting": "Signing in…",
+    "analyst": "Are you an analyst?",
+    "analystLink": "Sign in here",
+    "audit": "Sign-in attempts are recorded in the audit log.",
+    "errors": {
+      "emailRequired": "Enter your email address.",
+      "emailInvalid": "Enter an email in a valid format, for example name@company.com.",
+      "passwordRequired": "Enter your password.",
+      "invalid": "The email or password is not correct.",
+      "networkTitle": "We couldn't sign you in",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "ProjectNav": {
+    "projects": "Projects",
+    "done": "Done",
+    "pending": "Pending",
+    "operations": "{count} ops.",
+    "availableAfterVerification": "Available after verification",
+    "subject": "the project"
+  },
+  "Projects": {
+    "title": "Projects",
+    "newProject": "New project",
+    "summary": {
+      "projects": "Projects",
+      "open": "Open findings",
+      "pending": "Pending verification"
+    },
+    "orderBy": "Sort by",
+    "order": {
+      "lastRun": "Last run",
+      "name": "Name",
+      "createdAt": "Creation date"
+    },
+    "open": "Open",
+    "verify": "Verify ownership",
+    "settings": "Settings",
+    "delete": "Delete",
+    "moreActions": "More actions for {name}",
+    "openFindings": "Open findings",
+    "lastRun": "Last run",
+    "noRuns": "No runs",
+    "addAnother": {
+      "title": "Add another API",
+      "text": "Create the project, upload the contract, prove it's yours and run the tests."
+    },
+    "empty": {
+      "title": "You don't have any projects yet",
+      "text": "Create your first project to assess an API with its OpenAPI contract.",
+      "action": "Create project"
+    },
+    "deleteDialog": {
+      "title": "Delete the project “{name}”",
+      "description": "This action can't be undone. Resources the platform created in your API will be deleted first.",
+      "removed": "What is deleted",
+      "removed1": "The contract, its versions, identities and the access policy",
+      "removed2": "Runs, findings and reports",
+      "confirm": "Delete project",
+      "done": "Project “{name}” deleted",
+      "activeRun": "A run is in progress",
+      "activeRunText": "Cancel it before deleting the project.",
+      "mismatch": "The name doesn't match the project's name.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "failed": "We couldn't delete the project"
+    },
+    "greetingName": "Hi, {name}.",
+    "subject": "your projects",
+    "loading": "Loading your projects",
+    "reference": "Reference: {id}",
+    "pagination": {
+      "label": "Project pages",
+      "previous": "Previous",
+      "next": "Next",
+      "status": "Page {page} of {pages}"
+    }
+  },
+  "AcceptTerms": {
+    "pageTitle": "Before your first project",
+    "title": "Responsible-use terms",
+    "lead": "Hindama sends real requests to the API you register. That's why we ask you to accept them. Current version: {version}. If we publish a new version, we'll show them again before you continue.",
+    "rules": {
+      "authorized": {
+        "title": "Authorized APIs only",
+        "text": "Your own or with written permission from the owner. Testing others' APIs without permission is prohibited."
+      },
+      "ownership": {
+        "title": "You prove it's yours",
+        "text": "You verify the host with a file or a DNS record before running."
+      },
+      "testEnv": {
+        "title": "Prefer a test environment",
+        "text": "Some modules create data or increase load. Use them outside production."
+      },
+      "logged": {
+        "title": "Everything is recorded",
+        "text": "Sensitive actions are kept in a log that can't be altered."
+      }
+    },
+    "readFull": "Read the full terms",
+    "accept": "I accept the responsible-use terms. I will only test my own APIs or APIs I have written authorization from the owner to test.",
+    "recorded": "We record the version and the date and time of your acceptance.",
+    "cancel": "Cancel",
+    "continue": "Accept and continue",
+    "accepted": "Terms accepted",
+    "subject": "the current terms",
+    "loading": "Loading the terms",
+    "outdated": "A new version of the terms was published. Review it and accept it again.",
+    "errorTitle": "We couldn't record your acceptance",
+    "errorText": "Check your connection and try again.",
+    "rateLimited": "Too many attempts. Wait a moment.",
+    "reference": "Reference: {id}",
+    "retry": "Retry"
+  },
+  "NewProject": {
+    "stepsLabel": "Steps",
+    "steps": {
+      "data": {
+        "title": "Project details",
+        "note": "In progress"
+      },
+      "contract": {
+        "title": "OpenAPI contract",
+        "note": "Can be skipped"
+      },
+      "verification": {
+        "title": "Verification",
+        "note": "Can be skipped"
+      },
+      "done": {
+        "title": "Done",
+        "note": "Go to the dashboard"
+      }
+    },
+    "form": {
+      "title": "Project details",
+      "lead": "When created it will be “Pending verification” until you prove the API is yours.",
+      "name": "Name",
+      "description": "Description",
+      "optional": "(optional)",
+      "url": "Base URL",
+      "urlHint": "All tests are sent to this address, even if the contract declares other servers.",
+      "cancel": "Cancel",
+      "submit": "Create project",
+      "creating": "Creating…"
+    },
+    "created": "Project “{name}” created",
+    "skip": "Skip for now",
+    "panels": {
+      "contract": {
+        "title": "Upload the contract",
+        "text": "Import the OpenAPI 3 contract in JSON or YAML so Hindama knows your API's operations. You can skip this step and do it later from the dashboard.",
+        "action": "Upload contract"
+      },
+      "verification": {
+        "title": "Prove the API is yours",
+        "text": "Publish a code on your host with a file or a DNS record. Until it's verified you can't run tests, but you can come back from the dashboard.",
+        "action": "Verify ownership"
+      },
+      "done": {
+        "title": "Your project is ready",
+        "text": "Whatever you skipped stays pending on the project's dashboard.",
+        "action": "Go to the dashboard"
+      }
+    },
+    "help": {
+      "urlTitle": "Which base URL can I use?",
+      "urlText": "A public address with HTTP or HTTPS, ideally from your test environment. Not accepted:",
+      "prohibited": {
+        "private": "Private networks",
+        "loopback": "Loopback",
+        "linkLocal": "Link-local",
+        "metadata": "Cloud metadata"
+      },
+      "nextTitle": "After creating it",
+      "nextText": "You upload the contract and verify ownership. You can skip those steps and come back to them from the dashboard, but you won't be able to run tests until you verify."
+    },
+    "errors": {
+      "nameRequired": "Enter the project name.",
+      "urlRequired": "Enter your API's base URL.",
+      "url": {
+        "invalid": "Enter a full URL, for example https://api.example.com.",
+        "protocol": "Only HTTP or HTTPS addresses are accepted.",
+        "private": "Private-network addresses aren't accepted.",
+        "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
+        "linkLocal": "Link-local addresses aren't accepted.",
+        "metadata": "Cloud metadata addresses aren't accepted.",
+        "destination": "The API doesn't accept that address: it points to a private, local or metadata network."
+      },
+      "networkTitle": "We couldn't create the project",
+      "networkText": "Check your connection and try again.",
+      "retry": "Retry",
+      "nameInvalid": "The name allows up to 100 characters and no control characters.",
+      "descriptionInvalid": "The description allows up to 500 characters and no control characters.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "reference": "Reference: {id}"
+    }
+  },
+  "Dashboard": {
+    "running": {
+      "title": "The run is still in progress",
+      "action": "View run",
+      "textActive": "The tests keep running. Go back to its progress whenever you want."
+    },
+    "unverified": {
+      "title": "Ownership still needs verification",
+      "text": "Until you prove the API is yours you can't run tests.",
+      "action": "Verify"
+    },
+    "hero": {
+      "none": "No runs yet",
+      "open": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
+      "noneText": "Set up the project and launch your first full test to see results here.",
+      "cleanText": "The last run found no problems with the chosen modules.",
+      "text": "Review the findings, fix them and test again.",
+      "criticalOpen": "{count, plural, one {One is critical.} other {# are critical.}} Fix them and test again."
+    },
+    "fullTest": "Full test",
+    "blocked": {
+      "unverified": "The host's ownership still needs verification.",
+      "goVerify": "Go to verification",
+      "noContract": "Import an OpenAPI contract first.",
+      "goContract": "Import contract",
+      "active": "A run is already in progress in this project.",
+      "viewRun": "View run",
+      "identities": "You need at least 2 identities with resources.",
+      "addIdentity": "Add identity",
+      "reviewPolicy": "Review policy",
+      "resources": "Register each identity's resources.",
+      "goResources": "Register resources",
+      "policyPending": "Confirm the proposed access policy.",
+      "notImplemented": "Available in an upcoming version."
+    },
+    "stats": {
+      "requests": "Requests",
+      "minutes": "Duration (m:ss)",
+      "modules": "Modules run",
+      "lastRun": "Last run"
+    },
+    "severity": {
+      "title": "Open by severity",
+      "viewAll": "View all {count} findings",
+      "empty": "They will appear here when the first run finishes."
+    },
+    "policy": {
+      "title": "Access policy",
+      "empty": "Import the contract so Hindama can propose who should be able to do what.",
+      "review": "Review policy",
+      "pendingText": "Some proposals are unconfirmed. Pending ones aren't used in tests.",
+      "confirmedText": "The access policy is confirmed."
+    },
+    "modules": {
+      "title": "Test modules",
+      "results": "Results of run no. {number} · {date}",
+      "names": {
+        "auth": "Authentication",
+        "config": "Configuration",
+        "objects": "Object access",
+        "functions": "Function access",
+        "properties": "Properties",
+        "resources": "Resource consumption",
+        "sql": "SQL injection"
+      },
+      "notes": {
+        "auth": "Requires URL and contract",
+        "config": "Requires URL and contract",
+        "objects": "2 identities with resources",
+        "functions": "Requires an administrator identity",
+        "properties": "Confirmed on every run",
+        "resources": "Confirmed on every run",
+        "sql": "Confirmed on every run · CWE-89"
+      },
+      "blocked": "No administrator identity: add one",
+      "notRun": "Not run",
+      "run": "Run",
+      "runTitle": "Run of “{name}” requested",
+      "addIdentity": "Add identity",
+      "emptyTitle": "No results yet",
+      "emptyText": "Verify ownership and run your first test to see each module here.",
+      "ran": "Included in the last run"
+    },
+    "repeat": "Repeat last run"
+  },
+  "ProjectSettings": {
+    "crumb": "Settings",
+    "pageTitle": "Project settings",
+    "title": "Project details",
+    "name": "Name",
+    "description": "Description",
+    "optional": "(optional)",
+    "url": "Base URL",
+    "urlHint": "All tests are sent to this address.",
+    "before": "Before:",
+    "hostChanged": {
+      "title": "You changed the host",
+      "text": "When you save, the project will go back to “Pending verification” and you won't be able to run tests until you verify the new host. Verification only changes if the exact host changes: the path and port don't count. We'll ask you to confirm."
+    },
+    "discard": "Discard changes",
+    "save": "Save changes",
+    "saved": "Changes saved",
+    "hostDialog": {
+      "title": "Change the project's host?",
+      "text": "The project will go back to “Pending verification” and you won't be able to run tests until you verify the new host.",
+      "confirm": "Save and lose verification"
+    },
+    "delete": {
+      "title": "Delete project",
+      "lead": "It will be permanently deleted, within 30 days at most:",
+      "runs": "Runs, {findings} findings and their reports",
+      "button": "Delete project",
+      "contractAll": "The contract and all its versions",
+      "identitiesAll": "The identities, their credentials, the resources and the access policy"
+    },
+    "deleteDialog": {
+      "title": "Delete the project “{name}”",
+      "description": "This action can't be undone. Resources the platform created in your API will be deleted first.",
+      "removed": "What is deleted",
+      "removed1": "The contract, its versions, identities and the access policy",
+      "removed2": "Runs, findings and reports"
+    },
+    "deleted": "Project “{name}” deleted",
+    "errors": {
+      "nameRequired": "Enter the project name.",
+      "urlRequired": "Enter your API's base URL.",
+      "url": {
+        "invalid": "Enter a full URL, for example https://api.example.com.",
+        "protocol": "Only HTTP or HTTPS addresses are accepted.",
+        "private": "Private-network addresses aren't accepted.",
+        "loopback": "Local addresses (localhost or 127.0.0.1) aren't accepted.",
+        "linkLocal": "Link-local addresses aren't accepted.",
+        "metadata": "Cloud metadata addresses aren't accepted.",
+        "destination": "The API doesn't accept that address: it points to a private, local or metadata network."
+      },
+      "nameInvalid": "The name allows up to 100 characters and no control characters.",
+      "descriptionInvalid": "The description allows up to 500 characters and no control characters.",
+      "saveTitle": "We couldn't save the changes",
+      "saveText": "Check your connection and try again.",
+      "rateLimited": "Too many attempts. Wait a moment.",
+      "reference": "Reference: {id}",
+      "checkFields": "Check the highlighted fields."
+    }
+  },
+  "Verification": {
+    "crumb": "Verification",
+    "title": "Prove the API is yours",
+    "verifiedTitle": "Ownership verified",
+    "verifiedText": "We checked that you control {host}. It is checked again before every run.",
+    "codeTitle": "This project's verification code",
+    "copyCode": "Copy code",
+    "codeText": "Publish it on the host <code>{host}</code> using one of the two methods. Only someone who controls the domain can do it.",
+    "methodTitle": "Choose how to publish it",
+    "methodLabel": "Verification method",
+    "file": {
+      "tab": "File on the server",
+      "step1": "Create a text file whose only content is the code.",
+      "step2": "Publish it at this exact address:",
+      "step3": "Check that it opens in the browser and press Verify.",
+      "urlLabel": "file address"
+    },
+    "dns": {
+      "tab": "DNS TXT record",
+      "step1": "In your DNS provider's panel, create a TXT record with this host name:",
+      "step2": "Use the code as the record's value:",
+      "step3": "Save the record and press Verify.",
+      "hostLabel": "host name",
+      "valueLabel": "record value",
+      "noteTitle": "Propagation can take a while",
+      "noteText": "A new DNS record can take from minutes to a few hours to be visible. If it fails, wait a bit and try again."
+    },
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "lastAttempt": "Last attempt a few seconds ago",
+    "noAttempts": "You haven't tried to verify yet",
+    "success": "Ownership verified",
+    "failure": {
+      "expected": "We expected",
+      "found": "We found",
+      "howTitle": "How to fix it:",
+      "mismatch": {
+        "title": "We couldn't verify: the file's content is different",
+        "how": "leave only the code in the file, with no spaces or trailing newline, and press Verify again."
+      },
+      "notFound": {
+        "title": "We couldn't verify: we couldn't find the file",
+        "how": "check that the address opens the file in the browser."
+      },
+      "txtMissing": {
+        "title": "Verification failed: we couldn't find the TXT record",
+        "how": "check the record name and value; if you just created it, wait for it to propagate."
+      },
+      "connectionError": {
+        "title": "Verification failed: we couldn't connect to the host",
+        "how": "make sure the host is reachable from the internet and try again."
+      },
+      "destinationNotAllowed": {
+        "title": "Verification failed: the host resolves to a disallowed address",
+        "how": "use a public host; internal or private addresses are blocked and logged."
+      }
+    },
+    "help": {
+      "whyTitle": "Why we ask for it",
+      "whyText": "Hindama only tests APIs whose owners can prove they control them. That keeps it from being used to attack other people's services.",
+      "everyRunTitle": "Checked on every run",
+      "everyRunText": "The check can take up to 20 seconds. Before every run we check the code again. If you remove it, the run is cancelled and the project goes back to “Pending verification”.",
+      "commonTitle": "Common failures",
+      "common1": "File not found (404)",
+      "common2": "Content different from the code",
+      "common3": "Missing DNS record",
+      "common4": "Connection error with the host",
+      "common5": "The host resolves to a disallowed address: it is blocked and recorded in the log"
+    },
+    "subject": "the verification",
+    "rateLimited": "Too many attempts. Wait a moment and verify again.",
+    "failed": "We couldn't verify right now",
+    "reference": "Reference: {id}"
+  },
+  "Contract": {
+    "crumb": "Contract",
+    "title": "OpenAPI contract",
+    "history": "Version history",
+    "current": "Current version · imported on {date}",
+    "meta": "{format} format · source: {source} · OpenAPI {openapi} · fingerprint {hash}",
+    "summary": {
+      "openapi": "OpenAPI",
+      "operations": "Operations",
+      "version": "Current version"
+    },
+    "empty": {
+      "title": "No contract yet",
+      "text": "Import your API's OpenAPI 3 contract so Hindama knows its operations and can propose an access policy."
+    },
+    "import": {
+      "title": "Import new version",
+      "versions": "View {count} versions",
+      "sourceLabel": "Contract source",
+      "file": "Upload file",
+      "url": "From URL",
+      "drop": "Drag the file or choose it",
+      "limits": ".json, .yaml or .yml · max 5 MB · OpenAPI 3.0 or 3.1",
+      "urlLabel": "Contract URL",
+      "urlHint": "It must be a public address that returns the contract.",
+      "submit": "Import and compare",
+      "importing": "Importing…"
+    },
+    "imported": "Contract imported",
+    "importedText": "Review the warnings and confirm the access policy.",
+    "next": "Next step: verify the host's ownership",
+    "warnings": "{count, plural, one {# warning for this version} other {# warnings for this version}}",
+    "operations": {
+      "title": "{count} operations",
+      "filterLabel": "Filter by method",
+      "all": "All",
+      "security": {
+        "public": "public"
+      },
+      "detail": "Details of {method} {path}",
+      "params": "Parameters",
+      "declaredSecurity": "Declared security",
+      "seePolicy": "See in the access policy",
+      "none": "No operation matches.",
+      "showing": "Showing {shown} of {total}",
+      "subject": "the operations",
+      "paramCount": "{count, plural, =0 {no parameters} one {# parameter} other {# parameters}}",
+      "noParams": "No parameters.",
+      "param": "{location} · {type}{required, select, yes {} other {, optional}}",
+      "location": {
+        "path": "path",
+        "query": "query",
+        "header": "header",
+        "cookie": "cookie"
+      },
+      "body": "Body",
+      "noBody": "No body.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "API key",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "other"
+      },
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "errors": {
+      "type": "The file must be .json, .yaml or .yml.",
+      "size": "The file exceeds 5 MB.",
+      "noFile": "Choose a contract file.",
+      "url": "Enter a full contract URL.",
+      "invalid": "The document isn't valid OpenAPI. Check the locations listed.",
+      "unsupported": "Only OpenAPI 3.0 and 3.1 contracts are accepted.",
+      "unreachable": "We couldn't download the contract from that URL.",
+      "notAllowed": "That URL points to a disallowed address.",
+      "failed": "We couldn't import the contract.",
+      "rateLimited": "Too many imports in a row. Wait a moment.",
+      "reference": "Reference: {id}"
+    },
+    "source": {
+      "file": "file",
+      "url": "URL"
+    },
+    "untitled": "Untitled contract",
+    "subject": "the contract version",
+    "unchanged": "The document is identical to the current version; no new version was created.",
+    "importedTextClean": "Confirm the access policy."
+  },
+  "ContractVersions": {
+    "crumb": "Versions",
+    "title": "Contract versions",
+    "count": "{count, plural, one {# version} other {# versions}}",
+    "current": "Current",
+    "originUrl": "URL",
+    "originFile": "File",
+    "operations": "{count} operations",
+    "warningsOf": "Warnings for {version}",
+    "back": "Back to the current version",
+    "diffTitle": "{from} vs. {to}",
+    "summary": {
+      "added": "{count, plural, one {Added} other {Added}}",
+      "modified": "{count, plural, one {Modified} other {Modified}}",
+      "removed": "{count, plural, one {Removed} other {Removed}}"
+    },
+    "reviewPolicy": {
+      "title": "Review the policy",
+      "text": "The {count} new operations have a proposed template that won't be used in tests until you confirm it.",
+      "link": "Go to the policy"
+    },
+    "changes": "Changes by operation",
+    "kind": {
+      "added": "Added",
+      "modified": "Modified",
+      "removed": "Removed"
+    },
+    "name": "Version {number}",
+    "viewing": "Viewing",
+    "subject": "the contract versions",
+    "versionSubject": "the version",
+    "first": {
+      "title": "First version",
+      "text": "Version {number} is the first one imported: there's no other to compare it with."
+    },
+    "noChanges": "No changes in the operations.",
+    "empty": {
+      "title": "No contract yet",
+      "text": "Import a contract to see its versions.",
+      "action": "Import contract"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "Identities": {
+    "crumb": "Identities",
+    "title": "Identities",
+    "add": "Add identity",
+    "lead": "Test accounts for your API. Hindama authenticates as each one to check who can do what. Use accounts from a test environment, never real customers'.",
+    "requirements": {
+      "title": "What each module needs",
+      "objects": {
+        "title": "Object access",
+        "ok": "Two authenticated identities, each with its own resources. You meet it.",
+        "missing": "You need two authenticated identities, each with its own resources.",
+        "noResources": "You have two identities, but each one still needs resources of its own. Discover or add them under “Resources”."
+      },
+      "functions": {
+        "title": "Function access",
+        "ok": "A regular identity and one with an administrator role. You meet it.",
+        "missing": "A regular identity and one with an administrator role. You're missing the administrator."
+      }
+    },
+    "count": "{count, plural, one {# identity} other {# identities}}",
+    "roles": {
+      "admin": "Administrator",
+      "user": "User",
+      "other": "Other",
+      "anonymous": "Unauthenticated",
+      "named": "{role}: {name}"
+    },
+    "auth": {
+      "none": "Sends no credentials",
+      "login": "Automatic login",
+      "bearer": "Bearer token",
+      "cookie": "Session cookie",
+      "header": "Custom header"
+    },
+    "status": {
+      "active": "Active",
+      "expiredCredential": "Credential expired",
+      "untested": "Not tested"
+    },
+    "noResources": "0 · no resources",
+    "alwaysExists": "Always exists",
+    "edit": "Edit",
+    "test": {
+      "button": "Test",
+      "okTitle": "{name}: the credential works",
+      "failedTitle": "{name}: the credential failed",
+      "okText": "The API answered {code} on {path}.",
+      "failure": {
+        "rejected": "The API answered {code}. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
+    },
+    "delete": {
+      "label": "Delete {name}",
+      "title": "Delete the identity “{name}”",
+      "text": "This action can't be undone.",
+      "heading": "What happens",
+      "item1": "Its credential and resources are deleted.",
+      "item2": "Its findings are kept; the open ones become resolved.",
+      "confirm": "Delete identity",
+      "done": "Identity “{name}” deleted"
+    },
+    "deleteNote": "Deleting an identity removes its credential and its resources; its findings are kept, but the open ones become resolved.",
+    "subject": "the identities",
+    "tested": "tested {time}",
+    "errors": {
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't complete the action.",
+      "reference": "Reference: {id}"
+    }
+  },
+  "IdentityForm": {
+    "newCrumb": "New",
+    "newTitle": "Add identity",
+    "editTitle": "Edit identity",
+    "name": "Name",
+    "role": {
+      "label": "Declared role",
+      "admin": "Administrator",
+      "user": "User",
+      "other": "Other",
+      "hint": "The role this account has in your API. It is used to compare against the policy.",
+      "labelName": "Role name in your API (optional)"
+    },
+    "auth": {
+      "label": "Authentication method",
+      "login": {
+        "title": "Automatic login",
+        "note": "Username and password"
+      },
+      "bearer": {
+        "title": "Bearer token",
+        "note": "Authorization: Bearer"
+      },
+      "cookie": {
+        "title": "Session cookie",
+        "note": "Name and value"
+      },
+      "header": {
+        "title": "Custom header",
+        "note": "Name and value"
+      }
+    },
+    "fields": {
+      "password": "Password",
+      "token": "Token",
+      "cookieName": "Cookie name",
+      "headerName": "Header name",
+      "username": "Username",
+      "value": "Value",
+      "credential": "Credential",
+      "loginOperation": "Login operation",
+      "chooseOperation": "Choose the login operation"
+    },
+    "endsIn": "Ends in ••••{last4}",
+    "replace": "Replace",
+    "loginNote": "During the run we obtain and renew the token automatically.",
+    "test": {
+      "title": "Test credential",
+      "run": "Test now",
+      "testing": "Testing…",
+      "okText": "The credential works with {method} {path}.",
+      "savedOnly": "Test the saved credential against a protected GET operation chosen by the system.",
+      "answered": "The API answered {code}.",
+      "failure": {
+        "rejected": "The operation didn't answer 2xx. Replace the credential and test again.",
+        "login_failed": "The login operation didn't answer 2xx or didn't return a token.",
+        "connection_error": "The host didn't answer or timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address."
+      }
+    },
+    "cancel": "Cancel",
+    "save": "Save identity",
+    "saved": "Identity “{name}” saved",
+    "help": {
+      "encryptedTitle": "Your credentials are encrypted",
+      "encryptedText": "We store them with AES-256-GCM. After saving you'll only see the last 4 characters, and in evidence and reports they appear masked.",
+      "whichTitle": "Which method should I choose?",
+      "login": "if tokens expire soon.",
+      "bearer": "if you have a long-lived token.",
+      "cookie": "if your API uses sessions.",
+      "header": "for API keys."
+    },
+    "errors": {
+      "nameRequired": "Enter the identity's name.",
+      "fieldRequired": "This field is required.",
+      "nameTaken": "An identity with that name already exists. Choose another.",
+      "length": "The text is too long.",
+      "format": "The value has characters that aren't allowed.",
+      "fieldNameReserved": "The platform controls that header; use another one.",
+      "loginOperation": "Choose the login operation.",
+      "limitReached": "This project already has 20 identities, counting the anonymous one.",
+      "rateLimited": "Too many requests. Wait a moment.",
+      "failed": "We couldn't save the identity.",
+      "reference": "We couldn't save the identity. Reference: {id}",
+      "notVerified": "Verify the host's ownership before testing credentials.",
+      "noTestOperation": "There's no protected GET operation without path parameters to test with."
+    },
+    "editCrumb": "Edit"
+  },
+  "Resources": {
+    "crumb": "Resources",
+    "title": "Resources by identity",
+    "lead": "Say which objects in your API belong to each identity. That way Object access can check whether one identity reaches another's.",
+    "origin": {
+      "discovered": "Discovered",
+      "manual": "Added by hand"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "pending": "To confirm"
+    },
+    "confirm": "Confirm",
+    "params": {
+      "title": "1. Resource identifiers",
+      "lead": "Path parameters of the current contract. Check the ones that identify an owned object and enter its type.",
+      "empty": "Import a contract to detect identifiers.",
+      "isId": "{param} is an identifier",
+      "none": "The current contract has no operations with path parameters.",
+      "subject": "the operations",
+      "type": "Resource type of {param}",
+      "typePlaceholder": "order",
+      "save": "Save",
+      "discard": "Discard",
+      "saved": "Identifiers of {path} saved",
+      "partial": "Showing {shown} of {total} operations."
+    },
+    "discover": {
+      "title": "2. Discover resources",
+      "text": "We call, as each identity, only the listing GET operations, such as <code>GET /orders</code>, and propose what we find.",
+      "button": "Discover resources",
+      "hint": "It can take up to 25 seconds. Whatever it finds is left to confirm.",
+      "running": "Discovering resources…",
+      "needsVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noIdentities": "Register an identity with a credential to discover its resources.",
+      "done": "{count, plural, one {# new resource found} other {# new resources found}}",
+      "doneNone": "No new resources found",
+      "summary": "{count, plural, one {# new resource to confirm} other {# new resources to confirm}} · {requests, plural, one {# request} other {# requests}}",
+      "identityLine": "{found, plural, one {# found} other {# found}} · {created} new · {other} from another identity",
+      "unknownIdentity": "Deleted identity",
+      "truncated": {
+        "title": "Discovery stopped at a limit",
+        "text": "It reached the limit of 100 requests or 25 seconds and there may be more resources. Confirm or delete what it found and discover again."
+      },
+      "failure": {
+        "rejected": "The API answered with an error when listing. Check the credential.",
+        "login_failed": "The login operation did not return a token.",
+        "connection_error": "The host did not answer or the request timed out.",
+        "destination_not_allowed": "The host resolves to a disallowed address.",
+        "not_attempted": "Not tried: a limit was reached before getting to this identity."
+      },
+      "registered": "Registered resources"
+    },
+    "review": {
+      "title": "3. Review each identity's resources",
+      "identity": "Identity"
+    },
+    "noIdentities": {
+      "title": "No identities yet",
+      "text": "Add at least one identity to assign resources to it.",
+      "action": "Add identity"
+    },
+    "empty": {
+      "title": "{name} has no resources",
+      "text": "Object access cannot test this identity. Add its resources by hand."
+    },
+    "add": {
+      "kind": "Type",
+      "value": "Identifier",
+      "button": "Add to {name}",
+      "done": "Resource added to {name}"
+    },
+    "delete": {
+      "label": "Delete {value}",
+      "title": "Delete the resource",
+      "text": "“{value}” will be removed from this identity. Nothing is deleted in your API.",
+      "confirm": "Delete resource",
+      "done": "“{value}” deleted"
+    },
+    "errors": {
+      "valueRequired": "Enter the resource's identifier.",
+      "typeRequired": "Enter the resource type.",
+      "valueInvalid": "The identifier allows up to 500 characters, with no control characters.",
+      "ownedByOther": "That resource already belongs to another identity. An object has one owner.",
+      "identityNotFound": "The identity no longer exists. Reload the page.",
+      "anonymousOwner": "The anonymous identity has no resources.",
+      "notVerified": "Verify ownership of the host before discovering resources.",
+      "activeRun": "A run is queued or in progress; wait for it to finish.",
+      "noListOperations": "The current contract has no listing GET operations, so there is nothing to discover.",
+      "discoveryTimeout": "Discovery took too long. Whatever it managed to find was saved: reload the list.",
+      "notFound": "The resource no longer exists. Reload the page.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The action could not be completed",
+      "reference": "Reference: {id}"
+    },
+    "subject": "the resources",
+    "identitiesSubject": "the identities",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "Policy": {
+    "crumb": "Policy",
+    "title": "Access policy",
+    "template": {
+      "public": "Public",
+      "authenticated": "Any authenticated",
+      "owner": "Owner only",
+      "ownerOrAdmin": "Owner or administrator",
+      "admin": "Administrator only"
+    },
+    "templates": {
+      "title": "The five templates",
+      "public": "Anyone, even unauthenticated.",
+      "authenticated": "Every identity with a valid session.",
+      "owner": "Only the owner of the object indicated by the owner field.",
+      "ownerOrAdmin": "The owner or an identity with an administrator role.",
+      "admin": "Only identities with an administrator role."
+    },
+    "progress": {
+      "title": "{confirmed} of {total} confirmed",
+      "label": "Confirmed operations",
+      "text": "{count, plural, one {The unconfirmed proposal isn't used} other {The # unconfirmed proposals aren't used}} in Object access or Function access.",
+      "modified": "Last modified: {date}."
+    },
+    "orphan": {
+      "title": "{count, plural, one {# orphan rule} other {# orphan rules}}",
+      "text": "They are no longer in the current contract and still have a policy. They are not used in tests:"
+    },
+    "operations": "Operations",
+    "filters": {
+      "label": "Filter by status",
+      "all": "All · {count}",
+      "proposed": "Proposed · {count}",
+      "confirmed": "Confirmed · {count}"
+    },
+    "bulk": {
+      "label": "Bulk actions",
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "apply": "Apply template",
+      "button": "Apply and confirm",
+      "owner": "Owner field",
+      "done": "{count, plural, one {Template applied to # operation} other {Template applied to # operations}}"
+    },
+    "select": "Select {method} {path}",
+    "templateOf": "Template of {method} {path}",
+    "ownerOf": "Owner field of {method} {path}",
+    "notApplicable": "Not applicable",
+    "status": {
+      "confirmed": "Confirmed",
+      "proposed": "Proposed",
+      "changed": "Unsaved"
+    },
+    "confirm": "Confirm",
+    "showing": "Showing {shown} of {total} operations ·",
+    "viewContract": "View the contract",
+    "save": "Save policy",
+    "saved": "Policy saved",
+    "empty": {
+      "title": "No operations",
+      "text": "Import a contract to propose the policy."
+    },
+    "noContract": {
+      "title": "Import the contract first",
+      "text": "The policy is proposed from your OpenAPI contract's operations.",
+      "action": "Import contract"
+    },
+    "errors": {
+      "ownerTitle": "The owner field is missing",
+      "ownerText": "Ownership templates need an owner field: a path parameter (userId) or a response field (owner.id).",
+      "retired": "An operation is no longer in the current contract. Reload the page.",
+      "notFound": "An operation no longer exists. Reload the page.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The policy could not be saved",
+      "reference": "Reference: {id}"
+    },
+    "ownerPlaceholder": "userId or owner.id",
+    "noTemplate": "Choose a template",
+    "noSecurity": "No security",
+    "subject": "the operations"
+  },
+  "ConfigureRun": {
+    "title": "New run",
+    "crumb": "New run",
+    "crumbRuns": "Runs",
+    "modules": {
+      "title": "Test modules",
+      "lead": "Choose which OWASP API Top 10 categories to test in this run.",
+      "selected": "{count, plural, =0 {None selected} other {# selected}}",
+      "notes": {
+        "auth": "Tokens, sessions and credentials",
+        "config": "Headers, CORS and error messages",
+        "objects": "Each identity against other people's resources",
+        "functions": "Administrative functions with a regular user",
+        "properties": "Modifies test data that Hindama creates",
+        "resources": "Loads the server with repeated requests",
+        "sql": "Sends injection payloads; modifies test data"
+      },
+      "risk": "Risk",
+      "missing": {
+        "project_not_verified": "Requires verifying host ownership",
+        "no_contract": "Requires importing the contract",
+        "insufficient_identities": "Requires at least two identities",
+        "no_admin_identity": "Requires an admin identity",
+        "no_resources": "Requires resources assigned to identities",
+        "policy_unconfirmed": "Requires confirming the access policy",
+        "not_implemented": "Available in an upcoming version"
+      },
+      "fix": {
+        "project_not_verified": "Verify",
+        "no_contract": "Import contract",
+        "insufficient_identities": "Add identity",
+        "no_admin_identity": "Add identity",
+        "no_resources": "Assign resources",
+        "policy_unconfirmed": "Review policy"
+      }
+    },
+    "risk": {
+      "medium": "Medium risk",
+      "high": "High risk"
+    },
+    "riskSummary": "Selected modules: {names}.",
+    "limits": {
+      "title": "Run limits",
+      "lead": "They protect your server: the run stops as soon as any of them is reached.",
+      "rps": "Requests per second",
+      "concurrency": "Parallel requests",
+      "total": "Total requests",
+      "duration": "Maximum duration (minutes)",
+      "max": "Maximum allowed: {max}",
+      "outOfRange": "Enter a whole number between 1 and {max}."
+    },
+    "checks": {
+      "title": "Before running",
+      "verified": "The base URL is verified",
+      "noActive": "No other run is active",
+      "https": "The URL uses HTTPS",
+      "policy": "The access policy is confirmed"
+    },
+    "run": "{count, plural, =0 {Run tests} one {Run # module} other {Run # modules}}",
+    "starting": "Starting…",
+    "started": "Run #{number} queued",
+    "confirmFirst": "Confirm every risk module to run.",
+    "readOnly": {
+      "title": "What Hindama does",
+      "text": "Tests only create their own resources and delete them when finished. They never touch data that already existed in your API."
+    },
+    "blocked": {
+      "unverified": "Verify the project's base URL before running.",
+      "goVerify": "Go to verification",
+      "active": "A run is already in progress.",
+      "viewRun": "View the run"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "moduleUnavailable": "A module no longer meets its requirements. Check the list and try again.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be started",
+      "reference": "Reference: {id}"
+    }
+  },
+  "RunProgress": {
+    "title": "Run in progress",
+    "crumb": "In progress",
+    "crumbHistory": "Runs",
+    "started": "Started at {time} · {modules, plural, one {# module} other {# modules}}",
+    "now": "Testing now: <b>{module}</b>",
+    "progressLabel": "Run progress",
+    "stats": {
+      "requests": "Requests sent",
+      "minutes": "Elapsed time",
+      "speed": "Speed limit",
+      "cells": "{done} / {total}",
+      "cellsLabel": "Checks"
+    },
+    "viewResults": "View results",
+    "cancel": "Cancel run",
+    "found": "{count, plural, =0 {No findings yet} one {# finding so far} other {# findings so far}}",
+    "recent": "Most recent",
+    "noneYet": "Findings will appear here as soon as they are detected.",
+    "modules": "Modules",
+    "moduleDone": "Done",
+    "moduleRunning": "Running",
+    "modulePending": "Waiting",
+    "cancelDialog": {
+      "title": "Cancel run no. {number}?",
+      "text": "The {count, plural, one {# finding} other {# findings}} found so far are kept and the test resources created are deleted.",
+      "confirm": "Cancel run",
+      "keep": "Keep running"
+    },
+    "finished": "Run no. {number} finished",
+    "none": {
+      "title": "There is no run in progress",
+      "text": "Start a new run to follow its progress here.",
+      "action": "New run"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Live",
+      "completed": "Finished",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "cancelling": "Cancelling…",
+    "queuedAt": "Queued · {modules, plural, one {# module} other {# modules}}",
+    "subject": "the run",
+    "lost": {
+      "title": "The live connection was lost",
+      "text": "Reload the page to see the current state of the run."
+    },
+    "cancelRequested": "Cancellation of run #{number} requested",
+    "ended": {
+      "cancelled": "Run #{number} cancelled",
+      "failed": "Run #{number} didn't finish"
+    },
+    "errors": {
+      "notActive": "The run already finished.",
+      "failed": "The run could not be cancelled",
+      "reference": "Reference: {id}"
+    }
+  },
+  "RunTabs": {
+    "label": "Run views",
+    "summary": "Summary",
+    "matrix": "Access matrix",
+    "findings": "Findings ({count})"
+  },
+  "RunResults": {
+    "title": "Run #{number}",
+    "crumbHistory": "History",
+    "report": "Generate report",
+    "retest": "Test again",
+    "data": "Run details",
+    "end": {
+      "normal": "End: normal",
+      "limit_reached": "End: a limit was reached",
+      "cancelled_by_user": "End: cancelled by the user",
+      "verification_invalid": "End: the host verification is no longer valid",
+      "heartbeat_expired": "End: the engine stopped responding",
+      "lost_in_queue": "End: lost in the queue",
+      "error": "End: internal error"
+    },
+    "contract": "Contract #{number}",
+    "repeat": "Repeats an earlier run",
+    "headline": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "viewFindings": "View findings",
+    "stats": {
+      "requests": "Requests",
+      "minutes": "Duration (m:ss)",
+      "modules": "Modules run",
+      "cells": "Checks evaluated"
+    },
+    "comparison": {
+      "title": "Compared with run no. {number}",
+      "first": "First run",
+      "firstText": "There is no earlier run to compare with.",
+      "new": "New",
+      "persistent": "Persistent",
+      "regression": "Regressions",
+      "note": "A finding is a regression when it comes back after being marked as resolved.",
+      "onlyLatest": "The comparison uses the current status of the findings, so it is only shown for the project's latest run."
+    },
+    "bySeverity": "By severity",
+    "modules": "Modules",
+    "limits": "Limits: {rps} req/s · {concurrency} concurrent · {total} requests · {minutes} min",
+    "moduleNotSelected": "Not selected",
+    "notices": {
+      "title": "Notices",
+      "partial": {
+        "completed": {
+          "title": "Partial result",
+          "text": "The run stopped when it reached a limit and some checks were not evaluated."
+        },
+        "cancelled": {
+          "title": "Run cancelled",
+          "text": "The results are partial: they only include what was evaluated before it stopped."
+        },
+        "failed": {
+          "title": "The run did not finish",
+          "text": "The results are partial: they only include what was evaluated before the failure."
+        }
+      }
+    },
+    "top": "Most severe",
+    "titleLoading": "Run results",
+    "subject": "the run",
+    "status": {
+      "completed": "Completed · {date}",
+      "cancelled": "Cancelled · {date}",
+      "failed": "Did not finish · {date}"
+    },
+    "moduleRun": "Run",
+    "active": {
+      "title": "Run #{number} is still in progress",
+      "text": "Its results will show up here when it finishes.",
+      "action": "View progress"
+    }
+  },
+  "Matrix": {
+    "title": "Access matrix",
+    "subject": "the matrix",
+    "onlyDiscrepancies": "Discrepancies only",
+    "module": "Module",
+    "allModules": "All modules",
+    "legend": {
+      "title": "Legend",
+      "pass": "Pass: responded as expected",
+      "fail": "Discrepancy: did not respond as expected",
+      "error": "Error: could not be evaluated",
+      "skipped": "Skipped: expired credential or missing requirement"
+    },
+    "summary": "{rows, plural, one {# row} other {# rows}} · {identities, plural, one {# identity} other {# identities}} · {discrepancies, plural, one {# discrepancy} other {# discrepancies}}",
+    "none": {
+      "title": "No discrepancies",
+      "text": "Every identity got the expected response."
+    },
+    "empty": {
+      "title": "This run has no results",
+      "text": "The matrix fills in as the run evaluates its checks."
+    },
+    "caption": "Response of each operation for each identity",
+    "operation": "Operation and module",
+    "global": "Whole API",
+    "identityDeleted": "{name} (deleted)",
+    "notEvaluated": "Not evaluated",
+    "verdict": {
+      "pass": "Pass",
+      "fail": "Discrepancy",
+      "error": "Error",
+      "skipped": "Skipped"
+    },
+    "expected": "Expected: {value}",
+    "codes": {
+      "allowed": "allowed",
+      "denied": "denied",
+      "own_data_only": "own data only",
+      "no_sql_error": "no SQL error",
+      "no_data": "no data",
+      "baseline_failed": "could not compare",
+      "method_not_safe": "unsafe method, not tested",
+      "no_resources": "no resources to test",
+      "no_auth_required": "needs no credentials",
+      "login_failed": "login failed",
+      "credential_expired": "credential expired",
+      "error": "error",
+      "accepted": "accepted",
+      "rejected": "rejected",
+      "declared_only": "declared fields only",
+      "undeclared_fields": "undeclared fields",
+      "hardened": "hardened",
+      "limited": "limited",
+      "not_applicable": "not applicable",
+      "not_created": "not created",
+      "not_injectable": "not injectable",
+      "not_jwt": "does not use JWT",
+      "budget_reserved": "budget reserved"
+    },
+    "finding": {
+      "open": "View finding",
+      "openLabel": "View the finding of {identity}",
+      "none": "We could not find the finding of this cell: it may have been resolved or dismissed since.",
+      "failed": "The finding could not be searched",
+      "rateLimited": "Too many requests. Wait a moment and try again."
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "Findings": {
+    "globalOperation": "Entire API",
+    "title": "Findings",
+    "subtitle": "Current state of the project, with the results of run no. {number}.",
+    "subtitleNone": "There are no runs in this project yet.",
+    "empty": {
+      "title": "There are no findings yet",
+      "text": "Run the tests to see here what we find in your API.",
+      "action": "New run"
+    },
+    "filters": {
+      "title": "Filters",
+      "module": "Module",
+      "severity": "Severity",
+      "status": "Status",
+      "allModules": "All modules",
+      "allSeverities": "All",
+      "all": "All",
+      "clear": "Clear filters"
+    },
+    "status": {
+      "open": "Open"
+    },
+    "chips": {
+      "status": "Status: {value}",
+      "module": "Module: {value}",
+      "severity": "Severity: {value}",
+      "remove": "Remove filter “{filter}”",
+      "run": "Run #{number}",
+      "runLoading": "Run",
+      "runText": "Run"
+    },
+    "showing": "Showing {shown} of {total} · sorted by severity",
+    "openCount": "{count, plural, =0 {No open findings} one {# open finding} other {# open findings}}",
+    "count": "{count, plural, =0 {No findings} one {# finding} other {# findings}}",
+    "cols": {
+      "severity": "Severity",
+      "finding": "Finding and operation",
+      "module": "Module",
+      "identity": "Identity",
+      "classification": "Classification",
+      "status": "Status"
+    },
+    "open": "Open {title}",
+    "subject": "the findings",
+    "none": "This project has no findings.",
+    "identityDeleted": "{name} (deleted)",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "ExportFindings": {
+    "button": "Export to Excel",
+    "busy": "Preparing the workbook…",
+    "done": "Excel workbook downloaded",
+    "tooLarge": "Too many findings to export",
+    "tooLargeText": "The workbook holds up to 5,000 findings. Filter by module, severity or status and try again.",
+    "rateLimited": "Too many requests. Wait a moment.",
+    "failed": "The export failed",
+    "reference": "Reference: {id}"
+  },
+  "FindingDetail": {
+    "globalOperation": "Whole API",
+    "crumb": "Finding",
+    "subject": "the finding",
+    "summary": "Finding summary",
+    "severity": "{severity} severity",
+    "identityDeleted": "{name} (deleted)",
+    "fields": {
+      "operation": "Operation",
+      "identity": "Identity",
+      "module": "Module",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "detected": "Detected"
+    },
+    "detectedRuns": "From run #{first} to run #{last}",
+    "newTab": "(opens in a new tab)",
+    "acceptRisk": "Accept the risk",
+    "accepted": {
+      "accepted": "Risk accepted",
+      "falsePositive": "Dismissed as a false positive",
+      "note": "Dismissed on {date}. If a run detects it again, it stays accepted. If you revert it, it goes back to “Persistent”."
+    },
+    "revert": "Revert",
+    "reverted": "The finding went back to “Persistent”",
+    "resolved": {
+      "not_detected": "Resolved: a run no longer detected it",
+      "identity_deleted": "Resolved: the identity was deleted",
+      "operation_retired": "Resolved: the operation left the contract",
+      "at": "Since {date}."
+    },
+    "toast": {
+      "accepted": "Risk accepted",
+      "falsePositive": "Finding dismissed as a false positive"
+    },
+    "why": {
+      "title": "Why it is a flaw · {identity}",
+      "resource": "Resource: {type} “{value}”",
+      "resourceOwner": "Resource: {type} “{value}” owned by {owner}"
+    },
+    "evidence": {
+      "title": "Evidence from run #{run}",
+      "copyCurl": "Copy as curl",
+      "request": "Request",
+      "masked": "Credentials masked",
+      "response": "Response · {status}",
+      "truncated": "Body cut to 10 KB"
+    },
+    "fix": {
+      "title": "How to fix it"
+    },
+    "history": {
+      "title": "History",
+      "run": "Run #{number}",
+      "analyst": "By the analyst",
+      "reason": {
+        "detected": "Detected",
+        "not_detected": "No longer detected",
+        "regression": "Came back after being resolved",
+        "accepted": "Risk accepted",
+        "false_positive": "Marked as a false positive",
+        "reverted": "The dismissal was reverted",
+        "identity_deleted": "The identity was deleted",
+        "operation_retired": "The operation left the contract"
+      }
+    },
+    "occurrences": {
+      "title": "Detections",
+      "subject": "the detections",
+      "viewRun": "View run #{number}"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}",
+    "errors": {
+      "notOpen": "The finding is no longer open. Its status was refreshed.",
+      "notDismissed": "The finding was no longer dismissed. Its status was refreshed.",
+      "justification": "Check the justification: it is required and cannot contain control characters.",
+      "dismiss": "The finding could not be dismissed",
+      "revert": "The dismissal could not be reverted",
+      "reference": "Reference: {id}"
+    }
+  },
+  "History": {
+    "title": "History",
+    "repeat": "Repeat last run",
+    "viewProgress": "View progress",
+    "following": "Being tracked",
+    "notConcluded": "Not concluded yet",
+    "rule": "The project is marked as concluded when a run leaves no new, persistent or regression findings. If a later run finds any, it reopens.",
+    "concluded": {
+      "badge": "Concluded",
+      "title": "Project concluded",
+      "text": "The last run left no new, persistent or regression findings. If a later run finds any, it reopens."
+    },
+    "openNow": "Open now",
+    "resolvedTotal": "Resolved in total",
+    "chart": {
+      "title": "Findings detected in each run",
+      "running": "No. {number} is still running",
+      "summary": "Findings detected: {items}.",
+      "item": "run {number}, {count}",
+      "itemRunning": "run {number} in progress, {count} so far",
+      "tip": "Run {number}: {count, plural, one {# finding} other {# findings}}",
+      "label": "no. {number}",
+      "labelRunning": "no. {number} (running)"
+    },
+    "runs": "{count, plural, one {# run} other {# runs}}",
+    "cols": {
+      "run": "Run",
+      "date": "Date and modules",
+      "status": "Status",
+      "duration": "Duration",
+      "requests": "Requests",
+      "severity": "By severity"
+    },
+    "number": "no. {number}",
+    "kind": "{count, plural, one {# module} other {# modules}}",
+    "open": "Open",
+    "report": "Report",
+    "empty": {
+      "title": "There are no runs yet",
+      "text": "When you run the tests, you will see their evolution and every result here.",
+      "action": "New run"
+    },
+    "subject": "the history",
+    "filter": "Status",
+    "allStatuses": "All statuses",
+    "none": "No run has that status.",
+    "viewProgressOf": "View the progress of run no. {number}",
+    "openOf": "Open run no. {number}",
+    "reportOf": "Report of run no. {number}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "Report": {
+    "back": "Back",
+    "typeLabel": "Report type",
+    "variant": {
+      "run": "Run no. {number}",
+      "current": "Current state"
+    },
+    "print": "Print or save as PDF",
+    "printing": "Preparing the printout…",
+    "brand": "Hindama · {type}",
+    "type": {
+      "run": "Report of run no. {number}",
+      "current": "Current state report"
+    },
+    "subtitle": {
+      "run": "Run completed on {date}",
+      "current": "State as of {date}, with {count, plural, one {# run} other {# runs}}",
+      "ended": "Run ended on {date} without completing"
+    },
+    "generated": "Generated",
+    "by": "By",
+    "baseUrl": "Base URL",
+    "summary": {
+      "title": "1. Summary",
+      "bySeverity": "By severity",
+      "byStatus": "By status",
+      "modules": "Modules run:",
+      "none": "none",
+      "limits": "Limits: {rps} requests per second, {concurrency} concurrent, {total} requests, {minutes} minutes. {requests} requests were sent in {duration}.",
+      "resolved": "Resolved in total",
+      "onlyLatest": "The status of findings is only shown for the latest run.",
+      "concluded": "The project is concluded: the last run left no new, persistent or regression findings.",
+      "open": "Open findings in the project, across all its runs."
+    },
+    "matrix": {
+      "title": "2. Access matrix (discrepancies)",
+      "operation": "Operation",
+      "identity": "Identity",
+      "expected": "Expected",
+      "observed": "Observed",
+      "global": "Whole API",
+      "note": "The full matrix is in the run view.",
+      "subject": "the discrepancies",
+      "none": "There were no discrepancies in this run",
+      "partial": "Showing {shown} of {total} discrepancies. The full matrix is in the run view."
+    },
+    "pageBreak": "Page break when printing",
+    "findings": {
+      "title": "3. Findings",
+      "none": "There are no open findings",
+      "module": "Module",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "identity": "Identity",
+      "more": "{count, plural, one {And # more finding, in the findings view.} other {And # more findings, in the findings view.}}",
+      "subject": "the findings",
+      "noneRun": "This run detected no findings",
+      "operation": "Operation",
+      "runs": "Detected",
+      "runRange": "From no. {first} to no. {last}",
+      "detail": {
+        "explanation": "What was detected",
+        "recommendation": "Recommendation",
+        "loading": "Loading the evidence…",
+        "failed": "The evidence of this finding could not be loaded.",
+        "rateLimited": "Too many requests: wait a moment before loading more evidence.",
+        "retry": "Retry",
+        "notLoaded": "The evidence of this finding was not loaded in the report.",
+        "open": "Open it in its detail",
+        "loadMore": "{count, plural, one {Load the evidence of the next finding} other {Load the evidence of the next # findings}}",
+        "partial": "With evidence: {shown} of {total} findings. The API limits requests per minute, so they load in batches."
+      },
+      "types": {
+        "title": "{types, plural, one {# type of failure} other {# types of failure}} across {count, plural, one {# finding} other {# findings}}",
+        "count": "{count, plural, one {# operation or identity affected} other {# operations or identities affected}}"
+      }
+    },
+    "active": {
+      "title": "The run is still in progress",
+      "text": "The report is generated when the run ends.",
+      "action": "View progress"
+    }
+  },
+  "Stats": {
+    "crumb": "Statistics",
+    "title": "Usage statistics",
+    "subtitle": "Platform usage and the most common failures.",
+    "viewLog": "View audit log",
+    "period": {
+      "label": "Period",
+      "custom": "Custom",
+      "days": "Last {count} days"
+    },
+    "range": "{from} – {to}",
+    "custom": {
+      "from": "From",
+      "to": "To",
+      "invalid": "Enter a valid range: the start date cannot be after the end date, the end date cannot be after today and the range spans up to 366 days."
+    },
+    "empty": {
+      "title": "No data in this period",
+      "text": "The platform had no activity on these dates yet. Try a more recent period."
+    },
+    "kpi": {
+      "users": {
+        "label": "Registered users",
+        "note": "{count, plural, one {# new account} other {# new accounts}}"
+      },
+      "projects": {
+        "label": "Projects created",
+        "note": "In the period"
+      },
+      "runs": {
+        "label": "Runs",
+        "note": "{cancelled} cancelled · {failed} failed"
+      },
+      "resolution": {
+        "label": "From detection to resolution",
+        "note": "Average of resolved findings"
+      },
+      "deletedAccounts": {
+        "label": "Deleted accounts",
+        "note": "Figures do not change when an account is deleted"
+      },
+      "regressions": {
+        "label": "Regressions",
+        "note": "Resolved findings that came back"
+      }
+    },
+    "days": "days",
+    "runsBy": {
+      "day": "Runs per day",
+      "week": "Runs per week"
+    },
+    "unit": {
+      "runs": "runs",
+      "findings": "findings"
+    },
+    "findingsByWeek": "Findings detected per week",
+    "weekStart": "Each point is the week starting that Monday",
+    "noFindings": "No findings in this period",
+    "chart": {
+      "summary": "{label}: {items}.",
+      "tip": "{label}: {value} {unit}"
+    },
+    "hover": "Hover over a point to see its value",
+    "byModule": "Most frequent failures by module",
+    "byModuleList": "Failures by module",
+    "byOwasp": "Most frequent failures by OWASP category",
+    "byOwaspList": "Failures by OWASP category",
+    "owasp": {
+      "API1": "API1 Objects",
+      "API2": "API2 Authentication",
+      "API3": "API3 Properties",
+      "API4": "API4 Resources",
+      "API5": "API5 Functions",
+      "API8": "API8 Configuration"
+    },
+    "bars": {
+      "tip": "{name}: {count} failures"
+    },
+    "privacy": "Aggregated, anonymous data only. Findings are grouped by week and counters by day. No project can be opened from here.",
+    "loading": "Loading statistics",
+    "errorSubject": "the statistics"
+  },
+  "AuditLog": {
+    "crumb": "Audit log",
+    "title": "Audit log",
+    "subtitle": "Unalterable record of sensitive actions. It never shows credentials.",
+    "viewStats": "View statistics",
+    "filters": {
+      "title": "Audit log filters",
+      "from": "From",
+      "to": "To",
+      "action": "Action type",
+      "allActions": "All actions",
+      "user": "User",
+      "userPlaceholder": "Full identifier",
+      "host": "Reported host",
+      "clear": "Clear",
+      "invalidRange": "The range is reversed: the start date cannot be after the end date."
+    },
+    "user": {
+      "help": "The log keeps no names or emails: search by the full identifier (UUID) or click one in the table.",
+      "invalid": "Enter the full identifier (UUID). Emails and fragments are not searched."
+    },
+    "host": {
+      "help": "Enter the name or the URL. It is compared by its HMAC: the host is never stored or shown.",
+      "active": "Showing the actions on that host, compared by its HMAC.",
+      "invalid": "That is not a valid host."
+    },
+    "count": "{count, plural, =0 {No records} one {# record} other {# records}}",
+    "readOnly": "Read only · kept for 6 months and then deleted",
+    "empty": {
+      "title": "No records match these filters",
+      "text": "Widen the date range or clear the filters to see more.",
+      "invalidTitle": "Fix the date range",
+      "invalidText": "The log is not queried while the start date is after the end date.",
+      "invalidFiltersTitle": "Fix the filters",
+      "invalidFiltersText": "The log is not queried with a user that is not a full identifier or with an invalid host."
+    },
+    "cols": {
+      "date": "Date and time",
+      "user": "User",
+      "action": "Action",
+      "project": "Project",
+      "ip": "Source IP"
+    },
+    "ipNone": "No IP: the test engine made the action or no valid IP arrived.",
+    "filterByUser": "Filter by this user",
+    "copyId": "Copy the full identifier of {user}",
+    "copied": "Identifier copied",
+    "copyFailed": "Could not copy",
+    "detailOf": "Details of the record from {date}",
+    "actions": {
+      "account_created": "Account created",
+      "account_deleted": "Account deleted",
+      "project_created": "Project created",
+      "project_deleted": "Project deleted",
+      "project_verified": "Project verified",
+      "project_verification_lost": "Verification lost when starting a run",
+      "identity_created": "Identity created",
+      "identity_deleted": "Identity deleted",
+      "run_launched": "Run launched",
+      "run_cancelled": "Run cancelled",
+      "finding_dismissed": "Risk accepted or false positive",
+      "finding_dismissal_reverted": "Dismissal reverted",
+      "destination_blocked": "Destination blocked"
+    },
+    "modules": {
+      "authentication": "Authentication",
+      "configuration": "Configuration",
+      "object_access": "Object access",
+      "function_access": "Function access",
+      "property_access": "Properties",
+      "resource_consumption": "Resource consumption",
+      "sql_injection": "SQL injection"
+    },
+    "detail": {
+      "none": "This action carries no additional data.",
+      "modules": "Modules",
+      "limits": "Limits",
+      "run": "Run",
+      "sourceRun": "Repeats the run",
+      "verificationMethod": "Verification method",
+      "identity": "Identity",
+      "finding": "Finding",
+      "dismissalReason": "Dismissal reason",
+      "stage": "Blocking stage",
+      "blockReason": "Blocking reason"
+    },
+    "values": {
+      "limits": "{rps} req/s · {concurrency} concurrent · {requests} requests · {minutes} min",
+      "verificationMethod": {
+        "file": "File",
+        "dns": "DNS record"
+      },
+      "dismissalReason": {
+        "accepted_risk": "Risk accepted",
+        "false_positive": "False positive"
+      },
+      "stage": {
+        "project_url": "Project URL",
+        "verification": "Verification",
+        "contract_import": "Contract import",
+        "identity_test": "Identity test",
+        "resource_discovery": "Resource discovery",
+        "run": "Run"
+      },
+      "blockReason": {
+        "address_not_allowed": "Address not allowed (private, local or metadata)",
+        "host_mismatch": "Redirect outside the project host",
+        "unresolved": "The host does not resolve",
+        "invalid_url": "Invalid URL",
+        "scheme_not_allowed": "Scheme not allowed",
+        "too_many_redirects": "Too many redirects"
+      }
+    },
+    "pagination": {
+      "label": "Pagination",
+      "range": "{from}–{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "loading": "Loading the audit log",
+    "errorSubject": "the audit log"
+  },
+  "Offline": {
+    "title": "Offline. Reconnecting…",
+    "text": "The data you see may be out of date. As soon as the network is back, it updates by itself.",
+    "back": "Connection restored",
+    "backText": "The data was refreshed."
+  },
+  "PageTitles": {
+    "adminStats": "Usage statistics",
+    "auditLog": "Audit log",
+    "dashboard": "Project overview",
+    "contract": "OpenAPI contract",
+    "versions": "Contract versions",
+    "findings": "Findings",
+    "finding": "Finding details",
+    "history": "History",
+    "identities": "Identities",
+    "identityNew": "New identity",
+    "identityEdit": "Edit identity",
+    "policy": "Access policy",
+    "resources": "Resources by identity",
+    "runCurrent": "Run in progress",
+    "runNew": "New run",
+    "runResults": "Run results",
+    "matrix": "Access matrix",
+    "report": "Report",
+    "settings": "Project settings",
+    "verification": "Ownership verification"
+  },
+  "Loading": {
+    "label": "Loading…",
+    "page": "Loading the page",
+    "list": "Loading the list",
+    "detail": "Loading the details",
+    "chart": "Loading the chart"
+  },
+  "Rerun": {
+    "started": "Run #{number} queued",
+    "confirm": {
+      "title": "Repeat run #{number}",
+      "text": "It includes modules that change test data or load the server. Confirmation is required for every run.",
+      "heading": "Risky modules",
+      "button": "Confirm and repeat"
+    },
+    "errors": {
+      "activeRun": "A run is already queued or in progress.",
+      "notVerified": "Verify the host's ownership before running.",
+      "moduleUnavailable": "A module of the run no longer meets its requirements. Check the project.",
+      "rateLimited": "Too many requests. Wait a moment and try again.",
+      "failed": "The run could not be repeated",
+      "reference": "Reference: {id}"
+    }
+  }
+}

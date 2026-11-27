@@ -1,0 +1,2544 @@
+{
+  "Meta": {
+    "title": "Hindama",
+    "description": "Evalúa tu API antes de publicarla: pruebas de seguridad guiadas por el contrato OpenAPI y por quién debería poder hacer qué."
+  },
+  "Common": {
+    "appName": "Hindama",
+    "skipToContent": "Saltar al contenido",
+    "homeLink": "Hindama, inicio",
+    "accountNav": "Cuenta",
+    "legalNav": "Legales",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "terms": "Términos de uso",
+    "privacy": "Aviso de privacidad",
+    "goProjects": "Ir a mis proyectos",
+    "goAdmin": "Ir al panel"
+  },
+  "LanguageSelector": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "groupLabel": "Idioma de la interfaz",
+    "current": "Idioma de la interfaz: {language}",
+    "esNote": "Idioma principal",
+    "enNote": "English (ruta /en)"
+  },
+  "Fields": {
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "digit": "Dígito {index} de {total}"
+  },
+  "PasswordRules": {
+    "label": "Requisitos de la contraseña",
+    "length": "12 caracteres o más",
+    "upper": "Una mayúscula",
+    "lower": "Una minúscula",
+    "digit": "Un número",
+    "symbol": "Un símbolo",
+    "met": " (cumplido)",
+    "pending": " (pendiente)"
+  },
+  "Toast": {
+    "notifications": "Notificaciones",
+    "close": "Cerrar aviso",
+    "progress": "Progreso"
+  },
+  "Modal": {
+    "close": "Cerrar"
+  },
+  "Severity": {
+    "critical": "Crítica",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja",
+    "info": "Informativa"
+  },
+  "SignIn": {
+    "meta": "Iniciar sesión",
+    "heroTitle": "Evalúa tu API antes de publicarla",
+    "heroLead": "Pruebas de seguridad guiadas por el contrato OpenAPI y por quién debería poder hacer qué. «Hindama» significa evaluar en estonio.",
+    "exampleCategory": "Acceso a objetos · API1",
+    "exampleTitle": "Un usuario puede leer pedidos de otro usuario",
+    "exampleRequest": "GET /orders/'{orderId}' · Usuario B · 200 OK",
+    "exampleCaption": "Ejemplo de hallazgo, con la petición que lo reproduce.",
+    "heading": "Inicia sesión",
+    "subheading": "Entra para ver tus proyectos y sus hallazgos.",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "nombre@empresa.com",
+    "password": "Contraseña",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "submit": "Iniciar sesión",
+    "submitting": "Entrando…",
+    "noAccount": "¿Aún no tienes cuenta?",
+    "createAccount": "Crear cuenta",
+    "legal": "Solo puedes probar APIs propias o con autorización por escrito de su dueño.",
+    "terms": "Términos de uso",
+    "and": "y",
+    "privacy": "Aviso de privacidad",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Escribe tu contraseña.",
+      "invalidCredentials": "El correo o la contraseña no son correctos.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de intentarlo de nuevo.",
+      "networkTitle": "No pudimos iniciar sesión",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "SignUp": {
+    "meta": "Crear cuenta",
+    "heroTitle": "Tu primera evaluación en cuatro pasos",
+    "heroLead": "Toda cuenta nueva es de analista. Solo tú verás tus proyectos y sus resultados.",
+    "steps": {
+      "one": {
+        "title": "Crea el proyecto",
+        "text": "Nombre y URL base de tu API"
+      },
+      "two": {
+        "title": "Carga el contrato",
+        "text": "OpenAPI 3 en JSON o YAML"
+      },
+      "three": {
+        "title": "Verifica que es tuya",
+        "text": "Con un archivo o un registro DNS"
+      },
+      "four": {
+        "title": "Ejecuta las pruebas",
+        "text": "Y corrige lo que encontremos"
+      }
+    },
+    "heading": "Crea tu cuenta",
+    "subheading": "Te enviaremos un código a tu correo para confirmarla.",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirm": "Confirmar contraseña",
+    "acceptance": "Acepto los <terms>Términos de uso</terms> y el <privacy>Aviso de privacidad</privacy>. Solo probaré APIs propias o con autorización por escrito.",
+    "submit": "Crear cuenta",
+    "submitting": "Creando cuenta…",
+    "existsTitle": "Revisa tu correo",
+    "existsText": "Si podemos crear la cuenta, te enviamos un código para confirmarla. Si ya tienes una cuenta con este correo, <signIn>inicia sesión</signIn> o <recover>recupera tu contraseña</recover>.",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "signIn": "Inicia sesión",
+    "errors": {
+      "nameRequired": "Escribe tu nombre.",
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Elige una contraseña.",
+      "passwordWeak": "La contraseña aún no cumple todos los requisitos.",
+      "confirmRequired": "Repite la contraseña.",
+      "confirmMismatch": "Las contraseñas no coinciden.",
+      "termsRequired": "Para crear tu cuenta debes aceptar los términos de uso y el aviso de privacidad.",
+      "rateLimitTitle": "Demasiados intentos",
+      "rateLimitText": "Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos crear tu cuenta",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "nameInvalid": "Escribe un nombre de hasta 100 caracteres, sin caracteres especiales de control."
+    }
+  },
+  "VerifyEmail": {
+    "meta": "Verificar correo",
+    "heroTitle": "Revisa tu correo",
+    "heroLead": "Activamos tu cuenta en cuanto confirmes que el correo es tuyo.",
+    "tipTitle": "Busca un correo de Hindama",
+    "tipText": "Llega en menos de un minuto. Si no lo ves, revisa la carpeta de spam o promociones.",
+    "heading": "Escribe el código",
+    "subheading": "Enviamos un código de 6 dígitos a <b>{email}</b>.",
+    "subheadingNoEmail": "Enviamos un código de 6 dígitos al correo con el que te registraste.",
+    "legend": "Código de verificación",
+    "submit": "Verificar",
+    "submitting": "Verificando…",
+    "noCode": "¿No te llegó?",
+    "resend": "Reenviar código",
+    "resending": "Enviando…",
+    "resendIn": "Reenviar código en {time}",
+    "resentTitle": "Código reenviado",
+    "resentText": "Revisa tu correo; el código anterior ya no sirve.",
+    "wrongEmail": "¿Escribiste mal el correo?",
+    "backToSignUp": "Volver al registro",
+    "successTitle": "Cuenta confirmada",
+    "successText": "Ya puedes iniciar sesión.",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código venció. Pide uno nuevo.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos verificar el código",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "resendTitle": "No pudimos reenviar el código",
+      "retry": "Reintentar",
+      "emailInvalid": "Escribe el correo con el que creaste la cuenta."
+    },
+    "email": "Correo electrónico"
+  },
+  "ForgotPassword": {
+    "meta": "Recuperar contraseña",
+    "heroTitle": "Recupera el acceso",
+    "heroLead": "Primero confirmamos el código que te enviamos. Después defines la contraseña nueva.",
+    "stepsLabel": "Pasos",
+    "steps": {
+      "email": "Tu correo",
+      "code": "Código",
+      "password": "Nueva contraseña"
+    },
+    "email": "Correo electrónico",
+    "codeLegend": "Código del correo",
+    "step1": {
+      "heading": "¿Olvidaste tu contraseña?",
+      "text": "Escribe el correo de tu cuenta y te enviaremos un código.",
+      "submit": "Enviar código"
+    },
+    "step2": {
+      "heading": "Escribe el código",
+      "text": "Si el correo está registrado, recibirás un código. Revisa <b>{email}</b>.",
+      "useOther": "Usar otro correo",
+      "hint": "Hasta que el código sea válido no podrás definir la contraseña nueva.",
+      "submit": "Verificar código",
+      "noCode": "¿El código no llegó o ya venció?",
+      "resend": "Pedir otro código",
+      "resendIn": "Pedir otro código en {time}"
+    },
+    "step3": {
+      "heading": "Define tu nueva contraseña",
+      "text": "Elige una contraseña que cumpla los requisitos.",
+      "password": "Nueva contraseña",
+      "confirm": "Confirmar contraseña",
+      "submit": "Cambiar contraseña"
+    },
+    "verified": "Código listo",
+    "sending": "Enviando…",
+    "verifying": "Verificando…",
+    "saving": "Guardando…",
+    "backToSignIn": "Volver a iniciar sesión",
+    "resentTitle": "Código enviado",
+    "resentText": "Si el correo está registrado, recibirás un código nuevo.",
+    "successTitle": "Contraseña cambiada",
+    "successText": "Ya puedes iniciar sesión con tu contraseña nueva.",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "rateLimit": "Demasiadas solicitudes. Espera unos minutos antes de pedir otro código.",
+      "codeInvalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "codeExpired": "El código venció. Pide uno nuevo.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "passwordRequired": "Elige una contraseña.",
+      "passwordWeak": "La contraseña aún no cumple todos los requisitos.",
+      "confirmRequired": "Repite la contraseña.",
+      "confirmMismatch": "Las contraseñas no coinciden.",
+      "networkTitle": "No pudimos completar el paso",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "resendTitle": "No pudimos enviar el código",
+      "retry": "Reintentar",
+      "passwordRejected": "La contraseña no cumple la política o es una de tus últimas 5. Elige otra."
+    }
+  },
+  "Terms": {
+    "title": "Términos de uso",
+    "badge": "Versión vigente {version} · borrador para revisión legal",
+    "lead": "Estas reglas aplican a toda persona que use Hindama. Al crear tu cuenta y antes de tu primer proyecto confirmas que las aceptas.",
+    "tocLabel": "Contenido",
+    "tocHeading": "Contenido",
+    "noteTitle": "Lo más importante",
+    "noteText": "Solo pruebas APIs propias o con autorización por escrito. Si no puedes demostrarlo, no uses Hindama sobre esa API.",
+    "sections": {
+      "service": {
+        "title": "Objeto del servicio",
+        "text": "Hindama ejecuta pruebas automatizadas de seguridad sobre APIs REST a partir de su contrato OpenAPI 3 y de la política de acceso que declara su responsable."
+      },
+      "responsible": {
+        "title": "Uso responsable",
+        "text": "Solo puedes registrar y probar APIs propias o para las que tengas autorización por escrito de su dueño. Probar APIs de terceros sin autorización está prohibido y puede constituir un delito."
+      },
+      "ownership": {
+        "title": "Verificación de propiedad",
+        "text": "Antes de cualquier prueba debes demostrar que controlas el dominio de la API. La verificación se comprueba de nuevo antes de cada ejecución."
+      },
+      "limits": {
+        "title": "Límites y ambiente de pruebas",
+        "text": "Recomendamos usar un ambiente de pruebas. Los límites de velocidad, concurrencia, volumen y duración que configures se respetan en todo momento."
+      },
+      "activity": {
+        "title": "Registro de actividad",
+        "text": "Las acciones sensibles, como crear proyectos, lanzar ejecuciones o aceptar riesgos, quedan en una bitácora que no se puede modificar."
+      },
+      "suspension": {
+        "title": "Suspensión",
+        "text": "Podemos suspender cuentas que incumplan estos términos y conservar la información necesaria para atender requerimientos de autoridad."
+      }
+    }
+  },
+  "Privacy": {
+    "title": "Aviso de privacidad",
+    "badge": "Borrador para revisión legal · versión 1.0 · 30 oct 2026",
+    "lead": "Cómo tratamos tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.",
+    "tocLabel": "Contenido",
+    "tocHeading": "Contenido",
+    "retentionLabel": "Plazos de conservación",
+    "retention": {
+      "database": {
+        "where": "Base de datos",
+        "term": "Inmediato"
+      },
+      "backups": {
+        "where": "Respaldos",
+        "term": "7 días (máx. 30)"
+      },
+      "audit": {
+        "where": "Bitácora de auditoría",
+        "term": "6 meses"
+      }
+    },
+    "sections": {
+      "data": {
+        "title": "Datos que recabamos",
+        "text": "Nombre, correo electrónico y registros de actividad de tu cuenta. De tus proyectos guardamos el contrato, las identidades de prueba con credenciales cifradas y los resultados de las ejecuciones."
+      },
+      "purpose": {
+        "title": "Finalidad",
+        "text": "Operar la plataforma, ejecutar las pruebas que solicitas, generar reportes y mantener la seguridad del servicio. No vendemos ni compartimos tus datos con fines comerciales."
+      },
+      "credentials": {
+        "title": "Credenciales de prueba",
+        "text": "Se guardan cifradas y nunca se muestran completas: solo sus últimos 4 caracteres. En evidencias y reportes aparecen enmascaradas."
+      },
+      "retention": {
+        "title": "Conservación y borrado",
+        "text": "Al eliminar un proyecto o tu cuenta, los datos se borran de la base de datos de inmediato. Los respaldos los sobrescriben en 7 días y, como máximo, en 30. La bitácora de auditoría se conserva 6 meses."
+      },
+      "audit": {
+        "title": "Bitácora y métricas anónimas",
+        "text": "La bitácora guarda qué acción ocurrió y cuándo, con un identificador interno de usuario y una huella del host, nunca contraseñas ni textos libres. Las métricas de uso son anónimas, no son datos personales y se conservan aunque elimines tu cuenta."
+      },
+      "rights": {
+        "title": "Derechos ARCO",
+        "text": "La cancelación la ejerces tú mismo eliminando tu cuenta desde Perfil. Para acceder a tus datos, rectificarlos u oponerte a su tratamiento, escribe al correo del equipo: privacidad@hindama.mx. Respondemos en un máximo de 20 días hábiles."
+      },
+      "changes": {
+        "title": "Cambios a este aviso",
+        "text": "Publicaremos cualquier cambio en esta página con su fecha de versión."
+      }
+    }
+  },
+  "Home": {
+    "meta": "Hindama · Evalúa tu API antes de publicarla",
+    "badge": "Para equipos que publican APIs REST",
+    "title": "Encuentra las fallas de tu API antes que alguien más",
+    "lead": "Hindama prueba la seguridad de tu API a partir de su contrato OpenAPI 3 y de quién debería poder hacer qué. Cada falla llega con la petición que la reproduce y te acompaña hasta que la corriges.",
+    "ctaPrimary": "Crear cuenta",
+    "ctaSecondary": "Ver qué prueba",
+    "example": {
+      "title": "Un usuario puede leer pedidos de otro usuario",
+      "request": "GET /orders/8f21 · Usuario B → 200 OK",
+      "advice": "Recomendación: valida que el pedido pertenezca al usuario del token.",
+      "caption": "Ejemplo de hallazgo y de su seguimiento entre ejecuciones."
+    },
+    "cycle": {
+      "detected": "Detectados",
+      "resolved": "Resueltos",
+      "regressions": "Regresiones"
+    },
+    "benefits": {
+      "title": "Qué ganas",
+      "early": {
+        "title": "Detección temprana",
+        "text": "Prueba en tu ambiente de pruebas antes de publicar, no después de un incidente."
+      },
+      "contract": {
+        "title": "Guiado por tu contrato",
+        "text": "Las pruebas salen de tu OpenAPI 3 y de la política de acceso que tú confirmas."
+      },
+      "evidence": {
+        "title": "Evidencia accionable",
+        "text": "Cada hallazgo trae la petición, la respuesta, su categoría OWASP y CWE, y cómo corregirlo."
+      },
+      "followUp": {
+        "title": "Seguimiento hasta el cierre",
+        "text": "Vuelve a probar y ve qué se resolvió, qué persiste y qué regresó."
+      }
+    },
+    "modules": {
+      "title": "Siete módulos de prueba",
+      "subtitle": "Basados en OWASP API Security Top 10 y CWE",
+      "auth": {
+        "name": "Autenticación",
+        "text": "Tokens ausentes, alterados o vencidos."
+      },
+      "config": {
+        "name": "Configuración",
+        "text": "Cabeceras de seguridad, CORS y mensajes de error."
+      },
+      "objects": {
+        "name": "Acceso a objetos",
+        "text": "Un usuario que lee o cambia objetos de otro."
+      },
+      "functions": {
+        "name": "Acceso a funciones",
+        "text": "Usuarios normales que llegan a funciones de administrador."
+      },
+      "properties": {
+        "name": "Propiedades",
+        "text": "Campos expuestos o asignables que no deberían serlo."
+      },
+      "resources": {
+        "name": "Consumo de recursos",
+        "text": "Paginación y tamaños sin límite."
+      },
+      "sql": {
+        "name": "Inyección SQL",
+        "text": "Parámetros que llegan sin filtrar a la base de datos."
+      }
+    },
+    "steps": {
+      "title": "De la falla al cierre",
+      "detect": {
+        "title": "Detecta",
+        "text": "Ejecuta los módulos con límites de velocidad que tú defines."
+      },
+      "fix": {
+        "title": "Corrige",
+        "text": "Usa la evidencia y la recomendación de cada hallazgo."
+      },
+      "retest": {
+        "title": "Vuelve a probar",
+        "text": "Repite la ejecución con la misma configuración en un paso."
+      },
+      "close": {
+        "title": "Cierra",
+        "text": "El proyecto se marca como concluido cuando no quedan fallas abiertas."
+      }
+    },
+    "responsible": {
+      "title": "Uso responsable",
+      "text": "Solo puedes probar APIs propias o con autorización por escrito de su dueño. Antes de ejecutar pruebas, Hindama te pide demostrar que controlas el dominio."
+    }
+  },
+  "Errors": {
+    "reference": "Referencia: {id}",
+    "401": {
+      "title": "Tu sesión terminó",
+      "text": "Por seguridad cerramos tu sesión después de un tiempo sin actividad. Inicia sesión de nuevo para continuar.",
+      "action": "Iniciar sesión"
+    },
+    "403": {
+      "title": "Esta sección no es para tu rol",
+      "text": "Los administradores ven estadísticas y la bitácora, pero no el contenido de los proyectos.",
+      "action": "Ir al panel"
+    },
+    "404": {
+      "title": "No encontramos esta página",
+      "text": "El enlace puede estar mal escrito, o lo que buscas ya no existe o no es tuyo.",
+      "action": "Ir a mis proyectos"
+    },
+    "429": {
+      "title": "Demasiadas solicitudes",
+      "text": "Hiciste más de 100 solicitudes en un minuto. Espera un momento y vuelve a intentarlo.",
+      "action": "Reintentar",
+      "wait": "Podrás reintentar en {time}."
+    },
+    "500": {
+      "title": "Algo salió mal de nuestro lado",
+      "text": "No es tu culpa. Ya lo registramos. Si se repite, escríbenos con este código de referencia.",
+      "action": "Reintentar"
+    },
+    "503": {
+      "title": "Servicio no disponible",
+      "text": "Una parte de Hindama no responde en este momento. Tus datos están a salvo; vuelve a intentarlo en unos minutos.",
+      "action": "Reintentar"
+    },
+    "403analyst": {
+      "title": "Esta sección no es para tu rol",
+      "text": "El panel de administración es solo para administradores. Tu cuenta es de analista.",
+      "action": "Ir a mis proyectos"
+    },
+    "403mfa": {
+      "title": "Falta tu segundo factor",
+      "text": "Como administrador debes activarlo antes de entrar al panel. Se configura en un minuto con una app de autenticación.",
+      "action": "Activar el segundo factor"
+    }
+  },
+  "Status": {
+    "project": {
+      "verified": "Verificado",
+      "pendingVerification": "Pendiente de verificación",
+      "verificationLost": "Verificación perdida",
+      "concluded": "Concluido"
+    },
+    "run": {
+      "queued": "En cola",
+      "running": "En curso",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "failed": "Fallida"
+    },
+    "identity": {
+      "active": "Activa",
+      "expiredCredential": "Credencial vencida",
+      "untested": "Sin probar"
+    },
+    "finding": {
+      "open": "Abierto",
+      "new": "Nuevo",
+      "persistent": "Persistente",
+      "regression": "Regresión",
+      "resolved": "Resuelto",
+      "acceptedRisk": "Riesgo aceptado"
+    }
+  },
+  "States": {
+    "reference": "Referencia {id}",
+    "retry": "Reintentar",
+    "retrying": "Reintentando…",
+    "noResults": {
+      "title": "Nada coincide con tus filtros",
+      "text": "Prueba con otra severidad o limpia los filtros para ver todo.",
+      "action": "Limpiar filtros"
+    },
+    "loadError": {
+      "title": "No pudimos cargar {subject}",
+      "text": "Es un problema nuestro. Tus datos están a salvo."
+    },
+    "forbidden": {
+      "title": "No tienes permiso para ver esto",
+      "text": "Este contenido pertenece a otra cuenta o a otra función.",
+      "action": "Volver a mis proyectos"
+    },
+    "rateLimited": {
+      "title": "Demasiadas solicitudes",
+      "text": "Espera un momento antes de volver a intentarlo.",
+      "retryIn": "Reintentar en {time}"
+    },
+    "unavailable": {
+      "title": "El servicio no está disponible",
+      "text": "Estamos restableciéndolo. Tus ejecuciones en curso no se pierden."
+    }
+  },
+  "Warnings": {
+    "persistent": "Persistente",
+    "momentary": "Solo ahora",
+    "url_no_tls": {
+      "title": "La URL base usa HTTP sin cifrar",
+      "text": "Las credenciales de prueba viajarían sin protección. Usa HTTPS si tu API lo permite; puedes continuar con HTTP si el entorno es de pruebas."
+    },
+    "url_unresolved": {
+      "title": "El host todavía no resuelve en DNS",
+      "text": "Guardamos el proyecto de todos modos. Podrás verificar la propiedad cuando el registro DNS exista."
+    },
+    "project_verification_lost": {
+      "title": "Cambiaste el host y se perdió la verificación",
+      "text": "Verifica de nuevo la propiedad antes de ejecutar pruebas. Cambiar solo la ruta o el puerto no afecta la verificación."
+    },
+    "contract_servers_mismatch": {
+      "title": "El contrato declara servidores distintos a tu URL base",
+      "text": "Las pruebas se dirigen siempre a la URL base del proyecto. Confirma que es la correcta."
+    },
+    "contract_external_reference": {
+      "title": "El contrato usa referencias externas",
+      "text": "No descargamos referencias a otros archivos o sitios, por eso esas partes no se analizan."
+    },
+    "contract_unparsed_element": {
+      "title": "Un elemento del contrato no se pudo interpretar",
+      "text": "Lo omitimos y importamos el resto. Ubicación en el documento:"
+    },
+    "contract_unchanged": {
+      "title": "Esta versión es idéntica a la anterior",
+      "text": "No hay cambios que registrar, así que no creamos una versión nueva."
+    }
+  },
+  "PendingResources": {
+    "title": "{count, plural, one {# recurso quedó sin eliminar en tu API} other {# recursos quedaron sin eliminar en tu API}}",
+    "text": "Hindama los creó durante esta ejecución y no pudo borrarlos. Elimínalos a mano para dejar tu entorno limpio. Los errores se muestran sin credenciales.",
+    "tableLabel": "Recursos pendientes de eliminar",
+    "operation": "Operación",
+    "location": "Ubicación",
+    "attempts": "Intentos",
+    "attemptsOf": "{done} de {total}",
+    "lastError": "Último error"
+  },
+  "FailedResources": {
+    "operationUnknown": "Operación que ya no está en el contrato",
+    "errors": {
+      "status": "El último intento respondió {status}",
+      "no_answer": "La API no respondió",
+      "no_identifier": "No se pudo leer el identificador del recurso creado",
+      "budget_exhausted": "Se agotó el límite de peticiones antes de borrarlo",
+      "not_deleted": "La ejecución terminó antes de borrarlo",
+      "run_interrupted": "La ejecución se interrumpió antes de borrarlo",
+      "unknown": "No se pudo borrar"
+    }
+  },
+  "EvidenceContext": {
+    "undeclared": "Campos que la respuesta trae sin declararlos: {names}",
+    "acceptedFields": "Campos protegidos que la API aceptó: {names}",
+    "createdResource": {
+      "deleted": "Hindama creó un recurso de prueba y lo borró.",
+      "failed": "Hindama creó un recurso de prueba y no pudo borrarlo: elimínalo a mano."
+    },
+    "requests": "{count, plural, one {Se envió # petición seguida} other {Se enviaron # peticiones seguidas}}",
+    "bodyBytes": "Cuerpo enviado de {count, number} bytes",
+    "operation": "Operación probada: {value}",
+    "parameter": "Parámetro probado: {value}",
+    "payload": "Carga de prueba: {value}"
+  },
+  "Dialogs": {
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "genericError": "No se pudo completar la acción",
+    "genericErrorText": "Inténtalo de nuevo.",
+    "typeToConfirm": "Escribe <code>{text}</code> para confirmar",
+    "unsaved": {
+      "title": "¿Salir sin guardar?",
+      "text": "Tienes cambios sin guardar en esta pantalla. Si sales ahora, se pierden.",
+      "heading": "Se perdería",
+      "stay": "Seguir editando",
+      "leave": "Salir sin guardar"
+    }
+  },
+  "AcceptRisk": {
+    "title": "Descartar este hallazgo",
+    "description": "Pasa a «Riesgo aceptado» y deja de contar entre los abiertos. Elige el motivo.",
+    "reason": "Motivo",
+    "reasons": {
+      "accepted_risk": "Riesgo aceptado",
+      "false_positive": "Falso positivo"
+    },
+    "justification": "Justificación",
+    "required": "(obligatoria)",
+    "placeholder": "Explica por qué se acepta este riesgo",
+    "help": "Se guarda en el historial del hallazgo, no en la bitácora.",
+    "missing": "Escribe una justificación.",
+    "submit": "Descartar hallazgo",
+    "reasonText": {
+      "accepted_risk": "El hallazgo es real y decides no corregirlo por ahora.",
+      "false_positive": "El hallazgo no es real: la API se comporta como se espera."
+    },
+    "notes": {
+      "audit": "En la bitácora queda la acción, no tu justificación: no se guardan textos libres.",
+      "stays": "Si la ejecución vuelve a detectarlo, seguirá aceptado.",
+      "revert": "Puedes revertirlo y volverá a «Persistente»."
+    }
+  },
+  "Sidebar": {
+    "label": "Navegación principal",
+    "home": "Hindama, inicio",
+    "collapse": "Contraer menú",
+    "expand": "Expandir menú",
+    "projects": "Proyectos",
+    "administration": "Administración",
+    "statistics": "Estadísticas",
+    "auditLog": "Bitácora",
+    "profile": "Perfil",
+    "signOut": "Cerrar sesión",
+    "project": {
+      "summary": "Resumen",
+      "verification": "Verificación",
+      "contract": "Contrato",
+      "identities": "Identidades",
+      "resources": "Recursos",
+      "policy": "Política",
+      "history": "Historial",
+      "findings": "Hallazgos",
+      "settings": "Ajustes"
+    }
+  },
+  "Breadcrumb": {
+    "label": "Ruta"
+  },
+  "UserMenu": {
+    "profile": "Perfil",
+    "language": "Idioma",
+    "signOut": "Cerrar sesión",
+    "signOutError": "No pudimos cerrar la sesión. Inténtalo de nuevo.",
+    "loading": "Cargando tu cuenta"
+  },
+  "Copy": {
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyWhat": "Copiar {what}",
+    "failed": "No se pudo copiar",
+    "failedText": "Selecciona el texto y cópialo a mano."
+  },
+  "HttpViewer": {
+    "truncated": "se recorta a partir de 10 KB · {kb} KB en total"
+  },
+  "RiskConfirmation": {
+    "title": "Activaste módulos que modifican datos o cargan el servidor",
+    "explanation": "Solo actúan sobre recursos que crea Hindama y que se eliminan al terminar. Confirma cada módulo: la confirmación se pide en cada ejecución.",
+    "confirmModule": "Confirmar {name}",
+    "understand": "Entiendo el riesgo y confirmo que este es un ambiente de pruebas.",
+    "pending": "{count, plural, one {Falta confirmar # módulo.} other {Faltan por confirmar # módulos.}}"
+  },
+  "HomeNotice": {
+    "dismiss": "Cerrar",
+    "local_sign_out": {
+      "title": "Cerraste sesión solo en este navegador",
+      "text": "No pudimos avisar al servicio de acceso. Si usas un equipo compartido, vuelve a intentar cerrar sesión más tarde."
+    }
+  },
+  "Profile": {
+    "title": "Perfil",
+    "role": "Rol",
+    "analyst": "Analista",
+    "admin": "Administrador",
+    "terms": "Términos de uso responsable",
+    "termsValue": "Versión {version}, aceptados el {date}",
+    "termsPending": "Aún no aceptas la versión {version}.",
+    "roleNote": "El rol lo asigna la plataforma y no se puede cambiar desde aquí.",
+    "security": "Seguridad",
+    "twoFactor": "Segundo factor (2FA)",
+    "twoFactorOn": "Activado.",
+    "twoFactorOff": "Desactivado. Te recomendamos activarlo.",
+    "enableTwoFactor": "Activar 2FA",
+    "disableTwoFactor": "Desactivar 2FA",
+    "twoFactorDisabled": "Segundo factor desactivado",
+    "account": "Cuenta",
+    "deleteAccount": {
+      "row": "Eliminar mi cuenta",
+      "rowText": "Borra tu cuenta y todos tus proyectos. No se puede deshacer.",
+      "button": "Eliminar cuenta",
+      "title": "Eliminar tu cuenta",
+      "description": "Esta acción es permanente. Para confirmar, escribe el correo de tu cuenta.",
+      "removed": "Se borra",
+      "removed1": "Tu cuenta y tu acceso a Hindama.",
+      "removed2": "Todos tus proyectos con sus contratos, identidades, ejecuciones y hallazgos.",
+      "kept": "Se conserva",
+      "kept1": "Estadísticas anónimas de la plataforma, sin datos que te identifiquen.",
+      "kept2": "La bitácora de acciones sensibles durante su plazo de retención.",
+      "confirm": "Eliminar mi cuenta",
+      "done": "Tu cuenta se eliminó",
+      "activeRun": "Hay una ejecución en curso",
+      "activeRunText": "Cancela las ejecuciones en cola o en curso de tus proyectos y vuelve a intentarlo.",
+      "mismatch": "El correo no coincide",
+      "incomplete": "Tus datos ya se borraron, falta cerrar la cuenta",
+      "incompleteText": "No se pudo terminar la baja. Pulsa «Reintentar»: se completa sin perder nada más.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "forbidden": "Tu rol no puede eliminar la cuenta desde aquí.",
+      "failed": "No se pudo eliminar la cuenta",
+      "reference": "Referencia: {id}"
+    },
+    "preferences": "Preferencias",
+    "language": "Idioma de la interfaz",
+    "languageNote": "Se recuerda en este navegador. Las fechas y los plazos siguen el idioma elegido.",
+    "subject": "tu perfil",
+    "loading": "Cargando tu perfil",
+    "twoFactorLoading": "Consultando…"
+  },
+  "DisableTwoFactor": {
+    "title": "Desactivar el segundo factor",
+    "description": "Escribe un código vigente de tu app de autenticación para confirmar que eres tú.",
+    "legend": "Código de la app",
+    "submit": "Desactivar 2FA",
+    "invalid": "El código no es correcto o ya venció."
+  },
+  "TwoFactorSetup": {
+    "title": "Activa el segundo factor",
+    "crumb": "Segundo factor",
+    "adminCrumb": "Administración",
+    "mandatoryHeading": "Configura el segundo factor para continuar",
+    "mandatoryTitle": "Tu rol requiere segundo factor",
+    "mandatoryText": "Como administrador debes configurarlo antes de entrar al panel. No se puede omitir.",
+    "step1": {
+      "title": "Instala una app de autenticación",
+      "text": "Cualquiera que genere códigos de 6 dígitos (TOTP) sirve."
+    },
+    "step2": {
+      "title": "Escanea este código",
+      "qrLabel": "Código QR para agregar Hindama a tu app",
+      "manual": "¿No puedes escanear? Escribe esta clave en la app:",
+      "keyLabel": "clave",
+      "failed": "No pudimos generar la clave. Inténtalo de nuevo.",
+      "loading": "Generando el código QR"
+    },
+    "step3": {
+      "title": "Confirma con un código",
+      "text": "Escribe el código que muestra la app para comprobar que quedó bien configurada.",
+      "legend": "Código de 6 dígitos"
+    },
+    "confirm": "Confirmar",
+    "confirming": "Confirmando…",
+    "cancel": "Cancelar",
+    "enabled": "Segundo factor activado",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código ya venció. Escribe el que aparece ahora en tu app.",
+      "networkTitle": "No pudimos activar el segundo factor",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "SecondFactor": {
+    "meta": "Código de segundo factor",
+    "metaAdmin": "Código de segundo factor · administradores",
+    "heroTitle": "Un paso más",
+    "intro": "Tu cuenta tiene activado el segundo factor. Lo pedimos en cada inicio de sesión.",
+    "introAdmin": "Las cuentas de administrador siempre usan segundo factor. Escribe el código de tu app para entrar al panel.",
+    "tipTitle": "Abre tu app de autenticación",
+    "tipText": "Por ejemplo Google Authenticator, Microsoft Authenticator o 1Password. Busca la entrada «Hindama».",
+    "heading": "Código de 6 dígitos",
+    "subheading": "El código cambia cada 30 segundos.",
+    "legend": "Código de la app",
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "back": "Volver a iniciar sesión",
+    "errors": {
+      "invalid": "El código no es correcto. Revísalo e inténtalo de nuevo.",
+      "expired": "El código anterior ya venció. Escribe el que aparece ahora en tu app.",
+      "locked": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "networkTitle": "No pudimos verificar el código",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "sessionExpired": "Pasaron más de 3 minutos desde que escribiste tu contraseña. Vuelve a iniciar sesión."
+    }
+  },
+  "AdminSignIn": {
+    "meta": "Acceso de administradores",
+    "heroTitle": "Panel de administración",
+    "heroLead": "Estadísticas de uso de la plataforma y bitácora de auditoría. El acceso es independiente del de los analistas y siempre pide un segundo factor.",
+    "steps": {
+      "credentials": {
+        "title": "Correo y contraseña",
+        "text": "Tu cuenta de administrador."
+      },
+      "code": {
+        "title": "Código de verificación",
+        "text": "Obligatorio en cada inicio de sesión."
+      },
+      "panel": {
+        "title": "Panel de estadísticas",
+        "text": "Con la bitácora de auditoría a un clic."
+      }
+    },
+    "noSelfAssign": "Sin autoasignación de rol: las cuentas de administrador las da de alta el equipo de la plataforma.",
+    "heading": "Acceso de administradores",
+    "subheading": "Entra con tu cuenta de administrador. Después te pediremos el código de verificación.",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "nombre@empresa.com",
+    "password": "Contraseña",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "submit": "Continuar",
+    "submitting": "Entrando…",
+    "analyst": "¿Eres analista?",
+    "analystLink": "Inicia sesión aquí",
+    "audit": "Los intentos de acceso quedan registrados en la bitácora de auditoría.",
+    "errors": {
+      "emailRequired": "Escribe tu correo electrónico.",
+      "emailInvalid": "Escribe un correo con formato válido, por ejemplo nombre@empresa.com.",
+      "passwordRequired": "Escribe tu contraseña.",
+      "invalid": "El correo o la contraseña no son correctos.",
+      "networkTitle": "No pudimos iniciar sesión",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  },
+  "ProjectNav": {
+    "projects": "Proyectos",
+    "done": "Hecho",
+    "pending": "Pendiente",
+    "operations": "{count} op.",
+    "availableAfterVerification": "Disponible tras verificar",
+    "subject": "el proyecto"
+  },
+  "Projects": {
+    "title": "Proyectos",
+    "newProject": "Nuevo proyecto",
+    "summary": {
+      "projects": "Proyectos",
+      "open": "Hallazgos abiertos",
+      "pending": "Pendiente de verificación"
+    },
+    "orderBy": "Ordenar por",
+    "order": {
+      "lastRun": "Última ejecución",
+      "name": "Nombre",
+      "createdAt": "Fecha de creación"
+    },
+    "open": "Abrir",
+    "verify": "Verificar propiedad",
+    "settings": "Ajustes",
+    "delete": "Eliminar",
+    "moreActions": "Más acciones para {name}",
+    "openFindings": "Hallazgos abiertos",
+    "lastRun": "Última ejecución",
+    "noRuns": "Sin ejecuciones",
+    "addAnother": {
+      "title": "Agrega otra API",
+      "text": "Crea el proyecto, carga el contrato, verifica que es tuya y ejecuta las pruebas."
+    },
+    "empty": {
+      "title": "Aún no tienes proyectos",
+      "text": "Crea tu primer proyecto para evaluar una API con su contrato OpenAPI.",
+      "action": "Crear proyecto"
+    },
+    "deleteDialog": {
+      "title": "Eliminar el proyecto «{name}»",
+      "description": "Esta acción no se puede deshacer. Los recursos que la plataforma creó en tu API se eliminarán antes.",
+      "removed": "Se borra",
+      "removed1": "El contrato, sus versiones, identidades y la política de acceso",
+      "removed2": "Ejecuciones, hallazgos y reportes",
+      "confirm": "Eliminar proyecto",
+      "done": "Proyecto «{name}» eliminado",
+      "activeRun": "Hay una ejecución en curso",
+      "activeRunText": "Cancélala antes de eliminar el proyecto.",
+      "mismatch": "El nombre no coincide con el del proyecto.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "failed": "No pudimos eliminar el proyecto"
+    },
+    "greetingName": "Hola, {name}.",
+    "subject": "tus proyectos",
+    "loading": "Cargando tus proyectos",
+    "reference": "Referencia: {id}",
+    "pagination": {
+      "label": "Páginas de proyectos",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "status": "Página {page} de {pages}"
+    }
+  },
+  "AcceptTerms": {
+    "pageTitle": "Antes de tu primer proyecto",
+    "title": "Términos de uso responsable",
+    "lead": "Hindama envía peticiones reales a la API que registres. Por eso te pedimos aceptarlas. Versión vigente: {version}. Si publicamos una versión nueva, te las mostraremos otra vez antes de seguir.",
+    "rules": {
+      "authorized": {
+        "title": "Solo APIs autorizadas",
+        "text": "Propias o con permiso por escrito de su dueño. Probar APIs ajenas sin permiso está prohibido."
+      },
+      "ownership": {
+        "title": "Demuestras que es tuya",
+        "text": "Verificas el host con un archivo o un registro DNS antes de ejecutar."
+      },
+      "testEnv": {
+        "title": "Prefiere un ambiente de pruebas",
+        "text": "Algunos módulos crean datos o aumentan la carga. Úsalos fuera de producción."
+      },
+      "logged": {
+        "title": "Todo queda registrado",
+        "text": "Las acciones sensibles se guardan en una bitácora que no se puede modificar."
+      }
+    },
+    "readFull": "Leer los términos completos",
+    "accept": "Acepto los términos de uso responsable. Solo probaré APIs propias o con autorización por escrito de su dueño.",
+    "recorded": "Guardamos la versión y la fecha y hora de tu aceptación.",
+    "cancel": "Cancelar",
+    "continue": "Aceptar y continuar",
+    "accepted": "Términos aceptados",
+    "subject": "los términos vigentes",
+    "loading": "Cargando los términos",
+    "outdated": "Se publicó una versión nueva de los términos. Revísala y vuelve a aceptarla.",
+    "errorTitle": "No pudimos registrar tu aceptación",
+    "errorText": "Revisa tu conexión e inténtalo de nuevo.",
+    "rateLimited": "Demasiados intentos. Espera un momento.",
+    "reference": "Referencia: {id}",
+    "retry": "Reintentar"
+  },
+  "NewProject": {
+    "stepsLabel": "Pasos",
+    "steps": {
+      "data": {
+        "title": "Datos del proyecto",
+        "note": "En curso"
+      },
+      "contract": {
+        "title": "Contrato OpenAPI",
+        "note": "Se puede omitir"
+      },
+      "verification": {
+        "title": "Verificación",
+        "note": "Se puede omitir"
+      },
+      "done": {
+        "title": "Listo",
+        "note": "Ir al dashboard"
+      }
+    },
+    "form": {
+      "title": "Datos del proyecto",
+      "lead": "Al crearlo quedará como «Pendiente de verificación» hasta que demuestres que la API es tuya.",
+      "name": "Nombre",
+      "description": "Descripción",
+      "optional": "(opcional)",
+      "url": "URL base",
+      "urlHint": "Todas las pruebas se envían a esta dirección, aunque el contrato declare otros servidores.",
+      "cancel": "Cancelar",
+      "submit": "Crear proyecto",
+      "creating": "Creando…"
+    },
+    "created": "Proyecto «{name}» creado",
+    "skip": "Omitir por ahora",
+    "panels": {
+      "contract": {
+        "title": "Carga el contrato",
+        "text": "Importa el contrato OpenAPI 3 en JSON o YAML para que Hindama conozca las operaciones de tu API. Puedes omitir este paso y hacerlo después desde el dashboard.",
+        "action": "Cargar contrato"
+      },
+      "verification": {
+        "title": "Verifica que la API es tuya",
+        "text": "Publica un código en tu host con un archivo o un registro DNS. Hasta verificarlo no podrás ejecutar pruebas, pero puedes volver desde el dashboard.",
+        "action": "Verificar propiedad"
+      },
+      "done": {
+        "title": "Tu proyecto está listo",
+        "text": "Lo que omitiste queda como pendiente en el dashboard del proyecto.",
+        "action": "Ir al dashboard"
+      }
+    },
+    "help": {
+      "urlTitle": "¿Qué URL base puedo usar?",
+      "urlText": "Una dirección pública con HTTP o HTTPS, idealmente de tu ambiente de pruebas. No se aceptan:",
+      "prohibited": {
+        "private": "Redes privadas",
+        "loopback": "Loopback",
+        "linkLocal": "Enlace local",
+        "metadata": "Metadatos de nube"
+      },
+      "nextTitle": "Después de crearlo",
+      "nextText": "Cargas el contrato y verificas la propiedad. Puedes omitir esos pasos y volver a ellos desde el dashboard, pero no podrás ejecutar pruebas hasta verificar."
+    },
+    "errors": {
+      "nameRequired": "Escribe el nombre del proyecto.",
+      "urlRequired": "Escribe la URL base de tu API.",
+      "url": {
+        "invalid": "Escribe una URL completa, por ejemplo https://api.ejemplo.mx.",
+        "protocol": "Solo se aceptan direcciones HTTP o HTTPS.",
+        "private": "No se aceptan direcciones de redes privadas.",
+        "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
+        "linkLocal": "No se aceptan direcciones de enlace local.",
+        "metadata": "No se aceptan direcciones de metadatos de la nube.",
+        "destination": "La API no acepta esa dirección: apunta a una red privada, local o de metadatos."
+      },
+      "networkTitle": "No pudimos crear el proyecto",
+      "networkText": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "nameInvalid": "El nombre admite hasta 100 caracteres y sin caracteres de control.",
+      "descriptionInvalid": "La descripción admite hasta 500 caracteres y sin caracteres de control.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "reference": "Referencia: {id}"
+    }
+  },
+  "Dashboard": {
+    "running": {
+      "title": "La ejecución sigue en curso",
+      "action": "Ver ejecución",
+      "textActive": "Las pruebas continúan. Vuelve a su progreso cuando quieras."
+    },
+    "unverified": {
+      "title": "Falta verificar la propiedad",
+      "text": "Hasta que demuestres que la API es tuya no podrás ejecutar pruebas.",
+      "action": "Verificar"
+    },
+    "hero": {
+      "none": "Aún sin ejecuciones",
+      "open": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
+      "noneText": "Configura el proyecto y lanza tu primera prueba completa para ver resultados aquí.",
+      "cleanText": "La última ejecución no encontró problemas con los módulos elegidos.",
+      "text": "Revisa los hallazgos, corrígelos y vuelve a probar.",
+      "criticalOpen": "{count, plural, one {Uno es crítico.} other {# son críticos.}} Corrígelos y vuelve a probar."
+    },
+    "fullTest": "Prueba completa",
+    "blocked": {
+      "unverified": "Falta verificar la propiedad del host.",
+      "goVerify": "Ir a verificación",
+      "noContract": "Importa un contrato OpenAPI primero.",
+      "goContract": "Importar contrato",
+      "active": "Ya hay una ejecución en curso en este proyecto.",
+      "viewRun": "Ver ejecución",
+      "identities": "Necesitas al menos 2 identidades con recursos.",
+      "addIdentity": "Agregar identidad",
+      "reviewPolicy": "Revisar política",
+      "resources": "Registra los recursos de cada identidad.",
+      "goResources": "Registrar recursos",
+      "policyPending": "Confirma la política de acceso propuesta.",
+      "notImplemented": "Disponible en una versión próxima."
+    },
+    "stats": {
+      "requests": "Peticiones",
+      "minutes": "Duración (m:ss)",
+      "modules": "Módulos ejecutados",
+      "lastRun": "Última ejecución"
+    },
+    "severity": {
+      "title": "Abiertos por severidad",
+      "viewAll": "Ver los {count} hallazgos",
+      "empty": "Aparecerán aquí cuando termine la primera ejecución."
+    },
+    "policy": {
+      "title": "Política de acceso",
+      "empty": "Importa el contrato para que Hindama proponga quién debería poder hacer qué.",
+      "review": "Revisar política",
+      "pendingText": "Hay propuestas sin confirmar. Las pendientes no se usan en las pruebas.",
+      "confirmedText": "La política de acceso está confirmada."
+    },
+    "modules": {
+      "title": "Módulos de prueba",
+      "results": "Resultados de la ejecución n.º {number} · {date}",
+      "names": {
+        "auth": "Autenticación",
+        "config": "Configuración",
+        "objects": "Acceso a objetos",
+        "functions": "Acceso a funciones",
+        "properties": "Propiedades",
+        "resources": "Consumo de recursos",
+        "sql": "Inyección SQL"
+      },
+      "notes": {
+        "auth": "Requiere URL y contrato",
+        "config": "Requiere URL y contrato",
+        "objects": "2 identidades con recursos",
+        "functions": "Requiere una identidad administradora",
+        "properties": "Se confirma en cada ejecución",
+        "resources": "Se confirma en cada ejecución",
+        "sql": "Se confirma en cada ejecución · CWE-89"
+      },
+      "blocked": "Sin identidad administradora: agrega una",
+      "notRun": "No se ejecutó",
+      "run": "Ejecutar",
+      "runTitle": "Ejecución de «{name}» solicitada",
+      "addIdentity": "Agregar identidad",
+      "emptyTitle": "Aún no hay resultados",
+      "emptyText": "Verifica la propiedad y ejecuta tu primera prueba para ver cada módulo aquí.",
+      "ran": "Incluido en la última ejecución"
+    },
+    "repeat": "Repetir última ejecución"
+  },
+  "ProjectSettings": {
+    "crumb": "Ajustes",
+    "pageTitle": "Ajustes del proyecto",
+    "title": "Datos del proyecto",
+    "name": "Nombre",
+    "description": "Descripción",
+    "optional": "(opcional)",
+    "url": "URL base",
+    "urlHint": "Todas las pruebas se envían a esta dirección.",
+    "before": "Antes:",
+    "hostChanged": {
+      "title": "Cambiaste el host",
+      "text": "Al guardar, el proyecto volverá a «Pendiente de verificación» y no podrás ejecutar pruebas hasta verificar el nuevo host. Solo cambia la verificación si cambia el host exacto: la ruta y el puerto no cuentan. Te pediremos confirmarlo."
+    },
+    "discard": "Descartar cambios",
+    "save": "Guardar cambios",
+    "saved": "Cambios guardados",
+    "hostDialog": {
+      "title": "¿Cambiar el host del proyecto?",
+      "text": "El proyecto volverá a «Pendiente de verificación» y no podrás ejecutar pruebas hasta verificar el nuevo host.",
+      "confirm": "Guardar y perder la verificación"
+    },
+    "delete": {
+      "title": "Eliminar proyecto",
+      "lead": "Se borrará de forma permanente, en un máximo de 30 días:",
+      "runs": "Ejecuciones, {findings} hallazgos y sus reportes",
+      "button": "Eliminar proyecto",
+      "contractAll": "El contrato y todas sus versiones",
+      "identitiesAll": "Las identidades, sus credenciales, los recursos y la política de acceso"
+    },
+    "deleteDialog": {
+      "title": "Eliminar el proyecto «{name}»",
+      "description": "Esta acción no se puede deshacer. Los recursos que la plataforma creó en tu API se eliminarán antes.",
+      "removed": "Se borra",
+      "removed1": "El contrato, sus versiones, identidades y la política de acceso",
+      "removed2": "Ejecuciones, hallazgos y reportes"
+    },
+    "deleted": "Proyecto «{name}» eliminado",
+    "errors": {
+      "nameRequired": "Escribe el nombre del proyecto.",
+      "urlRequired": "Escribe la URL base de tu API.",
+      "url": {
+        "invalid": "Escribe una URL completa, por ejemplo https://api.ejemplo.mx.",
+        "protocol": "Solo se aceptan direcciones HTTP o HTTPS.",
+        "private": "No se aceptan direcciones de redes privadas.",
+        "loopback": "No se aceptan direcciones locales (localhost o 127.0.0.1).",
+        "linkLocal": "No se aceptan direcciones de enlace local.",
+        "metadata": "No se aceptan direcciones de metadatos de la nube.",
+        "destination": "La API no acepta esa dirección: apunta a una red privada, local o de metadatos."
+      },
+      "nameInvalid": "El nombre admite hasta 100 caracteres y sin caracteres de control.",
+      "descriptionInvalid": "La descripción admite hasta 500 caracteres y sin caracteres de control.",
+      "saveTitle": "No pudimos guardar los cambios",
+      "saveText": "Revisa tu conexión e inténtalo de nuevo.",
+      "rateLimited": "Demasiados intentos. Espera un momento.",
+      "reference": "Referencia: {id}",
+      "checkFields": "Revisa los campos marcados."
+    }
+  },
+  "Verification": {
+    "crumb": "Verificación",
+    "title": "Verifica que la API es tuya",
+    "verifiedTitle": "Propiedad verificada",
+    "verifiedText": "Comprobamos que controlas {host}. Se vuelve a comprobar antes de cada ejecución.",
+    "codeTitle": "Código de verificación de este proyecto",
+    "copyCode": "Copiar código",
+    "codeText": "Publícalo en el host <code>{host}</code> con uno de los dos métodos. Solo quien controla el dominio puede hacerlo.",
+    "methodTitle": "Elige cómo publicarlo",
+    "methodLabel": "Método de verificación",
+    "file": {
+      "tab": "Archivo en el servidor",
+      "step1": "Crea un archivo de texto cuyo único contenido sea el código.",
+      "step2": "Publícalo en esta dirección exacta:",
+      "step3": "Comprueba que se abre en el navegador y pulsa Verificar.",
+      "urlLabel": "dirección del archivo"
+    },
+    "dns": {
+      "tab": "Registro DNS TXT",
+      "step1": "En el panel de tu proveedor DNS, crea un registro TXT con este nombre de host:",
+      "step2": "Usa el código como valor del registro:",
+      "step3": "Guarda el registro y pulsa Verificar.",
+      "hostLabel": "nombre de host",
+      "valueLabel": "valor del registro",
+      "noteTitle": "La propagación puede tardar",
+      "noteText": "Un registro DNS nuevo puede tardar desde minutos hasta algunas horas en ser visible. Si falla, espera un poco y vuelve a intentarlo."
+    },
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "lastAttempt": "Último intento hace unos segundos",
+    "noAttempts": "Aún no has intentado verificar",
+    "success": "Propiedad verificada",
+    "failure": {
+      "expected": "Esperábamos",
+      "found": "Encontramos",
+      "howTitle": "Cómo corregirlo:",
+      "mismatch": {
+        "title": "No pudimos verificar: el contenido del archivo es distinto",
+        "how": "deja solo el código en el archivo, sin espacios ni saltos de línea al final, y vuelve a pulsar Verificar."
+      },
+      "notFound": {
+        "title": "No pudimos verificar: no encontramos el archivo",
+        "how": "comprueba que la dirección abre el archivo en el navegador."
+      },
+      "txtMissing": {
+        "title": "No pudimos verificar: no encontramos el registro TXT",
+        "how": "revisa el nombre y el valor del registro; si lo acabas de crear, espera a que se propague."
+      },
+      "connectionError": {
+        "title": "No pudimos verificar: no logramos conectar con el host",
+        "how": "comprueba que el host responde desde internet y vuelve a intentarlo."
+      },
+      "destinationNotAllowed": {
+        "title": "No pudimos verificar: el host resuelve a una dirección no permitida",
+        "how": "usa un host público; las direcciones internas o privadas se bloquean y quedan en la bitácora."
+      }
+    },
+    "help": {
+      "whyTitle": "Por qué lo pedimos",
+      "whyText": "Hindama solo prueba APIs de quien puede demostrar que las controla. Así evitamos que se use para atacar servicios ajenos.",
+      "everyRunTitle": "Se revisa en cada ejecución",
+      "everyRunText": "La comprobación puede tardar hasta 20 segundos. Antes de cada ejecución volvemos a comprobar el código. Si lo retiras, la ejecución se cancela y el proyecto vuelve a «Pendiente de verificación».",
+      "commonTitle": "Fallas comunes",
+      "common1": "Archivo no encontrado (404)",
+      "common2": "Contenido distinto al código",
+      "common3": "Registro DNS ausente",
+      "common4": "Error de conexión con el host",
+      "common5": "El host resuelve a una dirección no permitida: se bloquea y queda en la bitácora"
+    },
+    "subject": "la verificación",
+    "rateLimited": "Demasiados intentos. Espera un momento y vuelve a verificar.",
+    "failed": "No pudimos verificar en este momento",
+    "reference": "Referencia: {id}"
+  },
+  "Contract": {
+    "crumb": "Contrato",
+    "title": "Contrato OpenAPI",
+    "history": "Historial de versiones",
+    "current": "Versión actual · importada el {date}",
+    "meta": "Formato {format} · origen: {source} · OpenAPI {openapi} · huella {hash}",
+    "summary": {
+      "openapi": "OpenAPI",
+      "operations": "Operaciones",
+      "version": "Versión vigente"
+    },
+    "empty": {
+      "title": "Aún no hay contrato",
+      "text": "Importa el contrato OpenAPI 3 de tu API para que Hindama conozca sus operaciones y proponga una política de acceso."
+    },
+    "import": {
+      "title": "Importar nueva versión",
+      "versions": "Ver {count} versiones",
+      "sourceLabel": "Origen del contrato",
+      "file": "Subir archivo",
+      "url": "Desde URL",
+      "drop": "Arrastra el archivo o elígelo",
+      "limits": ".json, .yaml o .yml · máximo 5 MB · OpenAPI 3.0 o 3.1",
+      "urlLabel": "URL del contrato",
+      "urlHint": "Debe ser una dirección pública que devuelva el contrato.",
+      "submit": "Importar y comparar",
+      "importing": "Importando…"
+    },
+    "imported": "Contrato importado",
+    "importedText": "Revisa los avisos y confirma la política de acceso.",
+    "next": "Siguiente paso: verificar la propiedad del host",
+    "warnings": "{count, plural, one {# aviso de esta versión} other {# avisos de esta versión}}",
+    "operations": {
+      "title": "{count} operaciones",
+      "filterLabel": "Filtrar por método",
+      "all": "Todos",
+      "security": {
+        "public": "pública"
+      },
+      "detail": "Detalle de {method} {path}",
+      "params": "Parámetros",
+      "declaredSecurity": "Seguridad declarada",
+      "seePolicy": "Ver en la política de acceso",
+      "none": "Ninguna operación coincide.",
+      "showing": "Mostrando {shown} de {total}",
+      "subject": "las operaciones",
+      "paramCount": "{count, plural, =0 {sin parámetros} one {# parámetro} other {# parámetros}}",
+      "noParams": "Sin parámetros.",
+      "param": "{location} · {type}{required, select, yes {} other {, opcional}}",
+      "location": {
+        "path": "ruta",
+        "query": "consulta",
+        "header": "cabecera",
+        "cookie": "cookie"
+      },
+      "body": "Cuerpo",
+      "noBody": "Sin cuerpo.",
+      "securityType": {
+        "http_bearer": "HTTP bearer",
+        "http_basic": "HTTP basic",
+        "api_key": "clave de API",
+        "oauth2": "OAuth 2",
+        "openid_connect": "OpenID Connect",
+        "other": "otro"
+      },
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "errors": {
+      "type": "El archivo debe ser .json, .yaml o .yml.",
+      "size": "El archivo supera los 5 MB.",
+      "noFile": "Elige un archivo de contrato.",
+      "url": "Escribe una URL completa del contrato.",
+      "invalid": "El documento no es un OpenAPI válido. Revisa las ubicaciones señaladas.",
+      "unsupported": "Solo se aceptan contratos OpenAPI 3.0 y 3.1.",
+      "unreachable": "No pudimos descargar el contrato desde esa URL.",
+      "notAllowed": "Esa URL apunta a una dirección no permitida.",
+      "failed": "No pudimos importar el contrato.",
+      "rateLimited": "Demasiadas importaciones seguidas. Espera un momento.",
+      "reference": "Referencia: {id}"
+    },
+    "source": {
+      "file": "archivo",
+      "url": "URL"
+    },
+    "untitled": "Contrato sin título",
+    "subject": "la versión del contrato",
+    "unchanged": "El documento es idéntico a la versión vigente; no se creó otra.",
+    "importedTextClean": "Confirma la política de acceso."
+  },
+  "ContractVersions": {
+    "crumb": "Versiones",
+    "title": "Versiones del contrato",
+    "count": "{count, plural, one {# versión} other {# versiones}}",
+    "current": "Actual",
+    "originUrl": "URL",
+    "originFile": "Archivo",
+    "operations": "{count} operaciones",
+    "warningsOf": "Avisos de {version}",
+    "back": "Volver a la versión actual",
+    "diffTitle": "{from} frente a {to}",
+    "summary": {
+      "added": "{count, plural, one {Agregada} other {Agregadas}}",
+      "modified": "{count, plural, one {Modificada} other {Modificadas}}",
+      "removed": "{count, plural, one {Eliminada} other {Eliminadas}}"
+    },
+    "reviewPolicy": {
+      "title": "Revisa la política",
+      "text": "Las {count} operaciones nuevas tienen una plantilla propuesta que no se usará en las pruebas hasta que la confirmes.",
+      "link": "Ir a la política"
+    },
+    "changes": "Cambios por operación",
+    "kind": {
+      "added": "Agregada",
+      "modified": "Modificada",
+      "removed": "Eliminada"
+    },
+    "name": "Versión {number}",
+    "viewing": "Viendo",
+    "subject": "las versiones del contrato",
+    "versionSubject": "la versión",
+    "first": {
+      "title": "Primera versión",
+      "text": "La versión {number} es la primera importada: no hay otra con la cual compararla."
+    },
+    "noChanges": "Sin cambios en las operaciones.",
+    "empty": {
+      "title": "Aún no hay contrato",
+      "text": "Importa un contrato para ver sus versiones.",
+      "action": "Importar contrato"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
+  },
+  "Identities": {
+    "crumb": "Identidades",
+    "title": "Identidades",
+    "add": "Agregar identidad",
+    "lead": "Cuentas de prueba de tu API. Hindama se autentica como cada una para comprobar quién puede hacer qué. Usa cuentas de un ambiente de pruebas, nunca de clientes reales.",
+    "requirements": {
+      "title": "Lo que necesita cada módulo",
+      "objects": {
+        "title": "Acceso a objetos",
+        "ok": "Dos identidades autenticadas, cada una con recursos propios. Lo cumples.",
+        "missing": "Necesitas dos identidades autenticadas, cada una con recursos propios.",
+        "noResources": "Ya tienes dos identidades, pero falta que cada una tenga recursos propios. Descúbrelos o agrégalos en «Recursos»."
+      },
+      "functions": {
+        "title": "Acceso a funciones",
+        "ok": "Una identidad normal y una con rol de administrador. Lo cumples.",
+        "missing": "Una identidad normal y una con rol de administrador. Te falta la administradora."
+      }
+    },
+    "count": "{count, plural, one {# identidad} other {# identidades}}",
+    "roles": {
+      "admin": "Administrador",
+      "user": "Usuario",
+      "other": "Otro",
+      "anonymous": "Sin autenticar",
+      "named": "{role}: {name}"
+    },
+    "auth": {
+      "none": "No envía credenciales",
+      "login": "Login automático",
+      "bearer": "Token Bearer",
+      "cookie": "Cookie de sesión",
+      "header": "Cabecera personalizada"
+    },
+    "status": {
+      "active": "Activa",
+      "expiredCredential": "Credencial vencida",
+      "untested": "Sin probar"
+    },
+    "noResources": "0 · sin recursos",
+    "alwaysExists": "Siempre existe",
+    "edit": "Editar",
+    "test": {
+      "button": "Probar",
+      "okTitle": "{name}: la credencial funciona",
+      "failedTitle": "{name}: la credencial falló",
+      "okText": "La API respondió {code} en {path}.",
+      "failure": {
+        "rejected": "La API respondió {code}. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
+    },
+    "delete": {
+      "label": "Eliminar {name}",
+      "title": "Eliminar la identidad «{name}»",
+      "text": "Esta acción no se puede deshacer.",
+      "heading": "Qué pasa",
+      "item1": "Se borran su credencial y sus recursos.",
+      "item2": "Sus hallazgos se conservan; los abiertos pasan a resueltos.",
+      "confirm": "Eliminar identidad",
+      "done": "Identidad «{name}» eliminada"
+    },
+    "deleteNote": "Al eliminar una identidad se borran su credencial y sus recursos; sus hallazgos se conservan, pero los abiertos pasan a resueltos.",
+    "subject": "las identidades",
+    "tested": "probada {time}",
+    "errors": {
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos completar la acción.",
+      "reference": "Referencia: {id}"
+    }
+  },
+  "IdentityForm": {
+    "newCrumb": "Nueva",
+    "newTitle": "Agregar identidad",
+    "editTitle": "Editar identidad",
+    "name": "Nombre",
+    "role": {
+      "label": "Rol declarado",
+      "admin": "Administrador",
+      "user": "Usuario",
+      "other": "Otro",
+      "hint": "El rol que esta cuenta tiene en tu API. Se usa para comparar con la política.",
+      "labelName": "Nombre del rol en tu API (opcional)"
+    },
+    "auth": {
+      "label": "Forma de autenticación",
+      "login": {
+        "title": "Login automático",
+        "note": "Usuario y contraseña"
+      },
+      "bearer": {
+        "title": "Token Bearer",
+        "note": "Authorization: Bearer"
+      },
+      "cookie": {
+        "title": "Cookie de sesión",
+        "note": "Nombre y valor"
+      },
+      "header": {
+        "title": "Cabecera personalizada",
+        "note": "Nombre y valor"
+      }
+    },
+    "fields": {
+      "password": "Contraseña",
+      "token": "Token",
+      "cookieName": "Nombre de la cookie",
+      "headerName": "Nombre de la cabecera",
+      "username": "Usuario",
+      "value": "Valor",
+      "credential": "Credencial",
+      "loginOperation": "Operación de login",
+      "chooseOperation": "Elige la operación de login"
+    },
+    "endsIn": "Termina en ••••{last4}",
+    "replace": "Reemplazar",
+    "loginNote": "Durante la ejecución obtenemos y renovamos el token automáticamente.",
+    "test": {
+      "title": "Probar credencial",
+      "run": "Probar ahora",
+      "testing": "Probando…",
+      "okText": "La credencial funciona con {method} {path}.",
+      "savedOnly": "Prueba la credencial guardada con una operación GET protegida que elige el sistema.",
+      "answered": "La API respondió {code}.",
+      "failure": {
+        "rejected": "La operación no respondió 2xx. Reemplaza la credencial y vuelve a probar.",
+        "login_failed": "La operación de login no respondió 2xx o no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida."
+      }
+    },
+    "cancel": "Cancelar",
+    "save": "Guardar identidad",
+    "saved": "Identidad «{name}» guardada",
+    "help": {
+      "encryptedTitle": "Tus credenciales están cifradas",
+      "encryptedText": "Las guardamos con AES-256-GCM. Después de guardarlas solo verás los últimos 4 caracteres, y en evidencias y reportes aparecen enmascaradas.",
+      "whichTitle": "¿Qué forma elijo?",
+      "login": "si los tokens vencen pronto.",
+      "bearer": "si tienes un token de larga duración.",
+      "cookie": "si tu API usa sesiones.",
+      "header": "para llaves de API."
+    },
+    "errors": {
+      "nameRequired": "Escribe el nombre de la identidad.",
+      "fieldRequired": "Este campo es obligatorio.",
+      "nameTaken": "Ya hay una identidad con ese nombre. Elige otro.",
+      "length": "El texto es demasiado largo.",
+      "format": "El valor tiene caracteres no permitidos.",
+      "fieldNameReserved": "Esa cabecera la controla la plataforma; usa otra.",
+      "loginOperation": "Elige la operación de login.",
+      "limitReached": "Ya hay 20 identidades en este proyecto, contando la anónima.",
+      "rateLimited": "Demasiadas peticiones. Espera un momento.",
+      "failed": "No pudimos guardar la identidad.",
+      "reference": "No pudimos guardar la identidad. Referencia: {id}",
+      "notVerified": "Verifica la propiedad del host antes de probar credenciales.",
+      "noTestOperation": "No hay una operación GET protegida sin parámetros de ruta con la cual probar."
+    },
+    "editCrumb": "Editar"
+  },
+  "Resources": {
+    "crumb": "Recursos",
+    "title": "Recursos por identidad",
+    "lead": "Indica qué objetos de tu API pertenecen a cada identidad. Así Acceso a objetos puede comprobar si una identidad alcanza los de otra.",
+    "origin": {
+      "discovered": "Descubierto",
+      "manual": "Agregado a mano"
+    },
+    "status": {
+      "confirmed": "Confirmado",
+      "pending": "Por confirmar"
+    },
+    "confirm": "Confirmar",
+    "params": {
+      "title": "1. Identificadores de recursos",
+      "lead": "Parámetros de ruta del contrato vigente. Marca los que identifican un objeto con dueño y escribe su tipo.",
+      "empty": "Importa un contrato para detectar los identificadores.",
+      "isId": "{param} es identificador",
+      "none": "El contrato vigente no tiene operaciones con parámetros de ruta.",
+      "subject": "las operaciones",
+      "type": "Tipo de recurso de {param}",
+      "typePlaceholder": "pedido",
+      "save": "Guardar",
+      "discard": "Descartar",
+      "saved": "Identificadores de {path} guardados",
+      "partial": "Se muestran {shown} de {total} operaciones."
+    },
+    "discover": {
+      "title": "2. Descubrir recursos",
+      "text": "Llamamos como cada identidad solo a las operaciones GET de listado, como <code>GET /orders</code>, y proponemos lo que encontremos.",
+      "button": "Descubrir recursos",
+      "hint": "Puede tardar hasta 25 segundos. Lo que encuentre queda por confirmar.",
+      "running": "Descubriendo recursos…",
+      "needsVerified": "Verifica la propiedad del host antes de descubrir recursos.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noIdentities": "Registra una identidad con credencial para descubrir sus recursos.",
+      "done": "{count, plural, one {Se encontró # recurso nuevo} other {Se encontraron # recursos nuevos}}",
+      "doneNone": "No se encontraron recursos nuevos",
+      "summary": "{count, plural, one {# recurso nuevo por confirmar} other {# recursos nuevos por confirmar}} · {requests, plural, one {# petición} other {# peticiones}}",
+      "identityLine": "{found, plural, one {# encontrado} other {# encontrados}} · {created} nuevos · {other} de otra identidad",
+      "unknownIdentity": "Identidad eliminada",
+      "truncated": {
+        "title": "El descubrimiento se detuvo en un tope",
+        "text": "Se alcanzó el tope de 100 peticiones o de 25 segundos y puede haber más recursos. Confirma o elimina lo encontrado y vuelve a descubrir."
+      },
+      "failure": {
+        "rejected": "La API respondió con un error al listar. Revisa la credencial.",
+        "login_failed": "La operación de login no devolvió un token.",
+        "connection_error": "No hubo respuesta del host o se agotó el tiempo.",
+        "destination_not_allowed": "El host resuelve a una dirección no permitida.",
+        "not_attempted": "No se probó: se alcanzó un tope antes de llegar a esta identidad."
+      },
+      "registered": "Recursos registrados"
+    },
+    "review": {
+      "title": "3. Revisa los recursos de cada identidad",
+      "identity": "Identidad"
+    },
+    "noIdentities": {
+      "title": "Aún no hay identidades",
+      "text": "Agrega al menos una identidad para asignarle recursos.",
+      "action": "Agregar identidad"
+    },
+    "empty": {
+      "title": "{name} no tiene recursos",
+      "text": "Acceso a objetos no podrá probar esta identidad. Agrega sus recursos a mano."
+    },
+    "add": {
+      "kind": "Tipo",
+      "value": "Identificador",
+      "button": "Agregar a {name}",
+      "done": "Recurso agregado a {name}"
+    },
+    "delete": {
+      "label": "Eliminar {value}",
+      "title": "Eliminar el recurso",
+      "text": "Se quitará «{value}» de esta identidad. No se borra nada en tu API.",
+      "confirm": "Eliminar recurso",
+      "done": "Se eliminó «{value}»"
+    },
+    "errors": {
+      "valueRequired": "Escribe el identificador del recurso.",
+      "typeRequired": "Escribe el tipo de recurso.",
+      "valueInvalid": "El identificador admite hasta 500 caracteres, sin caracteres de control.",
+      "ownedByOther": "Ese recurso ya pertenece a otra identidad. Un objeto tiene un solo dueño.",
+      "identityNotFound": "La identidad ya no existe. Recarga la página.",
+      "anonymousOwner": "La identidad anónima no tiene recursos.",
+      "notVerified": "Verifica la propiedad del host antes de descubrir recursos.",
+      "activeRun": "Hay una ejecución en cola o en curso; espera a que termine.",
+      "noListOperations": "El contrato vigente no tiene operaciones GET de listado, así que no hay nada que descubrir.",
+      "discoveryTimeout": "El descubrimiento tardó demasiado. Los recursos que alcanzó a encontrar se guardaron: recarga la lista.",
+      "notFound": "El recurso ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo completar la acción",
+      "reference": "Referencia: {id}"
+    },
+    "subject": "los recursos",
+    "identitiesSubject": "las identidades",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
+  },
+  "Policy": {
+    "crumb": "Política",
+    "title": "Política de acceso",
+    "template": {
+      "public": "Pública",
+      "authenticated": "Cualquier autenticado",
+      "owner": "Solo propietario",
+      "ownerOrAdmin": "Propietario o administrador",
+      "admin": "Solo administrador"
+    },
+    "templates": {
+      "title": "Las cinco plantillas",
+      "public": "Cualquiera, incluso sin autenticarse.",
+      "authenticated": "Toda identidad con sesión válida.",
+      "owner": "Solo el dueño del objeto indicado por el campo propietario.",
+      "ownerOrAdmin": "El dueño o una identidad con rol de administrador.",
+      "admin": "Solo identidades con rol de administrador."
+    },
+    "progress": {
+      "title": "{confirmed} de {total} confirmadas",
+      "label": "Operaciones confirmadas",
+      "text": "{count, plural, one {La propuesta sin confirmar no se usa} other {Las # propuestas sin confirmar no se usan}} en Acceso a objetos ni Acceso a funciones.",
+      "modified": "Última modificación: {date}."
+    },
+    "orphan": {
+      "title": "{count, plural, one {# regla huérfana} other {# reglas huérfanas}}",
+      "text": "Ya no están en el contrato vigente y aún tienen política. No se usan en las pruebas:"
+    },
+    "operations": "Operaciones",
+    "filters": {
+      "label": "Filtrar por estado",
+      "all": "Todas · {count}",
+      "proposed": "Propuestas · {count}",
+      "confirmed": "Confirmadas · {count}"
+    },
+    "bulk": {
+      "label": "Acciones en bloque",
+      "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
+      "apply": "Aplicar plantilla",
+      "button": "Aplicar y confirmar",
+      "owner": "Campo propietario",
+      "done": "{count, plural, one {Plantilla aplicada a # operación} other {Plantilla aplicada a # operaciones}}"
+    },
+    "select": "Seleccionar {method} {path}",
+    "templateOf": "Plantilla de {method} {path}",
+    "ownerOf": "Campo propietario de {method} {path}",
+    "notApplicable": "No aplica",
+    "status": {
+      "confirmed": "Confirmada",
+      "proposed": "Propuesta",
+      "changed": "Sin guardar"
+    },
+    "confirm": "Confirmar",
+    "showing": "Mostrando {shown} de {total} operaciones ·",
+    "viewContract": "Ver el contrato",
+    "save": "Guardar política",
+    "saved": "Política guardada",
+    "empty": {
+      "title": "Sin operaciones",
+      "text": "Importa un contrato para proponer la política."
+    },
+    "noContract": {
+      "title": "Primero importa el contrato",
+      "text": "La política se propone a partir de las operaciones de tu contrato OpenAPI.",
+      "action": "Importar contrato"
+    },
+    "errors": {
+      "ownerTitle": "Falta el campo propietario",
+      "ownerText": "Las plantillas de propiedad necesitan un campo propietario: un parámetro de ruta (userId) o un campo de la respuesta (owner.id).",
+      "retired": "Una operación ya no está en el contrato vigente. Recarga la página.",
+      "notFound": "Una operación ya no existe. Recarga la página.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo guardar la política",
+      "reference": "Referencia: {id}"
+    },
+    "ownerPlaceholder": "userId u owner.id",
+    "noTemplate": "Elige una plantilla",
+    "noSecurity": "Sin seguridad",
+    "subject": "las operaciones"
+  },
+  "ConfigureRun": {
+    "title": "Nueva ejecución",
+    "crumb": "Nueva ejecución",
+    "crumbRuns": "Ejecuciones",
+    "modules": {
+      "title": "Módulos de prueba",
+      "lead": "Elige qué categorías de OWASP API Top 10 se probarán en esta ejecución.",
+      "selected": "{count, plural, =0 {Ninguno seleccionado} one {# seleccionado} other {# seleccionados}}",
+      "notes": {
+        "auth": "Tokens, sesiones y credenciales",
+        "config": "Cabeceras, CORS y mensajes de error",
+        "objects": "Cada identidad frente a recursos ajenos",
+        "functions": "Funciones administrativas con un usuario común",
+        "properties": "Modifica datos de prueba que crea Hindama",
+        "resources": "Carga el servidor con peticiones repetidas",
+        "sql": "Envía cargas de inyección; modifica datos de prueba"
+      },
+      "risk": "Riesgo",
+      "missing": {
+        "project_not_verified": "Requiere verificar la propiedad del host",
+        "no_contract": "Requiere importar el contrato",
+        "insufficient_identities": "Requiere al menos dos identidades",
+        "no_admin_identity": "Requiere una identidad administradora",
+        "no_resources": "Requiere recursos asignados a las identidades",
+        "policy_unconfirmed": "Requiere confirmar la política de acceso",
+        "not_implemented": "Disponible en una versión próxima"
+      },
+      "fix": {
+        "project_not_verified": "Verificar",
+        "no_contract": "Importar contrato",
+        "insufficient_identities": "Agregar identidad",
+        "no_admin_identity": "Agregar identidad",
+        "no_resources": "Asignar recursos",
+        "policy_unconfirmed": "Revisar política"
+      }
+    },
+    "risk": {
+      "medium": "Riesgo medio",
+      "high": "Riesgo alto"
+    },
+    "riskSummary": "Módulos elegidos: {names}.",
+    "limits": {
+      "title": "Límites de la ejecución",
+      "lead": "Protegen tu servidor: la ejecución se detiene al alcanzar cualquiera.",
+      "rps": "Peticiones por segundo",
+      "concurrency": "Peticiones en paralelo",
+      "total": "Peticiones en total",
+      "duration": "Duración máxima (minutos)",
+      "max": "Máximo permitido: {max}",
+      "outOfRange": "Escribe un número entero entre 1 y {max}."
+    },
+    "checks": {
+      "title": "Antes de ejecutar",
+      "verified": "La URL base está verificada",
+      "noActive": "No hay otra ejecución activa",
+      "https": "La URL usa HTTPS",
+      "policy": "La política de acceso está confirmada"
+    },
+    "run": "{count, plural, =0 {Ejecutar pruebas} one {Ejecutar # módulo} other {Ejecutar # módulos}}",
+    "starting": "Iniciando…",
+    "started": "Ejecución n.º {number} en cola",
+    "confirmFirst": "Confirma cada módulo de riesgo para poder ejecutar.",
+    "readOnly": {
+      "title": "Qué hace Hindama",
+      "text": "Las pruebas solo crean recursos propios y los eliminan al terminar. Nunca tocan datos que ya existían en tu API."
+    },
+    "blocked": {
+      "unverified": "Verifica la URL base del proyecto antes de ejecutar.",
+      "goVerify": "Ir a verificación",
+      "active": "Ya hay una ejecución en curso.",
+      "viewRun": "Ver la ejecución"
+    },
+    "errors": {
+      "activeRun": "Ya hay una ejecución en cola o en curso.",
+      "moduleUnavailable": "Un módulo ya no cumple sus requisitos. Revisa la lista y vuelve a intentarlo.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo iniciar la ejecución",
+      "reference": "Referencia: {id}"
+    }
+  },
+  "RunProgress": {
+    "title": "Ejecución en curso",
+    "crumb": "En curso",
+    "crumbHistory": "Ejecuciones",
+    "started": "Iniciada a las {time} · {modules, plural, one {# módulo} other {# módulos}}",
+    "now": "Probando ahora: <b>{module}</b>",
+    "progressLabel": "Avance de la ejecución",
+    "stats": {
+      "requests": "Peticiones enviadas",
+      "minutes": "Tiempo transcurrido",
+      "speed": "Velocidad máxima",
+      "cells": "{done} / {total}",
+      "cellsLabel": "Comprobaciones"
+    },
+    "viewResults": "Ver resultados",
+    "cancel": "Cancelar ejecución",
+    "found": "{count, plural, =0 {Aún sin hallazgos} one {# hallazgo hasta ahora} other {# hallazgos hasta ahora}}",
+    "recent": "Más recientes",
+    "noneYet": "Los hallazgos aparecerán aquí en cuanto se detecten.",
+    "modules": "Módulos",
+    "moduleDone": "Terminado",
+    "moduleRunning": "En curso",
+    "modulePending": "En espera",
+    "cancelDialog": {
+      "title": "¿Cancelar la ejecución n.º {number}?",
+      "text": "Se conservan los {count, plural, one {# hallazgo} other {# hallazgos}} encontrados hasta ahora y se eliminan los recursos de prueba creados.",
+      "confirm": "Cancelar ejecución",
+      "keep": "Seguir ejecutando"
+    },
+    "finished": "Ejecución n.º {number} terminada",
+    "none": {
+      "title": "No hay una ejecución en curso",
+      "text": "Inicia una nueva ejecución para ver su avance aquí.",
+      "action": "Nueva ejecución"
+    },
+    "status": {
+      "queued": "En cola",
+      "running": "En vivo",
+      "completed": "Terminada",
+      "cancelled": "Cancelada",
+      "failed": "Falló"
+    },
+    "cancelling": "Cancelando…",
+    "queuedAt": "En cola · {modules, plural, one {# módulo} other {# módulos}}",
+    "subject": "la ejecución",
+    "lost": {
+      "title": "Se perdió la conexión en vivo",
+      "text": "Recarga la página para ver el estado actual de la ejecución."
+    },
+    "cancelRequested": "Se pidió cancelar la ejecución n.º {number}",
+    "ended": {
+      "cancelled": "Ejecución n.º {number} cancelada",
+      "failed": "La ejecución n.º {number} no terminó"
+    },
+    "errors": {
+      "notActive": "La ejecución ya terminó.",
+      "failed": "No se pudo cancelar la ejecución",
+      "reference": "Referencia: {id}"
+    }
+  },
+  "RunTabs": {
+    "label": "Vistas de la ejecución",
+    "summary": "Resumen",
+    "matrix": "Matriz de acceso",
+    "findings": "Hallazgos ({count})"
+  },
+  "RunResults": {
+    "title": "Ejecución n.º {number}",
+    "crumbHistory": "Historial",
+    "report": "Generar reporte",
+    "retest": "Volver a probar",
+    "data": "Datos de la ejecución",
+    "end": {
+      "normal": "Fin: normal",
+      "limit_reached": "Fin: se alcanzó un límite",
+      "cancelled_by_user": "Fin: cancelada por el usuario",
+      "verification_invalid": "Fin: la verificación del host dejó de ser válida",
+      "heartbeat_expired": "Fin: el motor dejó de responder",
+      "lost_in_queue": "Fin: se perdió en la cola",
+      "error": "Fin: error interno"
+    },
+    "contract": "Contrato n.º {number}",
+    "repeat": "Repite una ejecución anterior",
+    "headline": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "viewFindings": "Ver hallazgos",
+    "stats": {
+      "requests": "Peticiones",
+      "minutes": "Duración (m:ss)",
+      "modules": "Módulos ejecutados",
+      "cells": "Comprobaciones evaluadas"
+    },
+    "comparison": {
+      "title": "Frente a la ejecución n.º {number}",
+      "first": "Primera ejecución",
+      "firstText": "No hay una ejecución anterior con la que comparar.",
+      "new": "Nuevos",
+      "persistent": "Persistentes",
+      "regression": "Regresiones",
+      "note": "Un hallazgo es regresión cuando reaparece tras haberse marcado como resuelto.",
+      "onlyLatest": "La comparación usa el estado actual de los hallazgos, así que solo se muestra en la última ejecución del proyecto."
+    },
+    "bySeverity": "Por severidad",
+    "modules": "Módulos",
+    "limits": "Límites: {rps} req/s · {concurrency} concurrentes · {total} peticiones · {minutes} min",
+    "moduleNotSelected": "No seleccionado",
+    "notices": {
+      "title": "Avisos",
+      "partial": {
+        "completed": {
+          "title": "Resultado parcial",
+          "text": "La ejecución se detuvo al alcanzar un límite y algunas comprobaciones no se evaluaron."
+        },
+        "cancelled": {
+          "title": "Ejecución cancelada",
+          "text": "Los resultados son parciales: solo incluyen lo que se evaluó antes de detenerla."
+        },
+        "failed": {
+          "title": "La ejecución no terminó",
+          "text": "Los resultados son parciales: solo incluyen lo que se evaluó antes de la falla."
+        }
+      }
+    },
+    "top": "Más graves",
+    "titleLoading": "Resultados de la ejecución",
+    "subject": "la ejecución",
+    "status": {
+      "completed": "Completada · {date}",
+      "cancelled": "Cancelada · {date}",
+      "failed": "No terminó · {date}"
+    },
+    "moduleRun": "Ejecutado",
+    "active": {
+      "title": "La ejecución n.º {number} sigue en curso",
+      "text": "Sus resultados aparecerán aquí cuando termine.",
+      "action": "Ver el avance"
+    }
+  },
+  "Matrix": {
+    "title": "Matriz de acceso",
+    "subject": "la matriz",
+    "onlyDiscrepancies": "Solo discrepancias",
+    "module": "Módulo",
+    "allModules": "Todos los módulos",
+    "legend": {
+      "title": "Leyenda",
+      "pass": "Correcto: respondió lo esperado",
+      "fail": "Discrepancia: no respondió lo esperado",
+      "error": "Error: no se pudo evaluar",
+      "skipped": "Omitido: credencial vencida o requisito faltante"
+    },
+    "summary": "{rows, plural, one {# fila} other {# filas}} · {identities, plural, one {# identidad} other {# identidades}} · {discrepancies, plural, one {# discrepancia} other {# discrepancias}}",
+    "none": {
+      "title": "No hay discrepancias",
+      "text": "Todas las identidades recibieron la respuesta esperada."
+    },
+    "empty": {
+      "title": "Esta ejecución no tiene resultados",
+      "text": "La matriz se llena cuando la ejecución evalúa sus comprobaciones."
+    },
+    "caption": "Respuesta de cada operación para cada identidad",
+    "operation": "Operación y módulo",
+    "global": "Toda la API",
+    "identityDeleted": "{name} (eliminada)",
+    "notEvaluated": "Sin evaluar",
+    "verdict": {
+      "pass": "Correcto",
+      "fail": "Discrepancia",
+      "error": "Error",
+      "skipped": "Omitido"
+    },
+    "expected": "Esperado: {value}",
+    "codes": {
+      "allowed": "permitido",
+      "denied": "denegado",
+      "own_data_only": "solo sus datos",
+      "no_sql_error": "sin error SQL",
+      "no_data": "sin datos",
+      "baseline_failed": "no se pudo comparar",
+      "method_not_safe": "método no seguro, no se probó",
+      "no_resources": "sin recursos para probar",
+      "no_auth_required": "no exige credenciales",
+      "login_failed": "falló el inicio de sesión",
+      "credential_expired": "credencial vencida",
+      "error": "error",
+      "accepted": "aceptado",
+      "rejected": "rechazado",
+      "declared_only": "solo campos declarados",
+      "undeclared_fields": "campos no declarados",
+      "hardened": "protegido",
+      "limited": "con límite",
+      "not_applicable": "no aplica",
+      "not_created": "no se creó",
+      "not_injectable": "no inyectable",
+      "not_jwt": "no usa JWT",
+      "budget_reserved": "presupuesto reservado"
+    },
+    "finding": {
+      "open": "Ver hallazgo",
+      "openLabel": "Ver el hallazgo de {identity}",
+      "none": "No encontramos el hallazgo de esta celda: puede que se haya resuelto o descartado desde entonces.",
+      "failed": "No se pudo buscar el hallazgo",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo."
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
+  },
+  "Findings": {
+    "globalOperation": "Toda la API",
+    "title": "Hallazgos",
+    "subtitle": "Estado actual del proyecto, con los resultados de la ejecución n.º {number}.",
+    "subtitleNone": "Aún no hay ejecuciones en este proyecto.",
+    "empty": {
+      "title": "Aún no hay hallazgos",
+      "text": "Ejecuta las pruebas para ver aquí lo que encontremos en tu API.",
+      "action": "Nueva ejecución"
+    },
+    "filters": {
+      "title": "Filtros",
+      "module": "Módulo",
+      "severity": "Severidad",
+      "status": "Estado",
+      "allModules": "Todos los módulos",
+      "allSeverities": "Todas",
+      "all": "Todos",
+      "clear": "Limpiar filtros"
+    },
+    "status": {
+      "open": "Abiertos"
+    },
+    "chips": {
+      "status": "Estado: {value}",
+      "module": "Módulo: {value}",
+      "severity": "Severidad: {value}",
+      "remove": "Quitar filtro «{filter}»",
+      "run": "Ejecución n.º {number}",
+      "runLoading": "Ejecución",
+      "runText": "Ejecución"
+    },
+    "showing": "Mostrando {shown} de {total} · ordenados por severidad",
+    "openCount": "{count, plural, =0 {Sin hallazgos abiertos} one {# hallazgo abierto} other {# hallazgos abiertos}}",
+    "count": "{count, plural, =0 {Sin hallazgos} one {# hallazgo} other {# hallazgos}}",
+    "cols": {
+      "severity": "Severidad",
+      "finding": "Hallazgo y operación",
+      "module": "Módulo",
+      "identity": "Identidad",
+      "classification": "Clasificación",
+      "status": "Estado"
+    },
+    "open": "Abrir {title}",
+    "subject": "los hallazgos",
+    "none": "Este proyecto no tiene hallazgos.",
+    "identityDeleted": "{name} (eliminada)",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
+  },
+  "ExportFindings": {
+    "button": "Exportar a Excel",
+    "busy": "Preparando el libro…",
+    "done": "Libro de Excel descargado",
+    "tooLarge": "Hay demasiados hallazgos para exportar",
+    "tooLargeText": "El libro admite hasta 5 000 hallazgos. Filtra por módulo, severidad o estado y vuelve a intentarlo.",
+    "rateLimited": "Demasiadas peticiones. Espera un momento.",
+    "failed": "No se pudo exportar",
+    "reference": "Referencia: {id}"
+  },
+  "FindingDetail": {
+    "globalOperation": "Toda la API",
+    "crumb": "Hallazgo",
+    "subject": "el hallazgo",
+    "summary": "Resumen del hallazgo",
+    "severity": "Severidad {severity}",
+    "identityDeleted": "{name} (eliminada)",
+    "fields": {
+      "operation": "Operación",
+      "identity": "Identidad",
+      "module": "Módulo",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "detected": "Detectado"
+    },
+    "detectedRuns": "De la ejecución n.º {first} a la n.º {last}",
+    "newTab": "(se abre en una pestaña nueva)",
+    "acceptRisk": "Aceptar el riesgo",
+    "accepted": {
+      "accepted": "Riesgo aceptado",
+      "falsePositive": "Descartado como falso positivo",
+      "note": "Descartado el {date}. Si una ejecución lo vuelve a detectar, seguirá aceptado. Si lo reviertes, vuelve a «Persistente»."
+    },
+    "revert": "Revertir",
+    "reverted": "El hallazgo volvió a «Persistente»",
+    "resolved": {
+      "not_detected": "Resuelto: una ejecución ya no lo detectó",
+      "identity_deleted": "Resuelto: se eliminó la identidad",
+      "operation_retired": "Resuelto: la operación salió del contrato",
+      "at": "Desde el {date}."
+    },
+    "toast": {
+      "accepted": "Riesgo aceptado",
+      "falsePositive": "Hallazgo descartado como falso positivo"
+    },
+    "why": {
+      "title": "Por qué es una falla · {identity}",
+      "resource": "Recurso: {type} «{value}»",
+      "resourceOwner": "Recurso: {type} «{value}» de {owner}"
+    },
+    "evidence": {
+      "title": "Evidencia de la ejecución n.º {run}",
+      "copyCurl": "Copiar como curl",
+      "request": "Petición",
+      "masked": "Credenciales enmascaradas",
+      "response": "Respuesta · {status}",
+      "truncated": "Cuerpo recortado a 10 KB"
+    },
+    "fix": {
+      "title": "Cómo corregirlo"
+    },
+    "history": {
+      "title": "Historial",
+      "run": "Ejecución n.º {number}",
+      "analyst": "Por el analista",
+      "reason": {
+        "detected": "Detectado",
+        "not_detected": "Ya no se detectó",
+        "regression": "Reapareció tras haberse resuelto",
+        "accepted": "Riesgo aceptado",
+        "false_positive": "Marcado como falso positivo",
+        "reverted": "Se revirtió el descarte",
+        "identity_deleted": "Se eliminó la identidad",
+        "operation_retired": "La operación salió del contrato"
+      }
+    },
+    "occurrences": {
+      "title": "Detecciones",
+      "subject": "las detecciones",
+      "viewRun": "Ver la ejecución n.º {number}"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}",
+    "errors": {
+      "notOpen": "El hallazgo ya no está abierto. Se actualizó su estado.",
+      "notDismissed": "El hallazgo ya no estaba descartado. Se actualizó su estado.",
+      "justification": "Revisa la justificación: es obligatoria y no admite caracteres de control.",
+      "dismiss": "No se pudo descartar el hallazgo",
+      "revert": "No se pudo revertir el descarte",
+      "reference": "Referencia: {id}"
+    }
+  },
+  "History": {
+    "title": "Historial",
+    "repeat": "Repetir última ejecución",
+    "viewProgress": "Ver progreso",
+    "following": "En seguimiento",
+    "notConcluded": "Aún no está concluido",
+    "rule": "El proyecto se marca como concluido cuando una ejecución no deja hallazgos nuevos, persistentes ni regresiones. Si una ejecución posterior encuentra alguno, se reabre.",
+    "concluded": {
+      "badge": "Concluido",
+      "title": "Proyecto concluido",
+      "text": "La última ejecución no dejó hallazgos nuevos, persistentes ni regresiones. Si una ejecución posterior encuentra alguno, se reabre."
+    },
+    "openNow": "Abiertos ahora",
+    "resolvedTotal": "Resueltos en total",
+    "chart": {
+      "title": "Hallazgos detectados en cada ejecución",
+      "running": "La n.º {number} sigue en curso",
+      "summary": "Hallazgos detectados: {items}.",
+      "item": "ejecución {number}, {count}",
+      "itemRunning": "ejecución {number} en curso, {count} hasta ahora",
+      "tip": "Ejecución {number}: {count, plural, one {# hallazgo} other {# hallazgos}}",
+      "label": "n.º {number}",
+      "labelRunning": "n.º {number} (en curso)"
+    },
+    "runs": "{count, plural, one {# ejecución} other {# ejecuciones}}",
+    "cols": {
+      "run": "Ejecución",
+      "date": "Fecha y módulos",
+      "status": "Estado",
+      "duration": "Duración",
+      "requests": "Peticiones",
+      "severity": "Por severidad"
+    },
+    "number": "n.º {number}",
+    "kind": "{count, plural, one {# módulo} other {# módulos}}",
+    "open": "Abrir",
+    "report": "Reporte",
+    "empty": {
+      "title": "Aún no hay ejecuciones",
+      "text": "Cuando ejecutes las pruebas, aquí verás su evolución y cada resultado.",
+      "action": "Nueva ejecución"
+    },
+    "subject": "el historial",
+    "filter": "Estado",
+    "allStatuses": "Todos los estados",
+    "none": "Ninguna ejecución tiene ese estado.",
+    "viewProgressOf": "Ver el progreso de la ejecución n.º {number}",
+    "openOf": "Abrir la ejecución n.º {number}",
+    "reportOf": "Reporte de la ejecución n.º {number}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}"
+  },
+  "Report": {
+    "back": "Volver",
+    "typeLabel": "Tipo de reporte",
+    "variant": {
+      "run": "Ejecución n.º {number}",
+      "current": "Estado actual"
+    },
+    "print": "Imprimir o guardar PDF",
+    "printing": "Preparando la impresión…",
+    "brand": "Hindama · {type}",
+    "type": {
+      "run": "Reporte de la ejecución n.º {number}",
+      "current": "Reporte del estado actual"
+    },
+    "subtitle": {
+      "run": "Ejecución completada el {date}",
+      "current": "Estado al {date}, con {count, plural, one {# ejecución} other {# ejecuciones}}",
+      "ended": "Ejecución terminada el {date}, sin completarse"
+    },
+    "generated": "Generado",
+    "by": "Por",
+    "baseUrl": "URL base",
+    "summary": {
+      "title": "1. Resumen",
+      "bySeverity": "Por severidad",
+      "byStatus": "Por estado",
+      "modules": "Módulos ejecutados:",
+      "none": "ninguno",
+      "limits": "Límites: {rps} peticiones por segundo, {concurrency} concurrentes, {total} peticiones, {minutes} minutos. Se enviaron {requests} peticiones en {duration}.",
+      "resolved": "Resueltos en total",
+      "onlyLatest": "El estado de los hallazgos solo se muestra para la última ejecución.",
+      "concluded": "El proyecto está concluido: la última ejecución no dejó hallazgos nuevos, persistentes ni regresiones.",
+      "open": "Hallazgos abiertos en el proyecto, de todas sus ejecuciones."
+    },
+    "matrix": {
+      "title": "2. Matriz de acceso (discrepancias)",
+      "operation": "Operación",
+      "identity": "Identidad",
+      "expected": "Esperado",
+      "observed": "Observado",
+      "global": "Toda la API",
+      "note": "La matriz completa está en la vista de la ejecución.",
+      "subject": "las discrepancias",
+      "none": "No hubo discrepancias en esta ejecución",
+      "partial": "Se muestran {shown} de {total} discrepancias. La matriz completa está en la vista de la ejecución."
+    },
+    "pageBreak": "Salto de página al imprimir",
+    "findings": {
+      "title": "3. Hallazgos",
+      "none": "No hay hallazgos abiertos",
+      "module": "Módulo",
+      "owasp": "OWASP",
+      "cwe": "CWE",
+      "identity": "Identidad",
+      "more": "{count, plural, one {Y # hallazgo más, en la vista de hallazgos.} other {Y # hallazgos más, en la vista de hallazgos.}}",
+      "subject": "los hallazgos",
+      "noneRun": "Esta ejecución no detectó hallazgos",
+      "operation": "Operación",
+      "runs": "Detectado",
+      "runRange": "De la n.º {first} a la n.º {last}",
+      "detail": {
+        "explanation": "Qué se detectó",
+        "recommendation": "Recomendación",
+        "loading": "Cargando la evidencia…",
+        "failed": "No se pudo cargar la evidencia de este hallazgo.",
+        "rateLimited": "Demasiadas solicitudes: espera un momento antes de cargar más evidencia.",
+        "retry": "Reintentar",
+        "notLoaded": "La evidencia de este hallazgo no se cargó en el reporte.",
+        "open": "Ábrelo en su detalle",
+        "loadMore": "{count, plural, one {Cargar la evidencia del siguiente hallazgo} other {Cargar la evidencia de los siguientes # hallazgos}}",
+        "partial": "Con evidencia: {shown} de {total} hallazgos. La API limita las peticiones por minuto, por eso se cargan por tandas."
+      },
+      "types": {
+        "title": "{types, plural, one {# tipo de falla} other {# tipos de falla}} en {count, plural, one {# hallazgo} other {# hallazgos}}",
+        "count": "{count, plural, one {# operación o identidad afectada} other {# operaciones o identidades afectadas}}"
+      }
+    },
+    "active": {
+      "title": "La ejecución sigue en curso",
+      "text": "El reporte se genera cuando la ejecución termina.",
+      "action": "Ver progreso"
+    }
+  },
+  "Stats": {
+    "crumb": "Estadísticas",
+    "title": "Estadísticas de uso",
+    "subtitle": "Uso de la plataforma y fallas más comunes.",
+    "viewLog": "Ver bitácora",
+    "period": {
+      "label": "Periodo",
+      "custom": "Personalizado",
+      "days": "Últimos {count} días"
+    },
+    "range": "{from} – {to}",
+    "custom": {
+      "from": "Desde",
+      "to": "Hasta",
+      "invalid": "Escribe un rango válido: la fecha inicial no puede ser posterior a la final, la final no puede ser posterior a hoy y el rango abarca hasta 366 días."
+    },
+    "empty": {
+      "title": "Sin datos en este periodo",
+      "text": "La plataforma aún no tenía actividad en estas fechas. Prueba con un periodo más reciente."
+    },
+    "kpi": {
+      "users": {
+        "label": "Usuarios registrados",
+        "note": "{count, plural, one {# cuenta nueva} other {# cuentas nuevas}}"
+      },
+      "projects": {
+        "label": "Proyectos creados",
+        "note": "En el periodo"
+      },
+      "runs": {
+        "label": "Ejecuciones",
+        "note": "{cancelled} canceladas · {failed} fallidas"
+      },
+      "resolution": {
+        "label": "De la detección a la resolución",
+        "note": "Promedio de hallazgos resueltos"
+      },
+      "deletedAccounts": {
+        "label": "Cuentas eliminadas",
+        "note": "Las cifras no cambian al eliminarse"
+      },
+      "regressions": {
+        "label": "Regresiones",
+        "note": "Hallazgos resueltos que reaparecieron"
+      }
+    },
+    "days": "días",
+    "runsBy": {
+      "day": "Ejecuciones por día",
+      "week": "Ejecuciones por semana"
+    },
+    "unit": {
+      "runs": "ejecuciones",
+      "findings": "hallazgos"
+    },
+    "findingsByWeek": "Hallazgos detectados por semana",
+    "weekStart": "Cada punto es la semana que empieza ese lunes",
+    "noFindings": "Sin hallazgos en este periodo",
+    "chart": {
+      "summary": "{label}: {items}.",
+      "tip": "{label}: {value} {unit}"
+    },
+    "hover": "Pasa el cursor por un punto para ver el valor",
+    "byModule": "Fallas más frecuentes por módulo",
+    "byModuleList": "Fallas por módulo",
+    "byOwasp": "Fallas más frecuentes por categoría OWASP",
+    "byOwaspList": "Fallas por categoría OWASP",
+    "owasp": {
+      "API1": "API1 Objetos",
+      "API2": "API2 Autenticación",
+      "API3": "API3 Propiedades",
+      "API4": "API4 Recursos",
+      "API5": "API5 Funciones",
+      "API8": "API8 Configuración"
+    },
+    "bars": {
+      "tip": "{name}: {count} fallas"
+    },
+    "privacy": "Solo datos agregados y anónimos. Los hallazgos se agrupan por semana y los contadores por día. Desde aquí no se puede abrir ningún proyecto.",
+    "loading": "Cargando estadísticas",
+    "errorSubject": "las estadísticas"
+  },
+  "AuditLog": {
+    "crumb": "Bitácora",
+    "title": "Bitácora de auditoría",
+    "subtitle": "Registro inalterable de acciones sensibles. Nunca muestra credenciales.",
+    "viewStats": "Ver estadísticas",
+    "filters": {
+      "title": "Filtros de la bitácora",
+      "from": "Desde",
+      "to": "Hasta",
+      "action": "Tipo de acción",
+      "allActions": "Todas las acciones",
+      "user": "Usuario",
+      "userPlaceholder": "Identificador completo",
+      "host": "Host reportado",
+      "clear": "Limpiar",
+      "invalidRange": "El rango está invertido: la fecha inicial no puede ser posterior a la final."
+    },
+    "user": {
+      "help": "La bitácora no guarda nombres ni correos: busca por el identificador completo (UUID) o haz clic en uno de la tabla.",
+      "invalid": "Escribe el identificador completo (UUID). No se buscan correos ni fragmentos."
+    },
+    "host": {
+      "help": "Escribe el nombre o la URL. Se compara por su HMAC: el host nunca se guarda ni se muestra.",
+      "active": "Se muestran las acciones sobre ese host, comparadas por su HMAC.",
+      "invalid": "Eso no es un host válido."
+    },
+    "count": "{count, plural, =0 {Sin registros} one {# registro} other {# registros}}",
+    "readOnly": "Solo lectura · se conservan 6 meses y luego se eliminan",
+    "empty": {
+      "title": "No hay registros con estos filtros",
+      "text": "Amplía el rango de fechas o limpia los filtros para ver más.",
+      "invalidTitle": "Corrige el rango de fechas",
+      "invalidText": "No se consulta la bitácora mientras la fecha inicial sea posterior a la final.",
+      "invalidFiltersTitle": "Corrige los filtros",
+      "invalidFiltersText": "No se consulta la bitácora con un usuario que no es un identificador completo ni con un host inválido."
+    },
+    "cols": {
+      "date": "Fecha y hora",
+      "user": "Usuario",
+      "action": "Acción",
+      "project": "Proyecto",
+      "ip": "IP de origen"
+    },
+    "ipNone": "Sin IP: la acción la hizo el motor de pruebas o no llegó una IP válida.",
+    "filterByUser": "Filtrar por este usuario",
+    "copyId": "Copiar el identificador completo de {user}",
+    "copied": "Identificador copiado",
+    "copyFailed": "No se pudo copiar",
+    "detailOf": "Detalle del registro de {date}",
+    "actions": {
+      "account_created": "Alta de cuenta",
+      "account_deleted": "Baja de cuenta",
+      "project_created": "Creación de proyecto",
+      "project_deleted": "Eliminación de proyecto",
+      "project_verified": "Verificación de proyecto",
+      "project_verification_lost": "Verificación perdida al iniciar una ejecución",
+      "identity_created": "Alta de identidad",
+      "identity_deleted": "Baja de identidad",
+      "run_launched": "Ejecución lanzada",
+      "run_cancelled": "Ejecución cancelada",
+      "finding_dismissed": "Riesgo aceptado o falso positivo",
+      "finding_dismissal_reverted": "Descarte revertido",
+      "destination_blocked": "Destino bloqueado"
+    },
+    "modules": {
+      "authentication": "Autenticación",
+      "configuration": "Configuración",
+      "object_access": "Acceso a objetos",
+      "function_access": "Acceso a funciones",
+      "property_access": "Propiedades",
+      "resource_consumption": "Consumo de recursos",
+      "sql_injection": "Inyección SQL"
+    },
+    "detail": {
+      "none": "Esta acción no trae datos adicionales.",
+      "modules": "Módulos",
+      "limits": "Límites",
+      "run": "Ejecución",
+      "sourceRun": "Repite la ejecución",
+      "verificationMethod": "Método de verificación",
+      "identity": "Identidad",
+      "finding": "Hallazgo",
+      "dismissalReason": "Motivo del descarte",
+      "stage": "Etapa del bloqueo",
+      "blockReason": "Motivo del bloqueo"
+    },
+    "values": {
+      "limits": "{rps} req/s · {concurrency} concurrentes · {requests} peticiones · {minutes} min",
+      "verificationMethod": {
+        "file": "Archivo",
+        "dns": "Registro DNS"
+      },
+      "dismissalReason": {
+        "accepted_risk": "Riesgo aceptado",
+        "false_positive": "Falso positivo"
+      },
+      "stage": {
+        "project_url": "URL del proyecto",
+        "verification": "Verificación",
+        "contract_import": "Importación del contrato",
+        "identity_test": "Prueba de una identidad",
+        "resource_discovery": "Descubrimiento de recursos",
+        "run": "Ejecución"
+      },
+      "blockReason": {
+        "address_not_allowed": "Dirección no permitida (privada, local o de metadatos)",
+        "host_mismatch": "Redirección fuera del host del proyecto",
+        "unresolved": "El host no resuelve",
+        "invalid_url": "URL inválida",
+        "scheme_not_allowed": "Esquema no permitido",
+        "too_many_redirects": "Demasiadas redirecciones"
+      }
+    },
+    "pagination": {
+      "label": "Paginación",
+      "range": "{from}–{to} de {total}",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    },
+    "loading": "Cargando la bitácora",
+    "errorSubject": "la bitácora"
+  },
+  "Offline": {
+    "title": "Sin conexión. Reconectando…",
+    "text": "Los datos que ves pueden estar desactualizados. En cuanto vuelva la red, se actualizan solos.",
+    "back": "Conexión recuperada",
+    "backText": "Los datos se actualizaron."
+  },
+  "PageTitles": {
+    "adminStats": "Estadísticas de uso",
+    "auditLog": "Bitácora de auditoría",
+    "dashboard": "Resumen del proyecto",
+    "contract": "Contrato OpenAPI",
+    "versions": "Versiones del contrato",
+    "findings": "Hallazgos",
+    "finding": "Detalle del hallazgo",
+    "history": "Historial",
+    "identities": "Identidades",
+    "identityNew": "Nueva identidad",
+    "identityEdit": "Editar identidad",
+    "policy": "Política de acceso",
+    "resources": "Recursos por identidad",
+    "runCurrent": "Ejecución en curso",
+    "runNew": "Nueva ejecución",
+    "runResults": "Resultados de la ejecución",
+    "matrix": "Matriz de acceso",
+    "report": "Reporte",
+    "settings": "Ajustes del proyecto",
+    "verification": "Verificación de propiedad"
+  },
+  "Loading": {
+    "label": "Cargando…",
+    "page": "Cargando la página",
+    "list": "Cargando la lista",
+    "detail": "Cargando el detalle",
+    "chart": "Cargando la gráfica"
+  },
+  "Rerun": {
+    "started": "Ejecución n.º {number} en cola",
+    "confirm": {
+      "title": "Repetir la ejecución n.º {number}",
+      "text": "Incluye módulos que modifican datos de prueba o cargan el servidor. La confirmación se pide en cada ejecución.",
+      "heading": "Módulos de riesgo",
+      "button": "Confirmar y repetir"
+    },
+    "errors": {
+      "activeRun": "Ya hay una ejecución en cola o en curso.",
+      "notVerified": "Verifica la propiedad del host antes de ejecutar.",
+      "moduleUnavailable": "Un módulo de la ejecución ya no cumple sus requisitos. Revisa el proyecto.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+      "failed": "No se pudo repetir la ejecución",
+      "reference": "Referencia: {id}"
+    }
+  }
+}

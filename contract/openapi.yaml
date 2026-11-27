@@ -1,0 +1,5285 @@
+openapi: 3.1.0
+info:
+  title: Hindama API
+  version: 0.12.0
+  summary: API privada de la plataforma Hindama. Su único cliente es el servidor de Next.js (BFF).
+  description: |
+    Contrato de la API de la plataforma. Es la fuente de verdad: el backend lo implementa y el
+    frontend lo consume (ADR-016). Las reglas comunes (errores, paginación, nombres, cabeceras)
+    están en `convenciones.md`; la traducción de cada término del dominio, en `glosario-identificadores.md`.
+
+    Alcance de la versión 0.2.0: endpoints de la semana 1, casos de uso CU-05 a CU-08 más `GET /me`.
+    0.2.1: límites de entrada que el backend ya debía cumplir (máximo de `page`, texto sin caracteres de
+    control, confirmación no vacía), encontrados por Schemathesis en la prueba técnica PT-03.
+    0.3.0: identidades (CU-09), recursos manuales (CU-10) y política de acceso (CU-11), y los campos de
+    política, parámetros de recurso y candidata a login en `Operation`.
+    0.4.0: ejecuciones (CU-12 a CU-14): lanzar, listar, consultar y cancelar, progreso en tiempo real por
+    SSE, matriz de resultados (RF-63, RF-64) y descubrimiento automático de recursos (RF-36). `RunSummary`
+    gana campos.
+    0.5.0: hallazgos (CU-15, CU-16, RF-65, RF-66, RF-70, RF-72): lista con filtros, detalle con evidencia
+    e historial, ocurrencias por ejecución, y aceptar el riesgo o marcar un falso positivo y revertirlo.
+    0.6.0: volver a probar (CU-17, RF-71): `rerunRun` repite una ejecución terminada con la misma
+    configuración y llena `source_run_id`.
+    0.7.0: bitácora (CU-21, RF-81 a RF-84, RN-09): `listAuditLog` para el administrador, con filtros por
+    fecha, acción, usuario y host (comparando su HMAC).
+    0.8.0: `ModuleAvailability.missing` gana `not_implemented` (el motor todavía no tiene ese módulo,
+    RF-45) y se corrige la descripción de `deleteIdentity`: sus hallazgos abiertos se resuelven con
+    `identity_deleted` (RF-69).
+    0.9.0: estadísticas del administrador (CU-20, RF-78, RF-79, RF-89): `getAdminStats`, con actividad
+    por día o semana y hallazgos por módulo, categoría OWASP y severidad, solo de métricas anónimas.
+    0.10.0: los siete módulos existen. `created_resources` gana `failed_items` (dónde quedó cada recurso
+    que el analista debe borrar a mano, CU-23 E1), y la evidencia puede traer el cuerpo enviado y nuevas
+    claves de `context` (propiedades, consumo de recursos e inyección SQL).
+    0.11.0: baja de cuenta (CU-25, RF-88): `deleteAccount`, que ya emite `account_deleted` y suma
+    `deleted_accounts`. Exportar hallazgos a Excel (RF-77): `exportFindings`, con los filtros de
+    `listFindings`. `finding_type` garantiza el mismo título en todos sus hallazgos: es la llave para
+    agruparlos (B21).
+    0.12.0: segundo factor (CU-22, RF-85, RF-86): `Me` gana `mfa_enabled`, y el panel de administración
+    exige al administrador tener activo el TOTP de Cognito (403 `auth.mfa_required`).
+    Los identificadores están en inglés (ADR-017). Los textos para el usuario los elige el frontend
+    según el campo `code` de errores y advertencias.
+servers:
+  - url: https://backend.internal:8443
+    description: API privada, solo accesible desde la EC2 del frontend.
+  - url: http://localhost:8000
+    description: Desarrollo local.
+security:
+  - bearerAuth: []
+tags:
+  - name: System
+    description: Salud del servicio.
+  - name: Account
+    description: Datos del usuario de la sesión (CU-02, CU-05).
+  - name: Projects
+    description: Gestión de proyectos (CU-05, CU-06).
+  - name: Verification
+    description: Verificación de propiedad de la API (CU-07).
+  - name: Contracts
+    description: Importación del contrato OpenAPI y sus operaciones (CU-08).
+  - name: Policy
+    description: Política de acceso por operación y parámetros de recurso (CU-11, RF-35).
+  - name: Identities
+    description: Identidades de prueba de la API del analista (CU-09).
+  - name: Resources
+    description: Recursos de la API del analista por identidad (CU-10).
+  - name: Runs
+    description: Ejecuciones de pruebas, su progreso y sus resultados (CU-12 a CU-14, RF-63, RF-64).
+  - name: Findings
+    description: Hallazgos, su evidencia y su seguimiento entre ejecuciones (CU-15, CU-16, RF-65 a RF-72).
+  - name: Admin
+    description: Panel del administrador; nunca el contenido de los proyectos (RN-03, RF-80). Bitácora (CU-21).
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Estado del servicio
+      description: Sin autenticación. Responde 200 si la API y la base de datos responden.
+      security: []
+      responses:
+        '200':
+          description: El servicio funciona.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /me:
+    get:
+      tags: [Account]
+      operationId: getMe
+      summary: Usuario de la sesión
+      description: |
+        Datos del usuario autenticado. En su primer acceso, el usuario se da de alta en la plataforma.
+        Next.js usa `role` solo para elegir la pantalla inicial; toda autorización la decide la API.
+      responses:
+        '200':
+          description: Usuario de la sesión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+              examples:
+                me:
+                  $ref: '#/components/examples/Me'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags: [Account]
+      operationId: deleteAccount
+      summary: Eliminar la cuenta
+      description: |
+        CU-25, RF-88. Borra de forma permanente la cuenta del analista en Cognito, su registro de usuario y
+        todos sus proyectos con su contenido (ADR-015). Solo se conservan las métricas anónimas (RF-89) y la
+        bitácora durante su plazo de retención (RF-90): registra `account_deleted` y suma
+        `deleted_accounts`.
+
+        Primero se confirma el borrado en la base de datos y después se borra la cuenta de Cognito con
+        `DeleteUser` y el access token de la sesión (modelo de datos, sección 7.2). Si Cognito no responde
+        (CU-25 E3), los datos ya se borraron: responde 503 `account.deletion_incomplete` y el analista
+        repite la acción, que entra a una cuenta vacía y termina la baja. Al terminar, el token deja de
+        valer; Next.js debe borrar la cookie de sesión.
+
+        El correo va en la consulta, que la API no escribe en sus registros (convenciones, sección 11).
+      parameters:
+        - name: confirmation
+          in: query
+          required: true
+          description: El correo de la cuenta, escrito por el analista. No distingue mayúsculas.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 254
+            pattern: '^[^\x00-\x1F\x7F]*$'
+      responses:
+        '204':
+          description: Cuenta eliminada.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: '`role.forbidden`: el administrador no elimina su cuenta desde la plataforma.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`account.active_run`: uno de sus proyectos tiene una ejecución en cola o en curso; cancelarla primero (CU-25 E1).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`account.confirmation_mismatch`: el correo no coincide (CU-25 E2); no se borra nada.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: |
+            `service.unavailable`: la base de datos o Cognito no respondieron antes de borrar; no se borró nada.
+            `account.deletion_incomplete`: los datos ya se borraron, pero Cognito no respondió al borrar la
+            cuenta (CU-25 E3); repetir la acción.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /me/terms:
+    post:
+      tags: [Account]
+      operationId: acceptTerms
+      summary: Aceptar los términos de uso responsable
+      description: Registra la fecha y la versión aceptada (RF-16, RN-12). Aceptar la misma versión otra vez no cambia nada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermsAcceptance'
+      responses:
+        '200':
+          description: Términos aceptados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+              examples:
+                me:
+                  $ref: '#/components/examples/Me'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          description: '`terms.outdated_version`: la versión enviada no es la vigente; volver a mostrar los términos.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: Proyectos del analista
+      description: Solo los proyectos del usuario de la sesión (RF-12, RN-02). Orden por defecto `-created_at`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [created_at, -created_at, name, -name, last_run_at, -last_run_at]
+            default: -created_at
+      responses:
+        '200':
+          description: Página de proyectos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPage'
+              examples:
+                projectPage:
+                  $ref: '#/components/examples/ProjectPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Crear un proyecto
+      description: |
+        Crea el proyecto en estado `pending` con su código de verificación y su identidad anónima (CU-05).
+        Exige haber aceptado los términos vigentes (RN-12).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Proyecto creado. Puede traer las advertencias `url.no_tls` o `url.unresolved`.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                newHttpProject:
+                  $ref: '#/components/examples/NewHttpProject'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: |
+            `terms.not_accepted`: mostrar los términos y llamar a `acceptTerms` antes de reintentar.
+            `role.forbidden`: el administrador no crea proyectos.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                termsNotAccepted:
+                  $ref: '#/components/examples/TermsNotAccepted'
+        '422':
+          description: |
+            Errores de campo (`validation.*`) o de la URL base: `url.invalid_format`,
+            `url.scheme_not_allowed`, `url.destination_not_allowed` (RF-11).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                urlNotAllowed:
+                  $ref: '#/components/examples/UrlNotAllowed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Dashboard del proyecto
+      description: Estado de verificación, contrato vigente, módulos disponibles, última ejecución y hallazgos abiertos por severidad (RF-15).
+      responses:
+        '200':
+          description: Proyecto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                project:
+                  $ref: '#/components/examples/Project'
+                newHttpProject:
+                  $ref: '#/components/examples/NewHttpProject'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      tags: [Projects]
+      operationId: updateProject
+      summary: Editar nombre, descripción o URL base
+      description: |
+        Si cambia el host de la URL base, el proyecto vuelve a `pending` y la respuesta trae la
+        advertencia `project.verification_lost` (RF-13).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Proyecto actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                project:
+                  $ref: '#/components/examples/Project'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Errores de campo o de la URL base, igual que en `createProject`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags: [Projects]
+      operationId: deleteProject
+      summary: Eliminar un proyecto
+      description: Borra el proyecto y todo su contenido de forma permanente (RF-14).
+      parameters:
+        - name: confirmation
+          in: query
+          required: true
+          description: Nombre exacto del proyecto, tal como lo escribió el analista.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+            pattern: '^[^\x00-\x1F\x7F]*$'
+      responses:
+        '204':
+          description: Proyecto eliminado.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project.active_run`: hay una ejecución en cola o en curso; cancelarla primero (CU-06 E2).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`project.confirmation_mismatch`: el nombre no coincide.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/verification:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Verification]
+      operationId: getVerification
+      summary: Instrucciones y estado de la verificación
+      description: Código del proyecto y cómo publicarlo con cada método (CU-07 paso 2).
+      responses:
+        '200':
+          description: Verificación del proyecto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verification'
+              examples:
+                pendingVerification:
+                  $ref: '#/components/examples/PendingVerification'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Verification]
+      operationId: verifyOwnership
+      summary: Comprobar la propiedad
+      description: |
+        Consulta el archivo `/.well-known/hindama-verificacion.txt` o el registro TXT
+        `_hindama-verificacion.<host>` a través de la guardia SSRF (ADR-008). Es síncrona y puede tardar
+        hasta 20 segundos. Verificar un proyecto ya verificado vuelve a comprobarlo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '200':
+          description: El código coincide; el proyecto queda `verified`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verification'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: |
+            La verificación falló (RF-21). `code`: `verification.file_not_found`,
+            `verification.content_mismatch`, `verification.txt_missing`, `verification.connection_error`
+            o `verification.destination_not_allowed`. El campo `found` resume lo que se obtuvo. El
+            proyecto queda `pending`. También puede ser un error de campo (`validation.*`), con el
+            esquema `Problem`.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/VerificationProblem'
+                  - $ref: '#/components/schemas/Problem'
+              examples:
+                failedVerification:
+                  $ref: '#/components/examples/FailedVerification'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/contracts:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Contracts]
+      operationId: listContracts
+      summary: Versiones del contrato
+      description: Todas las versiones importadas (RF-26). Orden por defecto `-number` (la más reciente primero).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de versiones.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractPage'
+              examples:
+                contractPage:
+                  $ref: '#/components/examples/ContractPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Contracts]
+      operationId: importContract
+      summary: Importar una versión del contrato
+      description: |
+        Envía **exactamente uno** de `file` o `url` (CU-08). Acepta OpenAPI 3.0 y 3.1 en JSON o YAML,
+        hasta 5 MB (RF-22). Resuelve solo referencias internas (RF-23). La importación por URL pasa por la
+        guardia SSRF y se permite antes de verificar el proyecto (excepción de RN-01). Es síncrona: hasta
+        10 segundos de análisis más hasta 20 de descarga.
+
+        Si el documento es idéntico a la versión vigente, no se crea otra: responde `200` con la versión
+        vigente y la advertencia `contract.unchanged`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContractImport'
+            encoding:
+              file:
+                contentType: application/json, application/yaml, application/x-yaml, text/yaml, text/plain, application/octet-stream
+      responses:
+        '201':
+          description: Nueva versión creada.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractVersion'
+              examples:
+                contractVersion:
+                  $ref: '#/components/examples/ContractVersion'
+        '200':
+          description: El documento es idéntico a la versión vigente; trae la advertencia `contract.unchanged`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractVersion'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          description: '`contract.too_large`: más de 5 MB.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `contract.source_required`, `contract.invalid` (con `errors[]`: el `field` es la ubicación en
+            el documento, JSON Pointer o «línea N»), `contract.unsupported_version`,
+            `contract.url_unreachable` o `contract.url_not_allowed`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidContract:
+                  $ref: '#/components/examples/InvalidContract'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/contracts/{contract_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: contract_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Contracts]
+      operationId: getContract
+      summary: Una versión del contrato
+      description: Avisos de la importación y diferencias con la versión anterior (RF-26).
+      responses:
+        '200':
+          description: Versión del contrato.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractVersion'
+              examples:
+                contractVersion:
+                  $ref: '#/components/examples/ContractVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/operations:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Contracts]
+      operationId: listOperations
+      summary: Operaciones del proyecto
+      description: |
+        Operaciones del proyecto según la versión vigente del contrato (CU-08 paso 4). Una operación es
+        estable entre versiones: se identifica por método y ruta normalizada. Orden: ruta y luego método.
+        `page_size` acepta hasta 500.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: include_retired
+          in: query
+          required: false
+          description: Incluir las operaciones que ya no aparecen en la versión vigente.
+          schema:
+            type: boolean
+            default: false
+        - name: method
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/HttpMethod'
+      responses:
+        '200':
+          description: Página de operaciones. Vacía si aún no se ha importado un contrato.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationPage'
+              examples:
+                operationPage:
+                  $ref: '#/components/examples/OperationPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/operations/{operation_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/OperationId'
+    patch:
+      tags: [Policy]
+      operationId: updateOperation
+      summary: Política y parámetros de recurso de una operación
+      description: |
+        Confirma o cambia la plantilla de política (RF-39 a RF-41) y corrige los parámetros que
+        identifican recursos (RF-35). Fijar `policy` es confirmarla: las propuestas sin confirmar no se
+        usan en las pruebas (RN-08). `"policy": null` la vuelve a dejar sin confirmar. Guarda quién y
+        cuándo la modificó (RF-43).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationUpdate'
+            examples:
+              ownerOnly:
+                $ref: '#/components/examples/OperationUpdate'
+      responses:
+        '200':
+          description: La operación con su política actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`operation.retired`: la operación ya no aparece en el contrato vigente.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `policy.owner_field_required` (plantilla de propiedad sin `owner_field`, CU-11
+            E1) u `operation.unknown_parameter` (un parámetro de recurso que no es parámetro de ruta de la
+            operación).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/policy:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Policy]
+      operationId: applyPolicy
+      summary: Aplicar una plantilla a varias operaciones
+      description: |
+        Edición en bloque (RF-42), por ejemplo todas las operaciones de una ruta. Todo o nada: si una
+        operación no es válida, no cambia ninguna. Confirma la plantilla en todas (RN-08).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyBulkUpdate'
+      responses:
+        '200':
+          description: Las operaciones actualizadas, ordenadas por ruta y método.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyBulkResult'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`operation.retired`: alguna operación ya no aparece en el contrato vigente.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `policy.owner_field_required` u `operation.not_found` (algún id no es una
+            operación del proyecto; `errors[].field` es `operation_ids.N`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/identities:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Identities]
+      operationId: listIdentities
+      summary: Identidades del proyecto
+      description: |
+        Identidades no eliminadas. La anónima (RF-34) va primero; las demás, por fecha de creación.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de identidades.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityPage'
+              examples:
+                identityPage:
+                  $ref: '#/components/examples/IdentityPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Identities]
+      operationId: createIdentity
+      summary: Registrar una identidad
+      description: |
+        CU-09. La credencial se cifra con AES-256-GCM antes de guardarse (RN-11, ADR-007) y nunca vuelve
+        en una respuesta: solo `credential_suffix`. Se guarda sin probarla; la prueba es
+        `POST …/identities/{identity_id}/test`. Hasta 20 identidades por proyecto, contando la anónima.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityCreate'
+            examples:
+              bearer:
+                $ref: '#/components/examples/BearerIdentityCreate'
+              login:
+                $ref: '#/components/examples/LoginIdentityCreate'
+      responses:
+        '201':
+          description: Identidad creada.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                identity:
+                  $ref: '#/components/examples/Identity'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`identity.name_taken` (otra identidad del proyecto se llama igual) o `identity.limit_reached` (ya hay 20).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `identity.credential_mismatch` (la forma de `credential` no corresponde a
+            `auth_type`), `identity.field_name_required` (`cookie` o `header` sin `field_name`),
+            `identity.field_name_reserved` (una cabecera que la plataforma controla, como `Host`) o
+            `identity.login_operation_required` (`login` sin `login_operation_id`, o con una operación
+            que no existe o fue retirada).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/identities/{identity_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/IdentityId'
+    patch:
+      tags: [Identities]
+      operationId: updateIdentity
+      summary: Editar una identidad
+      description: |
+        Cambios parciales. Una `credential` nueva reemplaza la anterior y vuelve a `status: active`.
+        Cambiar `auth_type` exige enviar la `credential` de la nueva forma. La identidad anónima no se edita.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityUpdate'
+      responses:
+        '200':
+          description: Identidad actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`identity.anonymous` (la identidad anónima no se edita) o `identity.name_taken`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `identity.credential_required` (cambia `auth_type` sin `credential`) y los
+            mismos códigos que al crear.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags: [Identities]
+      operationId: deleteIdentity
+      summary: Eliminar una identidad
+      description: |
+        Borrado lógico: la credencial se borra de inmediato y el nombre queda libre (ADR-015). Sus
+        recursos se eliminan. Sus hallazgos se conservan, pero los abiertos pasan a resueltos con el
+        motivo `identity_deleted` (RF-69); su historial y sus ocurrencias no cambian.
+      responses:
+        '204':
+          description: Identidad eliminada.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`identity.anonymous` (la identidad anónima no se elimina, RF-34) o `project.active_run` (hay una ejecución en cola o en curso).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/identities/{identity_id}/test:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/IdentityId'
+    post:
+      tags: [Identities]
+      operationId: testIdentity
+      summary: Probar la credencial de una identidad
+      description: |
+        RF-32. Envía una petición GET, a través de la guardia SSRF, a una operación protegida con la
+        credencial (en `login`, primero obtiene el token con la operación de login). Exige el proyecto
+        verificado (RN-01). Sin `operation_id`, el sistema elige un GET vigente con seguridad declarada y
+        sin parámetros de ruta. Responde 200 aunque la credencial falle: el resultado va en
+        `succeeded`, con el código de estado recibido y nunca la credencial. Guarda `last_tested_at` y
+        `last_test_status_code`. Síncrona: hasta 20 segundos.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityTestRequest'
+      responses:
+        '200':
+          description: Resultado de la prueba.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityTest'
+              examples:
+                rejected:
+                  $ref: '#/components/examples/RejectedIdentityTest'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project.not_verified` (RN-01) o `identity.anonymous` (la anónima no tiene credencial que probar).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*` u `identity.no_test_operation` (no hay un GET protegido sin parámetros de ruta,
+            o el `operation_id` indicado no existe, está retirado o no es GET).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/resources:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Resources]
+      operationId: listResources
+      summary: Recursos por identidad
+      description: Orden por tipo y luego por identificador (F-06).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: identity_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: resource_type
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+            pattern: '^[^\x00-\x1F\x7F]*$'
+      responses:
+        '200':
+          description: Página de recursos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcePage'
+              examples:
+                resourcePage:
+                  $ref: '#/components/examples/ResourcePage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Resources]
+      operationId: createResource
+      summary: Registrar un recurso a mano
+      description: |
+        RF-37. Queda con `source: manual` y `confirmed: true`. El descubrimiento automático (RF-36) es
+        `discoverResources`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceCreate'
+      responses:
+        '201':
+          description: Recurso creado.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`resource.owned_by_other`: ese tipo e identificador ya pertenecen a otra identidad (un objeto tiene un solo dueño).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `identity.not_found` (la identidad no es del proyecto o fue eliminada) o
+            `resource.anonymous_owner` (la identidad anónima no tiene recursos).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/resources/discovery:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Resources]
+      operationId: discoverResources
+      summary: Descubrir recursos por identidad
+      description: |
+        RF-36. Llama como cada identidad, a través de la guardia SSRF, solo a las operaciones GET de
+        listado del contrato vigente: sin parámetros de ruta y con una respuesta 2xx declarada como arreglo
+        o como objeto con un arreglo. El tipo de recurso es el último segmento de la ruta (`/orders` →
+        `orders`) y el identificador, el campo `id` de cada elemento.
+
+        - Los recursos nuevos quedan con `source: discovered` y `confirmed: false` (CU-10 paso 3).
+        - Los que la identidad ya tiene no cambian. Los que pertenecen a otra identidad se omiten, porque
+          un objeto tiene un solo dueño.
+        - La identidad anónima no participa. Una identidad con la credencial vencida se informa en
+          `identities[].failure` y no detiene a las demás.
+
+        Exige el proyecto verificado (RN-01) y sin ejecución activa (RN-07). Síncrona, con topes de 100
+        peticiones y 25 segundos; si se alcanza uno, `truncated` es `true` y lo encontrado se guarda.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceDiscoveryRequest'
+      responses:
+        '200':
+          description: Resultado del descubrimiento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDiscovery'
+              examples:
+                discovery:
+                  $ref: '#/components/examples/ResourceDiscovery'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project.not_verified` (RN-01) o `project.active_run` (RN-07).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            `validation.*`, `identity.not_found` (un id de `identity_ids` no es una identidad vigente del
+            proyecto), `resource.anonymous_owner` (se pidió la identidad anónima) o
+            `resource.no_list_operations` (el contrato vigente no tiene operaciones GET de listado).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/resources/{resource_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: resource_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Resources]
+      operationId: updateResource
+      summary: Editar o confirmar un recurso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceUpdate'
+      responses:
+        '200':
+          description: Recurso actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`resource.owned_by_other`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`validation.*`, `identity.not_found` o `resource.anonymous_owner`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags: [Resources]
+      operationId: deleteResource
+      summary: Eliminar un recurso
+      responses:
+        '204':
+          description: Recurso eliminado.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/runs:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Runs]
+      operationId: listRuns
+      summary: Ejecuciones del proyecto
+      description: |
+        Resumen de cada ejecución (RF-63). Orden: de la más reciente a la más antigua (`number`
+        descendente). Para filtrar por varios estados se repite `status`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/RunStatus'
+      responses:
+        '200':
+          description: Página de ejecuciones.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunPage'
+              examples:
+                runPage:
+                  $ref: '#/components/examples/RunPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags: [Runs]
+      operationId: createRun
+      summary: Lanzar una ejecución
+      description: |
+        CU-12, RF-44 a RF-48. Valida en este orden:
+
+        1. El proyecto está verificado (RN-01) y no tiene otra ejecución activa (RN-07).
+        2. Cada módulo pedido cumple sus requisitos (RF-45). Son los mismos que `modules[].missing` del
+           dashboard del proyecto.
+        3. Si hay un módulo de riesgo medio o alto, `confirm_risk` es `true` (RN-05, RF-46). La
+           confirmación vale solo para esta ejecución.
+        4. Los límites están dentro de sus topes (RF-47); los que no se envían toman su valor por defecto.
+
+        Crea la ejecución en `queued` con la versión vigente del contrato, la encola y responde 202 con el
+        recurso en su estado inicial. El progreso se sigue con `streamRunEvents` o con `getRun`.
+
+        Las pruebas son de solo lectura por defecto (RF-48). Solo los módulos de riesgo medio y alto
+        escriben, y únicamente sobre recursos que crea la propia plataforma y borra al terminar (RN-06).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunCreate'
+            examples:
+              withRiskyModule:
+                $ref: '#/components/examples/RunCreate'
+      responses:
+        '202':
+          description: Ejecución en cola.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+              examples:
+                queuedRun:
+                  $ref: '#/components/examples/QueuedRun'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project.not_verified` (RN-01) o `project.active_run` (RN-07, CU-12 E1).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            - `validation.*`.
+            - `run.module_unavailable`: un módulo no cumple sus requisitos. `errors[].field` es
+              `modules.N`; lo que falta está en `modules[].missing` del dashboard.
+            - `run.risk_not_confirmed`: hay un módulo de riesgo medio o alto y `confirm_risk` no es
+              `true`. `errors[].field` es `confirm_risk`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                moduleUnavailable:
+                  $ref: '#/components/examples/ModuleUnavailable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /projects/{project_id}/runs/{run_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Runs]
+      operationId: getRun
+      summary: Consultar una ejecución
+      description: |
+        Configuración, resumen (RF-63) y foto del progreso (RF-51). Sirve para recuperar el estado cuando
+        se pierde el stream (CU-13 A1) y para mostrar una ejecución terminada.
+      responses:
+        '200':
+          description: La ejecución.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+              examples:
+                runningRun:
+                  $ref: '#/components/examples/RunningRun'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/runs/{run_id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [Runs]
+      operationId: cancelRun
+      summary: Cancelar una ejecución
+      description: |
+        CU-14, RF-52. Sin cuerpo.
+
+        - En `queued`, la ejecución pasa de inmediato a `cancelled` con `end_reason: cancelled_by_user`.
+        - En `running`, se envía la señal al motor y la respuesta trae `cancel_requested_at`. El motor
+          se detiene en menos de 5 segundos, borra los recursos que creó (RN-06), conserva los resultados
+          parciales y el stream emite `end`.
+
+        Repetirla mientras la ejecución se detiene responde lo mismo.
+      responses:
+        '202':
+          description: Cancelación aceptada. La ejecución en su estado actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`run.not_active`: la ejecución ya terminó.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /projects/{project_id}/runs/{run_id}/rerun:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [Runs]
+      operationId: rerunRun
+      summary: Volver a probar
+      description: |
+        CU-17, RF-71. Lanza una ejecución nueva con la misma configuración (`modules` y `limits`) que
+        `run_id`, que puede ser cualquier ejecución terminada del proyecto. La nueva trae
+        `source_run_id` igual a `run_id`; lo demás es como en `createRun`.
+
+        Valida lo mismo y en el mismo orden que `createRun`:
+
+        1. El proyecto está verificado (RN-01) y no tiene otra ejecución activa (RN-07). Si `run_id`
+           sigue activa, responde `project.active_run`.
+        2. Cada módulo de la ejecución original sigue cumpliendo sus requisitos (RF-45). Si uno ya no
+           los cumple, responde `run.module_unavailable`: no se quita en silencio.
+        3. Si hay un módulo de riesgo medio o alto, `confirm_risk` es `true` (RN-05, RF-46). La
+           confirmación de la ejecución original no vale: se pide en cada ejecución.
+
+        Responde 202 con la ejecución en `queued`, con la versión vigente del contrato (que puede ser
+        más nueva que la de la original).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunRerun'
+            examples:
+              confirmed:
+                summary: Repite una ejecución con un módulo de riesgo
+                value:
+                  confirm_risk: true
+      responses:
+        '202':
+          description: Ejecución en cola.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+              examples:
+                queuedRerun:
+                  $ref: '#/components/examples/QueuedRerun'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project.not_verified` (RN-01) o `project.active_run` (RN-07).'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |
+            - `validation.*`.
+            - `run.module_unavailable`: un módulo de la ejecución original ya no cumple sus requisitos.
+              `errors[].field` es `modules.N`, con `N` la posición en `modules` de la original.
+            - `run.risk_not_confirmed`: hay un módulo de riesgo medio o alto y `confirm_risk` no es
+              `true`. `errors[].field` es `confirm_risk`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /projects/{project_id}/runs/{run_id}/events:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Runs]
+      operationId: streamRunEvents
+      summary: Progreso en tiempo real (SSE)
+      description: |
+        CU-13, RF-51, ADR-006. Stream `text/event-stream`. Next.js lo retransmite sin guardarlo ni
+        transformarlo, y cierra la conexión con FastAPI cuando el navegador la cierra.
+
+        Eventos (`data` es JSON en una sola línea):
+
+        | `event` | `data` | Cuándo |
+        | --- | --- | --- |
+        | `snapshot` | `Run` | Siempre primero, leído de la base de datos. También al reconectar. |
+        | `progress` | `RunProgress` | Cada vez que el motor avanza, con un retraso menor a 2 s (RNF-03). |
+        | `end` | `Run` | La ejecución terminó. El servidor cierra el stream después. |
+
+        - Cada evento lleva `id:`. Al reconectar con `Last-Event-ID`, la respuesta vuelve a empezar
+          con `snapshot` (CU-13 A1).
+        - Cada 15 segundos llega un comentario `: ping` para mantener viva la conexión.
+        - Si la ejecución ya terminó, el stream envía `snapshot` y `end` y se cierra.
+
+        Abrir el stream cuenta como una petición en el límite por usuario; sus eventos no cuentan.
+      parameters:
+        - name: Last-Event-ID
+          in: header
+          required: false
+          description: Último `id:` recibido. Lo envía el navegador al reconectar.
+          schema:
+            type: string
+            maxLength: 64
+            pattern: '^[^\x00-\x1F\x7F]*$'
+      responses:
+        '200':
+          description: Stream de eventos.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                retry: 3000
+
+                id: 1
+                event: snapshot
+                data: {"id":"0192e3a0-7777-7000-8000-000000000003","number":3,"status":"running", …}
+
+                id: 2
+                event: progress
+                data: {"status":"running","current_module":"object_access","requests_sent":42, …}
+
+                : ping
+
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/runs/{run_id}/results:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Runs]
+      operationId: listRunResults
+      summary: Matriz identidad × operación
+      description: |
+        RF-64. Cada elemento es una celda evaluada: módulo, operación e identidad, con lo esperado, lo
+        observado y el veredicto. Una discrepancia es `verdict: fail`. En una ejecución activa devuelve las
+        celdas terminadas hasta el momento; una celda a medio evaluar no aparece.
+
+        Orden: módulo (en el orden del catálogo), ruta, método y nombre de la identidad. Las comprobaciones
+        de toda la API (`operation: null`) van primero dentro de su módulo. `page_size` acepta hasta 500,
+        como `listOperations`. Para varios valores de `module` o `verdict` se repite el parámetro.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: module
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Module'
+        - name: verdict
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Verdict'
+        - name: identity_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: operation_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Página de celdas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPage'
+              examples:
+                resultPage:
+                  $ref: '#/components/examples/ResultPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/findings:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Findings]
+      operationId: listFindings
+      summary: Hallazgos del proyecto
+      description: |
+        CU-15, RF-65. Cada hallazgo es una falla lógica que vive entre ejecuciones (RF-68): aparece una
+        sola vez aunque se haya detectado en varias. Sin filtros trae todos los estados; los abiertos son
+        `new`, `persistent` y `regression`.
+
+        Orden: severidad (de `critical` a `info`), luego la detección más reciente primero
+        (`last_detected_at`). Para varios valores de `module`, `severity` o `status` se repite el parámetro.
+
+        `run_id` deja solo los hallazgos detectados en esa ejecución (los que tienen una ocurrencia en
+        ella), con su estado y su severidad **actuales**; la severidad que tuvo en esa ejecución está en
+        sus ocurrencias. Un `run_id`, `identity_id` u `operation_id` de otro proyecto no coincide con nada.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: module
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Module'
+        - name: severity
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Severity'
+        - name: status
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/FindingStatus'
+        - name: run_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: identity_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: operation_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Página de hallazgos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindingPage'
+              examples:
+                findingPage:
+                  $ref: '#/components/examples/FindingPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/findings/export:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Findings]
+      operationId: exportFindings
+      summary: Exportar hallazgos a Excel
+      description: |
+        CU-19, RF-77. Los mismos hallazgos y el mismo orden que `listFindings` con los mismos filtros, sin
+        paginar, en un libro `.xlsx` con una hoja «Hallazgos» y una fila por hallazgo. Columnas: título,
+        severidad, estado, módulo, tipo de falla (`finding_type`), categoría OWASP, CWE, método, ruta,
+        identidad, detectado, última detección, resuelto y recomendación. Las fechas van en UTC. Los
+        valores de severidad, estado y módulo van en español.
+
+        No incluye evidencia ni credenciales (RN-11). Toda celda de texto se escribe como texto, nunca como
+        fórmula, aunque empiece con `=`, `+`, `-` o `@` (CWE-1236): las rutas y los nombres vienen del
+        contrato y de la configuración del analista.
+
+        Máximo 5 000 hallazgos: si los filtros dejan más, responde 422 `finding.export_too_large` y el
+        frontend pide filtrar.
+      parameters:
+        - name: module
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Module'
+        - name: severity
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/Severity'
+        - name: status
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/FindingStatus'
+        - name: run_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: identity_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: operation_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: |
+            El libro de Excel. `Content-Disposition: attachment; filename="hallazgos.xlsx"`.
+          headers:
+            Content-Disposition:
+              description: Siempre `attachment; filename="hallazgos.xlsx"`.
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                contentEncoding: binary
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: |
+            `finding.export_too_large`: los filtros dejan más de 5 000 hallazgos. `validation.*`: un
+            parámetro no es válido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/findings/{finding_id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FindingId'
+    get:
+      tags: [Findings]
+      operationId: getFinding
+      summary: Detalle de un hallazgo
+      description: |
+        CU-15, RF-62, RF-66, RF-72. Clasificación, recomendación, la ocurrencia más reciente con su
+        evidencia y el historial de estados. Las ocurrencias anteriores están en
+        `GET …/findings/{finding_id}/occurrences`.
+      responses:
+        '200':
+          description: El hallazgo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+              examples:
+                finding:
+                  $ref: '#/components/examples/Finding'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/findings/{finding_id}/occurrences:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FindingId'
+    get:
+      tags: [Findings]
+      operationId: listFindingOccurrences
+      summary: Ocurrencias de un hallazgo
+      description: |
+        RF-66, RF-72. Una por cada ejecución que detectó el hallazgo, con la evidencia de esa ejecución.
+        Orden: de la ejecución más reciente a la más antigua. Cada evidencia puede pesar hasta 64 KB, por
+        eso `page_size` acepta hasta 20.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: Página de ocurrencias.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindingOccurrencePage'
+              examples:
+                findingOccurrencePage:
+                  $ref: '#/components/examples/FindingOccurrencePage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /projects/{project_id}/findings/{finding_id}/dismissal:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FindingId'
+    post:
+      tags: [Findings]
+      operationId: dismissFinding
+      summary: Aceptar el riesgo o marcar como falso positivo
+      description: |
+        CU-16, RF-70, RN-09. Solo para un hallazgo abierto (`new`, `persistent` o `regression`). Pasa a
+        `accepted_risk` con el motivo y la justificación, agrega un evento al historial (RF-72) y queda en
+        la bitácora (RN-09). Un hallazgo aceptado que se vuelve a detectar sigue aceptado; solo gana una
+        ocurrencia. Un proyecto sin hallazgos abiertos puede quedar concluido (RF-73).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DismissalCreate'
+            examples:
+              dismissalCreate:
+                $ref: '#/components/examples/DismissalCreate'
+      responses:
+        '200':
+          description: El hallazgo en `accepted_risk`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Finding'
+        '400':
+          $ref: '#/components/responses/Malformed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`finding.not_open`: el hallazgo ya está resuelto o aceptado.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags: [Findings]
+      operationId: revertDismissal
+      summary: Revertir la aceptación o el falso positivo
+      description: |
+        CU-16, RF-70. El hallazgo vuelve a `persistent` (aunque antes de aceptarlo fuera `new` o
+        `regression`), con un evento `reverted` en el historial. Sin cuerpo. La siguiente ejecución que
+        lo evalúe y no lo detecte lo resuelve, como a cualquier hallazgo abierto.
+      responses:
+        '204':
+          description: Revertido.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/RoleForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`finding.not_dismissed`: el hallazgo no está en `accepted_risk`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /admin/audit-log:
+    get:
+      tags: [Admin]
+      operationId: listAuditLog
+      summary: Bitácora de acciones sensibles
+      description: |
+        CU-21, RF-81 a RF-84. Solo el administrador; el analista recibe 403. Los registros no se editan
+        ni se eliminan desde la plataforma (RF-83) y se borran solos a los 6 meses (RF-90).
+
+        Orden: el más reciente primero (`occurred_at`; `id` desempata).
+
+        Filtros, todos opcionales y combinables:
+        - `occurred_from` (incluido) y `occurred_to` (excluido) acotan la fecha. Van en RFC 3339 con
+          hora y zona (`2026-11-20T00:00:00Z`, `2026-11-20T00:00:00-06:00`); una fecha sola, sin zona
+          o en segundos Unix es 422 con `validation.format`, igual que un `occurred_from` posterior a
+          `occurred_to` (en `occurred_to`).
+        - `action` se repite para varios valores.
+        - `user_id` deja las acciones de un usuario (el `id` interno, el mismo que lleva cada registro).
+        - `host` deja las acciones sobre ese host (A1 de CU-21): el servidor calcula su HMAC con cada
+          versión de la llave y compara. Acepta el nombre (`api.example.com`) o una URL completa; se
+          compara sin mayúsculas, sin puerto y en IDNA, igual que el host de un proyecto. El host nunca
+          se guarda ni se devuelve (RF-83). Un valor que no es un host es 422 con `validation.format`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: occurred_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: occurred_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: action
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/AuditAction'
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: host
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+            pattern: '^[^\x00-\x1F\x7F]*$'
+      responses:
+        '200':
+          description: Página de la bitácora.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+              examples:
+                auditLogPage:
+                  $ref: '#/components/examples/AuditLogPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /admin/stats:
+    get:
+      tags: [Admin]
+      operationId: getAdminStats
+      summary: Estadísticas agregadas de la plataforma
+      description: |
+        CU-20, RF-78 y RF-79. Solo el administrador; el analista recibe 403. Las cifras salen
+        **solo** de métricas anónimas que se escriben cuando ocurre cada hecho (RF-89): no cambian
+        al eliminarse un proyecto o una cuenta, y no traen URLs, contratos, credenciales, evidencias
+        ni identificadores de analistas, proyectos o hallazgos.
+
+        Periodo:
+        - `date_from` y `date_to` son fechas en UTC y **ambas se incluyen**. Por omisión, los 30 días
+          que terminan hoy. Un `date_from` posterior a `date_to` (en `date_to`) o un periodo de más de
+          366 días (en `date_from`) es 422 con `validation.format`.
+        - `group` agrupa la serie `activity`: `day` (por omisión) o `week`. Con `week`, cada grupo
+          empieza el lunes (`start`) y el primero y el último pueden estar incompletos. La serie trae
+          todos los grupos del periodo, también los que valen cero.
+
+        Hallazgos: para no fechar a nadie, cada hallazgo se guarda con el **lunes de la semana** en
+        que se detectó por primera vez. Cuentan los de las semanas cuyo lunes cae entre el lunes de
+        `date_from` y `date_to`. `average_days_to_resolve` promedia, entre esos hallazgos, los que una
+        ejecución confirmó corregidos (motivo `not_detected`); los cierres administrativos no cuentan
+        (modelo de datos, sección 7.3). Es `null` si no hay ninguno.
+
+        Usuarios: `users.total` son las cuentas que existían al terminar el periodo (altas menos
+        bajas desde el inicio de la plataforma).
+      parameters:
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: group
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [day, week]
+            default: day
+      responses:
+        '200':
+          description: Estadísticas del periodo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStats'
+              examples:
+                adminStats:
+                  $ref: '#/components/examples/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token de Amazon Cognito. Lo agrega el servidor de Next.js; el navegador nunca lo ve.
+
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 10000
+        default: 1
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    OperationId:
+      name: operation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdentityId:
+      name: identity_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RunId:
+      name: run_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    FindingId:
+      name: finding_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  headers:
+    Location:
+      description: Ruta del recurso creado.
+      schema:
+        type: string
+    RetryAfter:
+      description: Segundos que hay que esperar antes de reintentar.
+      schema:
+        type: integer
+    WwwAuthenticate:
+      schema:
+        type: string
+        example: Bearer
+
+  responses:
+    Malformed:
+      description: '`request.malformed`: cuerpo ilegible o tipo de contenido incorrecto.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: '`validation.*`: un parámetro de la ruta o de la consulta no es válido (por ejemplo, un UUID mal formado).'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthenticated:
+      description: '`auth.required` o `auth.invalid_token`. Next.js debe renovar el token o cerrar la sesión.'
+      headers:
+        WWW-Authenticate:
+          $ref: '#/components/headers/WwwAuthenticate'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RoleForbidden:
+      description: '`role.forbidden`: el administrador no accede al contenido de los proyectos (RF-80).'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    AdminOnly:
+      description: |
+        `role.forbidden`: solo el administrador consulta el panel de administración (RF-84).
+        `auth.mfa_required`: el administrador no tiene activo el segundo factor, obligatorio para él (RF-86).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: '`resource.not_found`: no existe o pertenece a otro analista; las dos respuestas son idénticas (RN-02, RNF-05).'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TooManyRequests:
+      description: '`rate_limit.exceeded`: más de 100 peticiones por minuto (RNF-09).'
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unavailable:
+      description: '`service.unavailable`: una dependencia no responde.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  examples:
+    Me:
+      summary: Analista que aún no acepta los términos
+      value:
+        id: 0192e3a0-1111-7000-8000-000000000001
+        name: Ana López
+        email: ana@ejemplo.com
+        role: analyst
+        mfa_enabled: false
+        terms:
+          current_version: '2026-10-30'
+          accepted_version: null
+          accepted_at: null
+          acceptance_required: true
+    ProjectPage:
+      summary: Dos proyectos
+      value:
+        items:
+          - id: 0192e3a0-2222-7000-8000-000000000001
+            name: API de pedidos
+            base_url: https://api.tienda-ejemplo.com/v1
+            verification_status: verified
+            concluded: false
+            last_run_at: '2026-11-03T17:42:10Z'
+            open_findings: 5
+            created_at: '2026-11-02T15:00:00Z'
+          - id: 0192e3a0-2222-7000-8000-000000000002
+            name: API interna de inventario
+            base_url: http://inventario.ejemplo.mx
+            verification_status: pending
+            concluded: false
+            last_run_at: null
+            open_findings: 0
+            created_at: '2026-11-04T09:30:00Z'
+        total: 2
+        page: 1
+        page_size: 20
+    Project:
+      summary: Proyecto verificado con una ejecución
+      value:
+        id: 0192e3a0-2222-7000-8000-000000000001
+        name: API de pedidos
+        description: API pública de la tienda, entorno de staging.
+        base_url: https://api.tienda-ejemplo.com/v1
+        host: api.tienda-ejemplo.com
+        verification_status: verified
+        verified_at: '2026-11-02T15:20:00Z'
+        concluded: false
+        current_contract:
+          id: 0192e3a0-3333-7000-8000-000000000002
+          number: 2
+          source: url
+          openapi_version: 3.0.3
+          operation_count: 18
+          imported_at: '2026-11-03T10:05:00Z'
+        last_run:
+          id: 0192e3a0-4444-7000-8000-000000000001
+          number: 1
+          status: completed
+          end_reason: normal
+          modules: [authentication, configuration, object_access, function_access]
+          requests_sent: 312
+          findings_by_severity: {critical: 1, high: 2, medium: 3, low: 1, info: 0, total: 7}
+          created_at: '2026-11-03T17:30:00Z'
+          started_at: '2026-11-03T17:30:02Z'
+          finished_at: '2026-11-03T17:42:10Z'
+        open_findings_by_severity:
+          critical: 1
+          high: 2
+          medium: 1
+          low: 1
+          info: 0
+          total: 5
+        modules:
+          - module: authentication
+            risk: low
+            available: true
+            missing: []
+          - module: configuration
+            risk: low
+            available: true
+            missing: []
+          - module: object_access
+            risk: low
+            available: false
+            missing: [insufficient_identities, no_resources]
+          - module: function_access
+            risk: low
+            available: false
+            missing: [no_admin_identity, policy_unconfirmed]
+          - module: property_access
+            risk: medium
+            available: false
+            missing: [not_implemented]
+          - module: resource_consumption
+            risk: high
+            available: false
+            missing: [not_implemented]
+          - module: sql_injection
+            risk: high
+            available: false
+            missing: [not_implemented]
+        warnings: []
+        created_at: '2026-11-02T15:00:00Z'
+        updated_at: '2026-11-03T10:05:00Z'
+    NewHttpProject:
+      summary: Proyecto recién creado con URL HTTP
+      value:
+        id: 0192e3a0-2222-7000-8000-000000000002
+        name: API interna de inventario
+        description: null
+        base_url: http://inventario.ejemplo.mx
+        host: inventario.ejemplo.mx
+        verification_status: pending
+        verified_at: null
+        concluded: false
+        current_contract: null
+        last_run: null
+        open_findings_by_severity:
+          critical: 0
+          high: 0
+          medium: 0
+          low: 0
+          info: 0
+          total: 0
+        modules:
+          - module: authentication
+            risk: low
+            available: false
+            missing: [project_not_verified, no_contract]
+          - module: configuration
+            risk: low
+            available: false
+            missing: [project_not_verified]
+          - module: object_access
+            risk: low
+            available: false
+            missing: [project_not_verified, no_contract, insufficient_identities, no_resources, policy_unconfirmed]
+          - module: function_access
+            risk: low
+            available: false
+            missing: [project_not_verified, no_contract, insufficient_identities, no_admin_identity, policy_unconfirmed]
+          - module: property_access
+            risk: medium
+            available: false
+            missing: [project_not_verified, no_contract, insufficient_identities, not_implemented]
+          - module: resource_consumption
+            risk: high
+            available: false
+            missing: [project_not_verified, no_contract, not_implemented]
+          - module: sql_injection
+            risk: high
+            available: false
+            missing: [project_not_verified, no_contract, not_implemented]
+        warnings:
+          - code: url.no_tls
+            message: La URL usa HTTP; el tráfico y las credenciales de prueba viajarán sin cifrar.
+            location: null
+        created_at: '2026-11-04T09:30:00Z'
+        updated_at: '2026-11-04T09:30:00Z'
+    UrlNotAllowed:
+      summary: URL base que resuelve a una dirección privada
+      value:
+        type: urn:hindama:error:url.destination_not_allowed
+        title: La URL apunta a un destino no permitido
+        status: 422
+        detail: La URL base resuelve a una dirección privada. Usa una dirección pública de tu API.
+        code: url.destination_not_allowed
+        request_id: 0192e3a0-9999-7000-8000-000000000001
+        errors:
+          - field: base_url
+            code: url.destination_not_allowed
+            message: Resuelve a una dirección privada.
+    TermsNotAccepted:
+      summary: Crear proyecto sin aceptar los términos
+      value:
+        type: urn:hindama:error:terms.not_accepted
+        title: Faltan los términos de uso
+        status: 403
+        detail: Acepta los términos de uso responsable antes de crear tu primer proyecto.
+        code: terms.not_accepted
+        request_id: 0192e3a0-9999-7000-8000-000000000002
+        errors: []
+    PendingVerification:
+      summary: Proyecto pendiente de verificación
+      value:
+        status: pending
+        host: api.tienda-ejemplo.com
+        code: hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6
+        method: null
+        verified_at: null
+        file:
+          url: https://api.tienda-ejemplo.com/.well-known/hindama-verificacion.txt
+          content: hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6
+        dns:
+          name: _hindama-verificacion.api.tienda-ejemplo.com
+          type: TXT
+          value: hindama-verificacion=8f3a1c9e2b7d4f60a5e1c3b9d7f2a4e6
+    FailedVerification:
+      summary: El archivo existe pero tiene otro contenido
+      value:
+        type: urn:hindama:error:verification.content_mismatch
+        title: El archivo no contiene el código
+        status: 422
+        detail: Encontramos el archivo de verificación, pero su contenido no coincide con el código del proyecto.
+        code: verification.content_mismatch
+        request_id: 0192e3a0-9999-7000-8000-000000000003
+        errors: []
+        found: 'HTTP 200: hindama-verificacion=000000'
+    ContractVersion:
+      summary: Segunda versión con diferencias y avisos
+      value:
+        id: 0192e3a0-3333-7000-8000-000000000002
+        number: 2
+        source: url
+        openapi_version: 3.0.3
+        operation_count: 18
+        imported_at: '2026-11-03T10:05:00Z'
+        source_url: https://raw.githubusercontent.com/tienda-ejemplo/api/main/openapi.yaml
+        file_name: null
+        format: yaml
+        api_title: API de pedidos
+        sha256: 9b74c9897bac770ffc029102a200c5de0a1b2c3d4e5f60718293a4b5c6d7e8f9
+        is_current: true
+        warnings:
+          - code: contract.servers_mismatch
+            message: Los servidores del contrato no coinciden con la URL base; se usará la URL base del proyecto.
+            location: /servers/0/url
+          - code: contract.external_reference
+            message: No se siguió una referencia a un archivo externo.
+            location: /paths/~1orders/post/requestBody/content/application~1json/schema/$ref
+        changes:
+          previous_version: 1
+          added:
+            - id: 0192e3a0-5555-7000-8000-000000000010
+              method: DELETE
+              path: /orders/{orderId}
+          modified:
+            - id: 0192e3a0-5555-7000-8000-000000000003
+              method: GET
+              path: /orders/{orderId}
+          removed: []
+    ContractPage:
+      summary: Dos versiones
+      value:
+        items:
+          - id: 0192e3a0-3333-7000-8000-000000000002
+            number: 2
+            source: url
+            openapi_version: 3.0.3
+            operation_count: 18
+            imported_at: '2026-11-03T10:05:00Z'
+          - id: 0192e3a0-3333-7000-8000-000000000001
+            number: 1
+            source: file
+            openapi_version: 3.0.3
+            operation_count: 17
+            imported_at: '2026-11-02T15:10:00Z'
+        total: 2
+        page: 1
+        page_size: 20
+    InvalidContract:
+      summary: Documento con errores
+      value:
+        type: urn:hindama:error:contract.invalid
+        title: El contrato no es un OpenAPI 3 válido
+        status: 422
+        detail: Corrige los errores indicados y vuelve a importarlo.
+        code: contract.invalid
+        request_id: 0192e3a0-9999-7000-8000-000000000004
+        errors:
+          - field: /paths/~1orders/get/responses
+            code: contract.required_field
+            message: La operación no declara respuestas.
+          - field: línea 42
+            code: contract.invalid_yaml
+            message: Sangría inesperada.
+    OperationPage:
+      summary: Dos operaciones
+      value:
+        items:
+          - id: 0192e3a0-5555-7000-8000-000000000001
+            method: GET
+            path: /orders
+            operation_id: listOrders
+            summary: Lista los pedidos del usuario
+            tags: [orders]
+            parameters:
+              - name: page
+                location: query
+                required: false
+                type: integer
+            body: null
+            security:
+              - scheme: bearerAuth
+                type: http_bearer
+            retired_at: null
+            suggested_policy: authenticated
+            policy: authenticated
+            owner_field: null
+            confirmed_at: '2026-11-03T10:20:00Z'
+            modified_at: '2026-11-03T10:20:00Z'
+            resource_parameters: []
+            is_login_candidate: false
+          - id: 0192e3a0-5555-7000-8000-000000000003
+            method: GET
+            path: /orders/{orderId}
+            operation_id: getOrder
+            summary: Obtiene un pedido
+            tags: [orders]
+            parameters:
+              - name: orderId
+                location: path
+                required: true
+                type: string
+            body: null
+            security:
+              - scheme: bearerAuth
+                type: http_bearer
+            retired_at: null
+            suggested_policy: owner_only
+            policy: null
+            owner_field: null
+            confirmed_at: null
+            modified_at: null
+            resource_parameters:
+              - name: orderId
+                resource_type: pedido
+            is_login_candidate: false
+        total: 18
+        page: 1
+        page_size: 100
+
+    OperationUpdate:
+      summary: Solo el propietario, con el parámetro que lo identifica
+      value:
+        policy: owner_only
+        owner_field: userId
+        resource_parameters:
+          - name: orderId
+            resource_type: pedido
+    BearerIdentityCreate:
+      summary: Identidad con token Bearer
+      value:
+        name: Usuario A
+        role: user
+        role_label: cliente
+        auth_type: bearer
+        credential:
+          token: eyJhbGciOiJIUzI1NiJ9.ejemplo.firma-de-prueba-7f3a
+    LoginIdentityCreate:
+      summary: Identidad con login automático
+      value:
+        name: Administrador
+        role: admin
+        role_label: null
+        auth_type: login
+        credential:
+          username: admin@tienda-ejemplo.com
+          password: contraseña-de-prueba
+        login_operation_id: 0192e3a0-5555-7000-8000-000000000020
+    Identity:
+      summary: Identidad Bearer sin recursos
+      value:
+        id: 0192e3a0-6666-7000-8000-000000000002
+        name: Usuario A
+        role: user
+        role_label: cliente
+        auth_type: bearer
+        credential_suffix: 7f3a
+        field_name: null
+        login_operation: null
+        status: active
+        last_tested_at: null
+        last_test_status_code: null
+        resource_count: 0
+        warnings:
+          - code: identity.no_resources
+            message: La identidad no tiene recursos; el módulo de acceso a objetos no podrá probarla.
+            location: null
+        created_at: '2026-11-16T10:00:00Z'
+    IdentityPage:
+      summary: La anónima y una identidad con recursos
+      value:
+        items:
+          - id: 0192e3a0-6666-7000-8000-000000000001
+            name: Anónimo
+            role: other
+            role_label: null
+            auth_type: none
+            credential_suffix: null
+            field_name: null
+            login_operation: null
+            status: active
+            last_tested_at: null
+            last_test_status_code: null
+            resource_count: 0
+            warnings: []
+            created_at: '2026-11-16T09:00:00Z'
+          - id: 0192e3a0-6666-7000-8000-000000000002
+            name: Usuario A
+            role: user
+            role_label: cliente
+            auth_type: bearer
+            credential_suffix: 7f3a
+            field_name: null
+            login_operation: null
+            status: active
+            last_tested_at: '2026-11-16T10:01:00Z'
+            last_test_status_code: 200
+            resource_count: 3
+            warnings: []
+            created_at: '2026-11-16T10:00:00Z'
+        total: 2
+        page: 1
+        page_size: 20
+    RejectedIdentityTest:
+      summary: La API rechazó la credencial
+      value:
+        succeeded: false
+        status_code: 401
+        failure: rejected
+        operation:
+          id: 0192e3a0-5555-7000-8000-000000000001
+          method: GET
+          path: /orders
+        tested_at: '2026-11-16T10:01:00Z'
+    ResourcePage:
+      summary: Recursos de dos identidades
+      value:
+        items:
+          - id: 0192e3a0-7777-7000-8000-000000000001
+            identity_id: 0192e3a0-6666-7000-8000-000000000002
+            resource_type: pedido
+            value: '101'
+            source: manual
+            confirmed: true
+            created_at: '2026-11-16T10:05:00Z'
+          - id: 0192e3a0-7777-7000-8000-000000000002
+            identity_id: 0192e3a0-6666-7000-8000-000000000003
+            resource_type: pedido
+            value: '202'
+            source: manual
+            confirmed: true
+            created_at: '2026-11-16T10:06:00Z'
+        total: 2
+        page: 1
+        page_size: 20
+
+    ResourceDiscovery:
+      summary: Dos identidades, una con la credencial vencida
+      value:
+        created:
+          - id: 0192e3a0-8888-7000-8000-000000000001
+            identity_id: 0192e3a0-6666-7000-8000-000000000002
+            resource_type: orders
+            value: '205'
+            source: discovered
+            confirmed: false
+            created_at: '2026-11-17T09:00:03Z'
+        identities:
+          - identity_id: 0192e3a0-6666-7000-8000-000000000002
+            found: 3
+            created: 1
+            owned_by_other: 0
+            failure: null
+          - identity_id: 0192e3a0-6666-7000-8000-000000000003
+            found: 0
+            created: 0
+            owned_by_other: 0
+            failure: rejected
+        requests_sent: 4
+        truncated: false
+    RunCreate:
+      summary: Tres módulos, uno de riesgo alto
+      value:
+        modules: [object_access, function_access, sql_injection]
+        limits:
+          requests_per_second: 5
+          concurrency: 2
+        confirm_risk: true
+    QueuedRun:
+      summary: Recién creada, en cola
+      value:
+        id: 0192e3a0-7777-7000-8000-000000000003
+        number: 3
+        status: queued
+        end_reason: null
+        modules: [object_access, function_access, sql_injection]
+        limits:
+          requests_per_second: 5
+          concurrency: 2
+          max_requests: 5000
+          max_duration_minutes: 30
+        risk_confirmed: true
+        contract_version:
+          id: 0192e3a0-3333-7000-8000-000000000002
+          number: 2
+          source: url
+          openapi_version: 3.0.3
+          operation_count: 18
+          imported_at: '2026-11-03T10:05:00Z'
+        source_run_id: null
+        progress:
+          status: queued
+          current_module: null
+          requests_sent: 0
+          cells_planned: 0
+          cells_evaluated: 0
+          percent: 0
+          findings_by_severity: {critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0}
+          updated_at: '2026-11-17T09:10:00Z'
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
+        cancel_requested_at: null
+        created_at: '2026-11-17T09:10:00Z'
+        started_at: null
+        finished_at: null
+    QueuedRerun:
+      summary: Vuelve a probar la ejecución 2
+      value:
+        id: 0192e3a0-7777-7000-8000-000000000004
+        number: 4
+        status: queued
+        end_reason: null
+        modules: [authentication, configuration, object_access, function_access]
+        limits:
+          requests_per_second: 5
+          concurrency: 2
+          max_requests: 5000
+          max_duration_minutes: 30
+        risk_confirmed: false
+        contract_version:
+          id: 0192e3a0-3333-7000-8000-000000000002
+          number: 2
+          source: url
+          openapi_version: 3.0.3
+          operation_count: 18
+          imported_at: '2026-11-03T10:05:00Z'
+        source_run_id: 0192e3a0-7777-7000-8000-000000000002
+        progress:
+          status: queued
+          current_module: null
+          requests_sent: 0
+          cells_planned: 0
+          cells_evaluated: 0
+          percent: 0
+          findings_by_severity: {critical: 0, high: 0, medium: 0, low: 0, info: 0, total: 0}
+          updated_at: '2026-11-17T12:00:00Z'
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
+        cancel_requested_at: null
+        created_at: '2026-11-17T12:00:00Z'
+        started_at: null
+        finished_at: null
+    RunningRun:
+      summary: En curso, a la mitad del módulo de acceso a objetos
+      value:
+        id: 0192e3a0-7777-7000-8000-000000000003
+        number: 3
+        status: running
+        end_reason: null
+        modules: [object_access, function_access, sql_injection]
+        limits:
+          requests_per_second: 5
+          concurrency: 2
+          max_requests: 5000
+          max_duration_minutes: 30
+        risk_confirmed: true
+        contract_version:
+          id: 0192e3a0-3333-7000-8000-000000000002
+          number: 2
+          source: url
+          openapi_version: 3.0.3
+          operation_count: 18
+          imported_at: '2026-11-03T10:05:00Z'
+        source_run_id: null
+        progress:
+          status: running
+          current_module: object_access
+          requests_sent: 42
+          cells_planned: 120
+          cells_evaluated: 38
+          percent: 31
+          findings_by_severity: {critical: 0, high: 2, medium: 0, low: 0, info: 0, total: 2}
+          updated_at: '2026-11-17T09:10:41Z'
+        created_resources: {pending: 0, deleted: 0, failed: 0, failed_items: []}
+        cancel_requested_at: null
+        created_at: '2026-11-17T09:10:00Z'
+        started_at: '2026-11-17T09:10:02Z'
+        finished_at: null
+    RunPage:
+      summary: Una ejecución en curso y una completada
+      value:
+        items:
+          - id: 0192e3a0-7777-7000-8000-000000000003
+            number: 3
+            status: running
+            end_reason: null
+            modules: [object_access, function_access, sql_injection]
+            requests_sent: 42
+            findings_by_severity: {critical: 0, high: 2, medium: 0, low: 0, info: 0, total: 2}
+            created_at: '2026-11-17T09:10:00Z'
+            started_at: '2026-11-17T09:10:02Z'
+            finished_at: null
+          - id: 0192e3a0-7777-7000-8000-000000000002
+            number: 2
+            status: completed
+            end_reason: normal
+            modules: [authentication, configuration, object_access, function_access]
+            requests_sent: 318
+            findings_by_severity: {critical: 1, high: 3, medium: 2, low: 1, info: 4, total: 11}
+            created_at: '2026-11-16T18:00:00Z'
+            started_at: '2026-11-16T18:00:01Z'
+            finished_at: '2026-11-16T18:04:37Z'
+        total: 2
+        page: 1
+        page_size: 20
+    ModuleUnavailable:
+      summary: Se pidió el módulo de acceso a objetos sin recursos registrados
+      value:
+        type: urn:hindama:error:run.module_unavailable
+        title: Un módulo no cumple sus requisitos
+        status: 422
+        detail: El módulo de acceso a objetos necesita recursos registrados para al menos dos identidades.
+        code: run.module_unavailable
+        request_id: 0192e3a0-9999-7000-8000-000000000007
+        errors:
+          - field: modules.0
+            code: run.module_unavailable
+            message: Faltan recursos por identidad.
+    ResultPage:
+      summary: Una discrepancia de acceso a objetos
+      value:
+        items:
+          - module: object_access
+            operation:
+              id: 0192e3a0-5555-7000-8000-000000000003
+              method: GET
+              path: /orders/{orderId}
+            identity:
+              id: 0192e3a0-6666-7000-8000-000000000002
+              name: Cliente A
+              deleted: false
+            expected: own_data_only
+            observed: 200 own_data_only
+            verdict: pass
+            evaluated_at: '2026-11-17T09:10:20Z'
+          - module: object_access
+            operation:
+              id: 0192e3a0-5555-7000-8000-000000000003
+              method: GET
+              path: /orders/{orderId}
+            identity:
+              id: 0192e3a0-6666-7000-8000-000000000004
+              name: Cliente B
+              deleted: false
+            expected: denied
+            observed: 200 allowed
+            verdict: fail
+            evaluated_at: '2026-11-17T09:10:21Z'
+        total: 2
+        page: 1
+        page_size: 100
+
+    FindingPage:
+      summary: Un hallazgo abierto de acceso a objetos y uno resuelto de configuración
+      value:
+        items:
+          - id: 0192e3a0-8888-7000-8000-000000000001
+            module: object_access
+            finding_type: object_access.unauthorized_read
+            title: Acceso a un objeto de otra identidad
+            severity: high
+            owasp_category: API1:2023
+            cwe: CWE-639
+            status: persistent
+            operation:
+              id: 0192e3a0-5555-7000-8000-000000000003
+              method: GET
+              path: /orders/{orderId}
+            identity:
+              id: 0192e3a0-6666-7000-8000-000000000004
+              name: Cliente B
+              deleted: false
+            detected_at: '2026-11-16T18:02:11Z'
+            last_detected_at: '2026-11-17T09:10:21Z'
+            resolved_at: null
+            first_run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+            last_run: {id: 0192e3a0-7777-7000-8000-000000000003, number: 3}
+          - id: 0192e3a0-8888-7000-8000-000000000002
+            module: configuration
+            finding_type: configuration.missing_header.hsts
+            title: Falta la cabecera Strict-Transport-Security
+            severity: low
+            owasp_category: API8:2023
+            cwe: CWE-319
+            status: resolved
+            operation: null
+            identity:
+              id: 0192e3a0-6666-7000-8000-000000000001
+              name: Anónimo
+              deleted: false
+            detected_at: '2026-11-16T18:01:40Z'
+            last_detected_at: '2026-11-16T18:01:40Z'
+            resolved_at: '2026-11-17T09:10:05Z'
+            first_run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+            last_run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+        total: 2
+        page: 1
+        page_size: 20
+    Finding:
+      summary: Acceso a objetos, persistente, con su evidencia
+      value:
+        id: 0192e3a0-8888-7000-8000-000000000001
+        module: object_access
+        finding_type: object_access.unauthorized_read
+        title: Acceso a un objeto de otra identidad
+        severity: high
+        owasp_category: API1:2023
+        cwe: CWE-639
+        status: persistent
+        operation:
+          id: 0192e3a0-5555-7000-8000-000000000003
+          method: GET
+          path: /orders/{orderId}
+        identity:
+          id: 0192e3a0-6666-7000-8000-000000000004
+          name: Cliente B
+          deleted: false
+        detected_at: '2026-11-16T18:02:11Z'
+        last_detected_at: '2026-11-17T09:10:21Z'
+        resolved_at: null
+        first_run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+        last_run: {id: 0192e3a0-7777-7000-8000-000000000003, number: 3}
+        recommendation: >-
+          Comprueba en el servidor, en cada petición, que el objeto solicitado pertenece al usuario
+          autenticado antes de devolverlo, y responde 404 si no es suyo. No confíes en que el
+          identificador sea difícil de adivinar.
+        dismissal: null
+        resolution_reason: null
+        last_occurrence:
+          run: {id: 0192e3a0-7777-7000-8000-000000000003, number: 3}
+          severity: high
+          explanation: >-
+            La identidad «Cliente B» obtuvo el recurso «1001» (order) de «Cliente A» con un 200,
+            aunque la política confirmada de la operación permite el acceso solo al propietario.
+          evidence:
+            request:
+              method: GET
+              url: https://api.ejemplo.com/v1/orders/1001
+              headers:
+                accept: application/json
+                authorization: '****x9Qz'
+              body: null
+            response:
+              status_code: 200
+              headers:
+                content-type: application/json
+              body: '{"id": 1001, "owner": "cliente-a", "total": 349.90}'
+              body_truncated: false
+            context:
+              resource: {type: order, value: '1001', owner: Cliente A}
+          detected_at: '2026-11-17T09:10:21Z'
+        history:
+          - from_status: null
+            to_status: new
+            reason: detected
+            run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+            justification: null
+            occurred_at: '2026-11-16T18:02:11Z'
+          - from_status: new
+            to_status: persistent
+            reason: detected
+            run: {id: 0192e3a0-7777-7000-8000-000000000003, number: 3}
+            justification: null
+            occurred_at: '2026-11-17T09:10:21Z'
+    FindingOccurrencePage:
+      summary: Detectado en dos ejecuciones
+      value:
+        items:
+          - run: {id: 0192e3a0-7777-7000-8000-000000000003, number: 3}
+            severity: high
+            explanation: >-
+              La identidad «Cliente B» obtuvo el recurso «1001» (order) de «Cliente A» con un 200,
+              aunque la política confirmada de la operación permite el acceso solo al propietario.
+            evidence:
+              request:
+                method: GET
+                url: https://api.ejemplo.com/v1/orders/1001
+                headers: {authorization: '****x9Qz'}
+                body: null
+              response:
+                status_code: 200
+                headers: {content-type: application/json}
+                body: '{"id": 1001, "owner": "cliente-a", "total": 349.90}'
+                body_truncated: false
+              context:
+                resource: {type: order, value: '1001', owner: Cliente A}
+            detected_at: '2026-11-17T09:10:21Z'
+          - run: {id: 0192e3a0-7777-7000-8000-000000000002, number: 2}
+            severity: high
+            explanation: >-
+              La identidad «Cliente B» obtuvo el recurso «1001» (order) de «Cliente A» con un 200,
+              aunque la política confirmada de la operación permite el acceso solo al propietario.
+            evidence:
+              request:
+                method: GET
+                url: https://api.ejemplo.com/v1/orders/1001
+                headers: {authorization: '****x9Qz'}
+                body: null
+              response:
+                status_code: 200
+                headers: {content-type: application/json}
+                body: '{"id": 1001, "owner": "cliente-a", "total": 349.90}'
+                body_truncated: false
+              context:
+                resource: {type: order, value: '1001', owner: Cliente A}
+            detected_at: '2026-11-16T18:02:11Z'
+        total: 2
+        page: 1
+        page_size: 10
+    DismissalCreate:
+      summary: Falso positivo
+      value:
+        reason: false_positive
+        justification: >-
+          El pedido 1001 es un pedido de demostración público; cualquier cliente puede leerlo por diseño.
+
+    AdminStats:
+      summary: Una semana con actividad y hallazgos
+      value:
+        period: {date_from: '2026-11-16', date_to: '2026-11-22', group: day}
+        users: {total: 18, new: 3, deleted: 0}
+        projects: {created: 4}
+        runs: {started: 12, cancelled: 1, failed: 1}
+        activity:
+          - {start: '2026-11-16', new_users: 1, deleted_accounts: 0, projects_created: 2, runs_started: 3, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-17', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-18', new_users: 2, deleted_accounts: 0, projects_created: 1, runs_started: 4, runs_cancelled: 1, runs_failed: 0}
+          - {start: '2026-11-19', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 2, runs_cancelled: 0, runs_failed: 1}
+          - {start: '2026-11-20', new_users: 0, deleted_accounts: 0, projects_created: 1, runs_started: 3, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-21', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+          - {start: '2026-11-22', new_users: 0, deleted_accounts: 0, projects_created: 0, runs_started: 0, runs_cancelled: 0, runs_failed: 0}
+        findings:
+          detected: 9
+          resolved: 3
+          regressions: 1
+          average_days_to_resolve: 2.67
+          by_severity: {critical: 1, high: 3, medium: 2, low: 2, info: 1, total: 9}
+          by_module:
+            - {module: object_access, detected: 4}
+            - {module: configuration, detected: 3}
+            - {module: authentication, detected: 2}
+          by_owasp_category:
+            - {owasp_category: 'API1:2023', detected: 4}
+            - {owasp_category: 'API8:2023', detected: 3}
+            - {owasp_category: 'API2:2023', detected: 2}
+          weekly:
+            - {week: '2026-11-16', detected: 9}
+    AuditLogPage:
+      summary: Una ejecución lanzada y un bloqueo del motor sobre el mismo host
+      value:
+        items:
+          - id: 1042
+            occurred_at: '2026-11-17T09:12:03Z'
+            action: destination_blocked
+            user_id: 0192e3a0-1111-7000-8000-000000000001
+            project_id: 0192e3a0-2222-7000-8000-000000000001
+            source_ip: null
+            details:
+              stage: run
+              block_reason: address_not_allowed
+              run_id: 0192e3a0-7777-7000-8000-000000000003
+          - id: 1041
+            occurred_at: '2026-11-17T09:10:00Z'
+            action: run_launched
+            user_id: 0192e3a0-1111-7000-8000-000000000001
+            project_id: 0192e3a0-2222-7000-8000-000000000001
+            source_ip: 203.0.113.25
+            details:
+              run_id: 0192e3a0-7777-7000-8000-000000000003
+              modules: [object_access, configuration]
+              limits:
+                requests_per_second: 5
+                concurrency: 2
+                max_requests: 5000
+                max_duration_minutes: 30
+        total: 2
+        page: 1
+        page_size: 20
+
+  schemas:
+    # ---------- Common ----------
+    Problem:
+      type: object
+      additionalProperties: false
+      description: Error en formato Problem Details (RFC 9457) con las extensiones de Hindama. Ver convenciones, sección 8.
+      required: [type, title, status, detail, code, request_id, errors]
+      properties:
+        type:
+          type: string
+          description: '`urn:hindama:error:<code>`.'
+          examples: ['urn:hindama:error:url.destination_not_allowed']
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+          description: Texto en español de respaldo. El frontend debe preferir su propio texto según `code`.
+        code:
+          type: string
+          description: Código estable del error. Es el valor que el cliente debe interpretar.
+          examples: ['url.destination_not_allowed']
+        request_id:
+          type: string
+          description: Mismo valor que la cabecera `X-Request-Id`.
+        errors:
+          type: array
+          description: Errores por campo. Vacío si el error no es de un campo.
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field:
+          type: [string, 'null']
+          description: Ruta del campo con puntos, nombre del parámetro o ubicación en un documento importado.
+        code:
+          type: string
+        message:
+          type: string
+    VerificationProblem:
+      type: object
+      additionalProperties: false
+      description: '`Problem` con el campo `found`.'
+      required: [type, title, status, detail, code, request_id, errors, found]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+          enum:
+            - verification.file_not_found
+            - verification.content_mismatch
+            - verification.txt_missing
+            - verification.connection_error
+            - verification.destination_not_allowed
+        request_id:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+        found:
+          type: [string, 'null']
+          maxLength: 200
+          description: |
+            Resumen de lo obtenido, como texto no confiable: código HTTP, inicio del contenido del
+            archivo o registros TXT encontrados. Mostrar siempre escapado.
+    Warning:
+      type: object
+      additionalProperties: false
+      required: [code, message, location]
+      properties:
+        code:
+          type: string
+          examples: ['url.no_tls']
+        message:
+          type: string
+          description: Texto en español de respaldo.
+        location:
+          type: [string, 'null']
+          description: En avisos del contrato, JSON Pointer dentro del documento; si no, `null`.
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    # ---------- Catalogs ----------
+    Role:
+      type: string
+      enum: [analyst, admin]
+    VerificationStatus:
+      type: string
+      enum: [pending, verified]
+    VerificationMethod:
+      type: string
+      enum: [file, dns]
+    HttpMethod:
+      type: string
+      enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE]
+    Module:
+      type: string
+      description: Los siete módulos de prueba (F-09).
+      enum: [authentication, configuration, object_access, function_access, property_access, resource_consumption, sql_injection]
+    RunStatus:
+      type: string
+      description: '`queued` y `running` son activos; los demás, finales (modelo de datos, sección 4.2).'
+      enum: [queued, running, completed, cancelled, failed]
+    EndReason:
+      type: string
+      description: |
+        Por qué terminó una ejecución. `completed`: `normal` o `limit_reached` (RF-47). `cancelled`:
+        `cancelled_by_user` (RF-52) o `verification_invalid` (RF-20). `failed`: `heartbeat_expired`,
+        `lost_in_queue` (CU-23) o `error`.
+      enum: [normal, limit_reached, cancelled_by_user, verification_invalid, heartbeat_expired, lost_in_queue, error]
+    Verdict:
+      type: string
+      description: |
+        Veredicto de una celda. Solo `pass` y `fail` cuentan como evaluada. `skipped`: credencial vencida
+        (RF-33) o requisito faltante. `error`: no se pudo evaluar (sin respuesta, destino bloqueado).
+      enum: [pass, fail, skipped, error]
+
+    # ---------- Account ----------
+    Me:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, role, mfa_enabled, terms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Nombre registrado en Cognito; no se guarda en la base de datos.
+        email:
+          type: string
+          format: email
+          description: Correo registrado en Cognito; no se guarda en la base de datos.
+        role:
+          $ref: '#/components/schemas/Role'
+        mfa_enabled:
+          type: boolean
+          description: |
+            El usuario tiene activo el TOTP en Cognito (RF-85), así que Cognito lo pide en cada inicio de
+            sesión. Se lee de Cognito en cada petición; no se guarda. Un administrador sin él no entra al
+            panel (RF-86): Next.js lo lleva a activarlo.
+        terms:
+          $ref: '#/components/schemas/TermsStatus'
+    TermsStatus:
+      type: object
+      additionalProperties: false
+      required: [current_version, accepted_version, accepted_at, acceptance_required]
+      properties:
+        current_version:
+          type: string
+          description: Versión de los términos que hay que aceptar. El texto lo publica el frontend.
+          examples: ['2026-10-30']
+        accepted_version:
+          type: [string, 'null']
+        accepted_at:
+          type: [string, 'null']
+          format: date-time
+        acceptance_required:
+          type: boolean
+          description: '`true` si el usuario no ha aceptado la versión vigente; en ese caso no puede crear proyectos.'
+    TermsAcceptance:
+      type: object
+      required: [version]
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+          maxLength: 50
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Debe ser igual a `current_version`.
+
+    # ---------- Projects ----------
+    ProjectCreate:
+      type: object
+      required: [name, base_url]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Se recortan los espacios de los extremos. Sin caracteres de control.
+        description:
+          type: [string, 'null']
+          maxLength: 500
+          pattern: '^[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F]*$'
+          description: Admite tabulador y saltos de línea; ningún otro carácter de control.
+        base_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: |
+            URL base de la API, con esquema `http` o `https`, sin usuario, contraseña ni fragmento. Puede
+            incluir puerto y ruta (`https://api.ejemplo.com/v1`). Se rechaza si el host es, o resuelve a, una
+            dirección privada, de loopback, de enlace local o de metadatos (RF-11).
+          examples: ['https://api.ejemplo.com/v1']
+    ProjectUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        description:
+          type: [string, 'null']
+          maxLength: 500
+          pattern: '^[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F]*$'
+          description: Admite tabulador y saltos de línea; ningún otro carácter de control.
+        base_url:
+          type: string
+          format: uri
+          maxLength: 2048
+    ProjectSummary:
+      type: object
+      additionalProperties: false
+      description: Fila de la lista de proyectos (RF-12).
+      required: [id, name, base_url, verification_status, concluded, last_run_at, open_findings, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        base_url:
+          type: string
+        verification_status:
+          $ref: '#/components/schemas/VerificationStatus'
+        concluded:
+          type: boolean
+          description: Al menos una ejecución completada y ningún hallazgo abierto (RN-10). Es independiente de la verificación.
+        last_run_at:
+          type: [string, 'null']
+          format: date-time
+        open_findings:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+    Project:
+      type: object
+      additionalProperties: false
+      description: Dashboard del proyecto (RF-15).
+      required:
+        - id
+        - name
+        - description
+        - base_url
+        - host
+        - verification_status
+        - verified_at
+        - concluded
+        - current_contract
+        - last_run
+        - open_findings_by_severity
+        - modules
+        - warnings
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: [string, 'null']
+        base_url:
+          type: string
+        host:
+          type: string
+          description: Host exacto que se verifica (sin puerto ni ruta).
+        verification_status:
+          $ref: '#/components/schemas/VerificationStatus'
+        verified_at:
+          type: [string, 'null']
+          format: date-time
+        concluded:
+          type: boolean
+        current_contract:
+          oneOf:
+            - $ref: '#/components/schemas/ContractVersionSummary'
+            - type: 'null'
+        last_run:
+          oneOf:
+            - $ref: '#/components/schemas/RunSummary'
+            - type: 'null'
+        open_findings_by_severity:
+          $ref: '#/components/schemas/SeverityCount'
+          description: Hallazgos abiertos (`new`, `persistent` o `regression`).
+        modules:
+          type: array
+          description: Los siete módulos con su disponibilidad (RF-45). Siempre en el orden del catálogo.
+          items:
+            $ref: '#/components/schemas/ModuleAvailability'
+        warnings:
+          type: array
+          description: |
+            Persistentes: aparecen en toda respuesta mientras la condición siga (`url.no_tls`).
+            Momentáneas: solo en la respuesta de la operación que las causó (`project.verification_lost`
+            en `updateProject`, `url.unresolved` en `createProject` y `updateProject`).
+          items:
+            $ref: '#/components/schemas/Warning'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SeverityCount:
+      type: object
+      additionalProperties: false
+      description: Hallazgos por severidad. Qué hallazgos cuenta lo indica el campo que lo usa.
+      required: [critical, high, medium, low, info, total]
+      properties:
+        critical:
+          type: integer
+          minimum: 0
+        high:
+          type: integer
+          minimum: 0
+        medium:
+          type: integer
+          minimum: 0
+        low:
+          type: integer
+          minimum: 0
+        info:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+    ModuleAvailability:
+      type: object
+      additionalProperties: false
+      required: [module, risk, available, missing]
+      properties:
+        module:
+          $ref: '#/components/schemas/Module'
+        risk:
+          type: string
+          enum: [low, medium, high]
+          description: Los de riesgo medio y alto exigen confirmación en cada ejecución (RN-05).
+        available:
+          type: boolean
+        missing:
+          type: array
+          description: |
+            Requisitos que faltan (RF-45), en este orden; vacío si `available` es `true`.
+            `not_implemented`: el motor todavía no tiene el módulo. Se informa junto con los demás
+            requisitos y lo quita una versión nueva del backend, no el analista. Lanzarlo responde
+            `run.module_unavailable`.
+          items:
+            type: string
+            enum:
+              - project_not_verified
+              - no_contract
+              - insufficient_identities
+              - no_admin_identity
+              - no_resources
+              - policy_unconfirmed
+              - not_implemented
+    RunSummary:
+      type: object
+      additionalProperties: false
+      description: |
+        Resumen de una ejecución (RF-63): elemento de `listRuns` y `last_run` del dashboard. La duración
+        es `finished_at` menos `started_at`.
+      required: [id, number, status, end_reason, modules, requests_sent, findings_by_severity, created_at, started_at, finished_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+          description: Consecutivo por proyecto.
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        end_reason:
+          description: '`null` mientras la ejecución está activa.'
+          oneOf:
+            - $ref: '#/components/schemas/EndReason'
+            - type: 'null'
+        modules:
+          type: array
+          description: Módulos de la ejecución, en el orden del catálogo.
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Module'
+        requests_sent:
+          type: integer
+          minimum: 0
+        findings_by_severity:
+          $ref: '#/components/schemas/SeverityCount'
+          description: Fallas detectadas en esta ejecución.
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: [string, 'null']
+          format: date-time
+          description: Cuando el motor la tomó; `null` en cola.
+        finished_at:
+          type: [string, 'null']
+          format: date-time
+    ProjectPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSummary'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+
+    # ---------- Verification ----------
+    VerificationRequest:
+      type: object
+      required: [method]
+      additionalProperties: false
+      properties:
+        method:
+          $ref: '#/components/schemas/VerificationMethod'
+    Verification:
+      type: object
+      additionalProperties: false
+      required: [status, host, code, method, verified_at, file, dns]
+      properties:
+        status:
+          $ref: '#/components/schemas/VerificationStatus'
+        host:
+          type: string
+        code:
+          type: string
+          description: Código del proyecto que hay que publicar (RF-17).
+        method:
+          description: Método con el que se verificó; `null` si está pendiente.
+          oneOf:
+            - $ref: '#/components/schemas/VerificationMethod'
+            - type: 'null'
+        verified_at:
+          type: [string, 'null']
+          format: date-time
+        file:
+          type: object
+          additionalProperties: false
+          description: Instrucciones del método por archivo.
+          required: [url, content]
+          properties:
+            url:
+              type: string
+              examples: ['https://api.ejemplo.com/.well-known/hindama-verificacion.txt']
+            content:
+              type: string
+              description: Contenido exacto del archivo (el código).
+        dns:
+          type: object
+          additionalProperties: false
+          description: Instrucciones del método por registro TXT.
+          required: [name, type, value]
+          properties:
+            name:
+              type: string
+              examples: ['_hindama-verificacion.api.ejemplo.com']
+            type:
+              type: string
+              enum: [TXT]
+            value:
+              type: string
+
+    # ---------- Contracts ----------
+    ContractImport:
+      type: object
+      additionalProperties: false
+      description: Exactamente uno de `file` o `url`.
+      properties:
+        file:
+          type: string
+          format: binary
+          description: Documento OpenAPI 3.0 o 3.1 en JSON o YAML, hasta 5 MB.
+        url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: URL pública del documento. Puede estar en un host distinto al de la API.
+    ContractVersionSummary:
+      type: object
+      additionalProperties: false
+      required: [id, number, source, openapi_version, operation_count, imported_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        source:
+          type: string
+          enum: [file, url]
+        openapi_version:
+          type: string
+          examples: ['3.1.0']
+        operation_count:
+          type: integer
+          minimum: 0
+        imported_at:
+          type: string
+          format: date-time
+    ContractVersion:
+      type: object
+      additionalProperties: false
+      required: [id, number, source, openapi_version, operation_count, imported_at, source_url, file_name, format, api_title, sha256, is_current, warnings, changes]
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        source:
+          type: string
+          enum: [file, url]
+        openapi_version:
+          type: string
+        operation_count:
+          type: integer
+          minimum: 0
+        imported_at:
+          type: string
+          format: date-time
+        source_url:
+          type: [string, 'null']
+        file_name:
+          type: [string, 'null']
+        format:
+          type: string
+          enum: [json, yaml]
+        api_title:
+          type: [string, 'null']
+          description: '`info.title` del documento. Texto no confiable.'
+        sha256:
+          type: string
+        is_current:
+          type: boolean
+          description: '`true` si es la versión más reciente.'
+        warnings:
+          type: array
+          description: Lo que no se pudo interpretar, referencias externas no seguidas y servidores distintos a la URL base (RF-23, RF-27).
+          items:
+            $ref: '#/components/schemas/Warning'
+        changes:
+          description: Cambios respecto a la versión anterior (RF-26); `null` en la primera versión.
+          oneOf:
+            - $ref: '#/components/schemas/ContractChanges'
+            - type: 'null'
+    ContractChanges:
+      type: object
+      additionalProperties: false
+      required: [previous_version, added, modified, removed]
+      properties:
+        previous_version:
+          type: integer
+          description: '`number` de la versión con la que se compara.'
+        added:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationRef'
+        modified:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationRef'
+        removed:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationRef'
+    OperationRef:
+      type: object
+      additionalProperties: false
+      required: [id, method, path]
+      properties:
+        id:
+          type: string
+          format: uuid
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        path:
+          type: string
+    ContractPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractVersionSummary'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+
+    # ---------- Operations ----------
+    Operation:
+      type: object
+      additionalProperties: false
+      description: Operación del proyecto, estable entre versiones del contrato. Los textos vienen del contrato y no son confiables.
+      required: [id, method, path, operation_id, summary, tags, parameters, body, security, retired_at, suggested_policy, policy, owner_field, confirmed_at, modified_at, resource_parameters, is_login_candidate]
+      properties:
+        id:
+          type: string
+          format: uuid
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        path:
+          type: string
+          description: Ruta tal como aparece en la versión vigente (o en la última que la incluyó, si fue retirada).
+          examples: ['/users/{userId}/orders']
+        operation_id:
+          type: [string, 'null']
+        summary:
+          type: [string, 'null']
+          description: '`summary` de la operación.'
+        tags:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+        body:
+          description: Cuerpo de la petición; `null` si no tiene.
+          oneOf:
+            - $ref: '#/components/schemas/RequestBody'
+            - type: 'null'
+        security:
+          type: array
+          description: Esquemas de seguridad declarados; vacío si la operación es pública según el contrato.
+          items:
+            $ref: '#/components/schemas/DeclaredSecurity'
+        retired_at:
+          type: [string, 'null']
+          format: date-time
+          description: Fecha en que dejó de aparecer en el contrato; `null` si está vigente.
+        suggested_policy:
+          description: Plantilla que propone el sistema a partir de la seguridad declarada y la forma de la ruta (RF-40).
+          oneOf:
+            - $ref: '#/components/schemas/Policy'
+            - type: 'null'
+        policy:
+          description: Plantilla confirmada por el analista; `null` mientras no la confirme (RN-08). Una operación retirada con política es una regla huérfana.
+          oneOf:
+            - $ref: '#/components/schemas/Policy'
+            - type: 'null'
+        owner_field:
+          type: [string, 'null']
+          description: Parámetro o campo que identifica al propietario (RF-41).
+        confirmed_at:
+          type: [string, 'null']
+          format: date-time
+        modified_at:
+          type: [string, 'null']
+          format: date-time
+          description: Última modificación de la política por el analista (RF-43).
+        resource_parameters:
+          type: array
+          description: Parámetros de ruta que identifican recursos, propuestos al importar y corregibles (RF-35).
+          items:
+            $ref: '#/components/schemas/ResourceParameter'
+        is_login_candidate:
+          type: boolean
+          description: El sistema la propone como operación de login para las identidades `login` (RF-30).
+    Parameter:
+      type: object
+      additionalProperties: false
+      required: [name, location, required, type]
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+          enum: [path, query, header, cookie]
+        required:
+          type: boolean
+        type:
+          type: [string, 'null']
+          description: Tipo del esquema (`string`, `integer`…), o `null` si no se declaró.
+    RequestBody:
+      type: object
+      additionalProperties: false
+      required: [required, content_types]
+      properties:
+        required:
+          type: boolean
+        content_types:
+          type: array
+          items:
+            type: string
+          examples: [['application/json']]
+    DeclaredSecurity:
+      type: object
+      additionalProperties: false
+      required: [scheme, type]
+      properties:
+        scheme:
+          type: string
+          description: Nombre del esquema en `components.securitySchemes`.
+        type:
+          type: string
+          enum: [http_bearer, http_basic, api_key, oauth2, openid_connect, other]
+    OperationPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+
+    # ---------- Policy ----------
+    Policy:
+      type: string
+      description: Plantilla de política (RF-39).
+      enum: [public, authenticated, owner_only, owner_or_admin, admin_only]
+    ResourceParameter:
+      type: object
+      additionalProperties: false
+      description: Un parámetro de ruta que identifica un recurso (RF-35).
+      required: [name, resource_type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Nombre del parámetro de ruta, como en `path` (`orderId`).
+        resource_type:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Tipo de recurso, el mismo que usan los recursos registrados (`pedido`).
+    OperationUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        policy:
+          description: Plantilla confirmada; `null` la deja sin confirmar.
+          oneOf:
+            - $ref: '#/components/schemas/Policy'
+            - type: 'null'
+        owner_field:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 200
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: |
+            Parámetro o campo que identifica al propietario (RF-41): un parámetro de ruta (`userId`) o un
+            campo de la respuesta en notación de puntos (`owner.id`). Obligatorio con `owner_only` y
+            `owner_or_admin`.
+        resource_parameters:
+          type: array
+          maxItems: 20
+          description: Reemplaza la selección completa.
+          items:
+            $ref: '#/components/schemas/ResourceParameter'
+    PolicyBulkUpdate:
+      type: object
+      additionalProperties: false
+      required: [operation_ids, policy]
+      properties:
+        operation_ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        policy:
+          $ref: '#/components/schemas/Policy'
+        owner_field:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 200
+          pattern: '^[^\x00-\x1F\x7F]*$'
+    PolicyBulkResult:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+
+    # ---------- Identities ----------
+    IdentityRole:
+      type: string
+      description: Rol en la API del analista (RF-28). Lo usan los módulos de autorización (RF-57).
+      enum: [admin, user, other]
+    AuthType:
+      type: string
+      description: '`none` es solo la identidad anónima (RF-34); no se puede crear.'
+      enum: [none, login, bearer, cookie, header]
+    IdentityStatus:
+      type: string
+      description: '`expired_credential` cuando la credencial venció durante una ejecución (RF-33).'
+      enum: [active, expired_credential]
+    LoginCredential:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        password:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          pattern: '^[^\x00-\x1F\x7F]*$'
+    TokenCredential:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Sin el prefijo `Bearer `.
+    ValueCredential:
+      type: object
+      additionalProperties: false
+      required: [value]
+      properties:
+        value:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Valor de la cookie o de la cabecera.
+    Credential:
+      writeOnly: true
+      description: |
+        Nunca vuelve en una respuesta (RN-11). Su forma depende de `auth_type`: `login` →
+        `LoginCredential`, `bearer` → `TokenCredential`, `cookie` y `header` → `ValueCredential`.
+      oneOf:
+        - $ref: '#/components/schemas/LoginCredential'
+        - $ref: '#/components/schemas/TokenCredential'
+        - $ref: '#/components/schemas/ValueCredential'
+    IdentityCreate:
+      type: object
+      additionalProperties: false
+      required: [name, role, auth_type, credential]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Se recortan los espacios de los extremos. Único entre las identidades del proyecto.
+        role:
+          $ref: '#/components/schemas/IdentityRole'
+        role_label:
+          type: [string, 'null']
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Rol como lo llama la API del analista (`vendedor`), texto libre (RF-28).
+        auth_type:
+          type: string
+          enum: [login, bearer, cookie, header]
+        credential:
+          $ref: '#/components/schemas/Credential'
+        field_name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 100
+          pattern: "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$"
+          description: |
+            Nombre de la cookie o de la cabecera; obligatorio con `cookie` y `header`. No se admiten las
+            cabeceras que controla la plataforma (`Host`, `Content-Length`, `Transfer-Encoding`,
+            `Connection`, `Cookie` con `header`, …).
+        login_operation_id:
+          type: [string, 'null']
+          format: uuid
+          description: Operación de login (RF-30); obligatoria con `login`. Las candidatas traen `is_login_candidate`.
+    IdentityUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        role:
+          $ref: '#/components/schemas/IdentityRole'
+        role_label:
+          type: [string, 'null']
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        auth_type:
+          type: string
+          enum: [login, bearer, cookie, header]
+        credential:
+          $ref: '#/components/schemas/Credential'
+        field_name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 100
+          pattern: "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$"
+        login_operation_id:
+          type: [string, 'null']
+          format: uuid
+    Identity:
+      type: object
+      additionalProperties: false
+      required: [id, name, role, role_label, auth_type, credential_suffix, field_name, login_operation, status, last_tested_at, last_test_status_code, resource_count, warnings, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/IdentityRole'
+        role_label:
+          type: [string, 'null']
+        auth_type:
+          $ref: '#/components/schemas/AuthType'
+        credential_suffix:
+          type: [string, 'null']
+          maxLength: 4
+          description: |
+            Últimos 4 caracteres de la credencial (RF-31): del token, del valor o, en `login`, del
+            usuario (la contraseña no se muestra ni en parte). `null` en la anónima.
+        field_name:
+          type: [string, 'null']
+        login_operation:
+          description: Operación de login; `null` si no es `login`.
+          oneOf:
+            - $ref: '#/components/schemas/OperationRef'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/IdentityStatus'
+        last_tested_at:
+          type: [string, 'null']
+          format: date-time
+        last_test_status_code:
+          type: [integer, 'null']
+          description: Código HTTP de la última prueba; `null` si nunca se probó o no hubo respuesta.
+        resource_count:
+          type: integer
+          minimum: 0
+        warnings:
+          type: array
+          description: '`identity.no_resources` (persistente, RF-38): el módulo de acceso a objetos no podrá probarla.'
+          items:
+            $ref: '#/components/schemas/Warning'
+        created_at:
+          type: string
+          format: date-time
+    IdentityPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identity'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+    IdentityTestRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        operation_id:
+          type: [string, 'null']
+          format: uuid
+          description: Operación GET con la que probar; si falta, la elige el sistema.
+    IdentityTest:
+      type: object
+      additionalProperties: false
+      required: [succeeded, status_code, failure, operation, tested_at]
+      properties:
+        succeeded:
+          type: boolean
+          description: '`true` si la operación respondió 2xx con la credencial.'
+        status_code:
+          type: [integer, 'null']
+          description: Código HTTP recibido (RF-32); `null` si no hubo respuesta.
+        failure:
+          type: [string, 'null']
+          enum: [rejected, login_failed, connection_error, destination_not_allowed, null]
+          description: |
+            Por qué falló; `null` si funcionó. `rejected`: la operación no respondió 2xx.
+            `login_failed`: la operación de login no respondió 2xx o no devolvió un token.
+            `connection_error`: sin respuesta o tiempo agotado. `destination_not_allowed`: la guardia SSRF
+            bloqueó el destino.
+        operation:
+          $ref: '#/components/schemas/OperationRef'
+        tested_at:
+          type: string
+          format: date-time
+
+    # ---------- Resources ----------
+    ResourceCreate:
+      type: object
+      additionalProperties: false
+      required: [identity_id, resource_type, value]
+      properties:
+        identity_id:
+          type: string
+          format: uuid
+        resource_type:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        value:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: '^[^\x00-\x1F\x7F]*$'
+          description: Identificador del objeto en la API del analista (`101`).
+    ResourceUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        identity_id:
+          type: string
+          format: uuid
+        resource_type:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        value:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: '^[^\x00-\x1F\x7F]*$'
+        confirmed:
+          type: boolean
+    Resource:
+      type: object
+      additionalProperties: false
+      required: [id, identity_id, resource_type, value, source, confirmed, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        identity_id:
+          type: string
+          format: uuid
+        resource_type:
+          type: string
+        value:
+          type: string
+        source:
+          type: string
+          enum: [discovered, manual]
+        confirmed:
+          type: boolean
+          description: Los recursos descubiertos llegan sin confirmar; los manuales, confirmados.
+        created_at:
+          type: string
+          format: date-time
+    ResourcePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+    ResourceDiscoveryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        identity_ids:
+          type: array
+          description: Identidades que se usan. Sin el campo, todas las vigentes menos la anónima.
+          minItems: 1
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+    ResourceDiscovery:
+      type: object
+      additionalProperties: false
+      required: [created, identities, requests_sent, truncated]
+      properties:
+        created:
+          type: array
+          description: Recursos nuevos, sin confirmar, ordenados por tipo y luego por identificador.
+          items:
+            $ref: '#/components/schemas/Resource'
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoveryIdentityResult'
+        requests_sent:
+          type: integer
+          minimum: 0
+        truncated:
+          type: boolean
+          description: Se alcanzó el tope de 100 peticiones o de 25 segundos; puede haber más recursos.
+    DiscoveryIdentityResult:
+      type: object
+      additionalProperties: false
+      required: [identity_id, found, created, owned_by_other, failure]
+      properties:
+        identity_id:
+          type: string
+          format: uuid
+        found:
+          type: integer
+          minimum: 0
+          description: Identificadores que devolvieron sus listados.
+        created:
+          type: integer
+          minimum: 0
+          description: Cuántos de ellos eran nuevos y se registraron.
+        owned_by_other:
+          type: integer
+          minimum: 0
+          description: Cuántos se omitieron porque ya pertenecen a otra identidad.
+        failure:
+          type: [string, 'null']
+          enum: [rejected, login_failed, connection_error, destination_not_allowed, not_attempted, null]
+          description: |
+            `null` si sus listados respondieron. Los cuatro primeros significan lo mismo que en
+            `IdentityTest.failure`. `not_attempted`: se alcanzó un tope antes de llegar a esta identidad.
+
+    # ---------- Runs ----------
+    RunLimitsInput:
+      type: object
+      additionalProperties: false
+      description: Límites por ejecución (RF-47). Los que no se envían toman su valor por defecto.
+      properties:
+        requests_per_second:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+        concurrency:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 2
+          description: Peticiones en vuelo a la vez.
+        max_requests:
+          type: integer
+          minimum: 1
+          maximum: 5000
+          default: 5000
+        max_duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 30
+    RunLimits:
+      type: object
+      additionalProperties: false
+      description: Los límites efectivos de la ejecución (RF-47).
+      required: [requests_per_second, concurrency, max_requests, max_duration_minutes]
+      properties:
+        requests_per_second:
+          type: integer
+          minimum: 1
+          maximum: 20
+        concurrency:
+          type: integer
+          minimum: 1
+          maximum: 5
+        max_requests:
+          type: integer
+          minimum: 1
+          maximum: 5000
+        max_duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 30
+    RunCreate:
+      type: object
+      additionalProperties: false
+      required: [modules]
+      properties:
+        modules:
+          type: array
+          description: Uno o varios módulos (RF-44). «Prueba completa» es enviar todos los disponibles.
+          minItems: 1
+          maxItems: 7
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Module'
+        limits:
+          $ref: '#/components/schemas/RunLimitsInput'
+        confirm_risk:
+          type: boolean
+          default: false
+          description: |
+            El analista confirmó la advertencia de los módulos de riesgo medio y alto (RN-05, RF-46).
+            Obligatorio en `true` si `modules` incluye alguno; sin ellos se ignora.
+    RunRerun:
+      type: object
+      additionalProperties: false
+      description: Volver a probar (RF-71). Los módulos y los límites se copian de la ejecución original.
+      properties:
+        confirm_risk:
+          type: boolean
+          default: false
+          description: |
+            Igual que en `RunCreate`: obligatorio en `true` si la ejecución original incluye un módulo
+            de riesgo medio o alto (RN-05, RF-46).
+    Run:
+      type: object
+      additionalProperties: false
+      description: Una ejecución con su configuración, su progreso y su resumen (RF-51, RF-63).
+      required: [id, number, status, end_reason, modules, limits, risk_confirmed, contract_version, source_run_id, progress, created_resources, cancel_requested_at, created_at, started_at, finished_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        end_reason:
+          description: '`null` mientras la ejecución está activa.'
+          oneOf:
+            - $ref: '#/components/schemas/EndReason'
+            - type: 'null'
+        modules:
+          type: array
+          description: En el orden del catálogo.
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Module'
+        limits:
+          $ref: '#/components/schemas/RunLimits'
+        risk_confirmed:
+          type: boolean
+          description: Se confirmó la advertencia de riesgo medio o alto (RN-05).
+        contract_version:
+          description: Versión del contrato con la que se generaron las pruebas (RNF-19).
+          oneOf:
+            - $ref: '#/components/schemas/ContractVersionSummary'
+            - type: 'null'
+        source_run_id:
+          type: [string, 'null']
+          format: uuid
+          description: La ejecución que esta vuelve a probar (`rerunRun`, RF-71); `null` en las demás.
+        progress:
+          $ref: '#/components/schemas/RunProgress'
+        created_resources:
+          $ref: '#/components/schemas/CreatedResourceCount'
+        cancel_requested_at:
+          type: [string, 'null']
+          format: date-time
+          description: Cuando el analista pidió cancelarla; `null` si no lo hizo.
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: [string, 'null']
+          format: date-time
+        finished_at:
+          type: [string, 'null']
+          format: date-time
+    RunProgress:
+      type: object
+      additionalProperties: false
+      description: Foto del progreso (RF-51). Es el `data` del evento `progress`.
+      required: [status, current_module, requests_sent, cells_planned, cells_evaluated, percent, findings_by_severity, updated_at]
+      properties:
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        current_module:
+          description: Módulo en curso; `null` en cola y al terminar.
+          oneOf:
+            - $ref: '#/components/schemas/Module'
+            - type: 'null'
+        requests_sent:
+          type: integer
+          minimum: 0
+        cells_planned:
+          type: integer
+          minimum: 0
+          description: Celdas (módulo, operación, identidad) que la ejecución planea evaluar; 0 en cola.
+        cells_evaluated:
+          type: integer
+          minimum: 0
+          description: Celdas terminadas, con cualquier veredicto.
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: |
+            `cells_evaluated` entre `cells_planned`, redondeado hacia abajo. Llega a 100 solo si terminó
+            con `end_reason: normal`; si se cancela, falla o alcanza un límite, queda donde iba.
+        findings_by_severity:
+          $ref: '#/components/schemas/SeverityCount'
+          description: Fallas detectadas en esta ejecución hasta el momento.
+        updated_at:
+          type: string
+          format: date-time
+    CreatedResourceCount:
+      type: object
+      additionalProperties: false
+      description: |
+        Recursos que la plataforma creó en la API del analista (RN-06); hoy solo los crea el módulo de
+        propiedades (API3). Cada uno se anota antes de crearse y se borra en la misma prueba, también al
+        cancelar. `failed`: no se pudo borrar y el analista debe hacerlo a mano (CU-23 E1); `failed_items`
+        dice dónde.
+      required: [pending, deleted, failed, failed_items]
+      properties:
+        pending:
+          type: integer
+          minimum: 0
+        deleted:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        failed_items:
+          type: array
+          description: Uno por recurso en `failed`, en el orden en que se crearon.
+          items:
+            $ref: '#/components/schemas/CreatedResourceFailure'
+    CreatedResourceFailure:
+      type: object
+      additionalProperties: false
+      required: [operation_id, location, last_error]
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+          description: La operación que lo creó.
+        location:
+          type: string
+          description: |
+            La ruta para borrarlo, relativa a la URL base del proyecto (`/wishlist/wish-7`). Si no se
+            pudo leer su identificador, es la ruta con que se creó (`/wishlist`).
+        last_error:
+          type: [string, 'null']
+          description: |
+            Por qué no se borró: `status_NNN` (código del último intento), `no_answer`, `no_identifier`,
+            `budget_exhausted`, `not_deleted` (la ejecución terminó antes) o `run_interrupted` (el motor
+            se detuvo y la reconciliación la dio por perdida).
+    RunPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunSummary'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+    IdentityRef:
+      type: object
+      additionalProperties: false
+      required: [id, name, deleted]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        deleted:
+          type: boolean
+          description: La identidad se eliminó después de la ejecución; sus celdas se conservan.
+    Result:
+      type: object
+      additionalProperties: false
+      description: Una celda de la matriz identidad × operación (RF-64).
+      required: [module, operation, identity, expected, observed, verdict, evaluated_at]
+      properties:
+        module:
+          $ref: '#/components/schemas/Module'
+        operation:
+          description: '`null` en las comprobaciones de toda la API (por ejemplo, CORS en Configuración).'
+          oneOf:
+            - $ref: '#/components/schemas/OperationRef'
+            - type: 'null'
+        identity:
+          $ref: '#/components/schemas/IdentityRef'
+        expected:
+          type: string
+          maxLength: 200
+          description: |
+            Lo que la política confirmada (o el módulo) espera, en un código corto y estable:
+            `allowed`, `denied`, `own_data_only`, `no_sql_error`… El frontend lo traduce si lo conoce.
+        observed:
+          type: string
+          maxLength: 200
+          description: Lo que respondió la API, con el mismo vocabulario y el código HTTP (`200 allowed`).
+        verdict:
+          $ref: '#/components/schemas/Verdict'
+        evaluated_at:
+          type: string
+          format: date-time
+    ResultPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+
+    # ---------- Findings ----------
+    Severity:
+      type: string
+      description: RF-62. De mayor a menor.
+      enum: [critical, high, medium, low, info]
+    FindingStatus:
+      type: string
+      description: |
+        RF-69 (modelo de datos, sección 4.3). Abiertos: `new`, `persistent` y `regression`. Cerrados:
+        `resolved` y `accepted_risk` (que incluye el falso positivo; el motivo está en `dismissal`).
+      enum: [new, persistent, resolved, regression, accepted_risk]
+    DismissalReason:
+      type: string
+      enum: [accepted_risk, false_positive]
+    ResolutionReason:
+      type: string
+      description: |
+        `not_detected`: una ejecución volvió a evaluar su comprobación y no lo detectó (RF-68).
+        `identity_deleted` y `operation_retired`: se eliminó la identidad o la operación salió del
+        contrato (RF-69).
+      enum: [not_detected, identity_deleted, operation_retired]
+    FindingEventReason:
+      type: string
+      enum: [detected, not_detected, regression, accepted, false_positive, reverted, identity_deleted, operation_retired]
+    RunRef:
+      type: object
+      additionalProperties: false
+      required: [id, number]
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+    FindingSummary:
+      type: object
+      additionalProperties: false
+      description: |
+        Fila de la lista de hallazgos (RF-65). `severity`, `owasp_category`, `cwe` y `title` son los de
+        la ocurrencia más reciente.
+      required: [id, module, finding_type, title, severity, owasp_category, cwe, status, operation, identity, detected_at, last_detected_at, resolved_at, first_run, last_run]
+      properties:
+        id:
+          type: string
+          format: uuid
+        module:
+          $ref: '#/components/schemas/Module'
+        finding_type:
+          type: string
+          maxLength: 200
+          description: |
+            Código estable del tipo de falla en el catálogo del módulo, con su calificador cuando hace
+            falta (`object_access.unauthorized_read`, `configuration.missing_header.hsts`). Forma parte de la
+            huella (RF-68). Todos los hallazgos con el mismo `finding_type` tienen el mismo `title`: es la
+            llave para agruparlos («N operaciones afectadas»), porque el título no incluye la operación ni la
+            identidad (B21).
+        title:
+          type: string
+          description: Título en español, escrito por la plataforma. Depende solo de `finding_type`.
+        severity:
+          $ref: '#/components/schemas/Severity'
+        owasp_category:
+          type: string
+          description: Categoría del OWASP API Security Top 10 2023 (`API1:2023`).
+          examples: ['API1:2023']
+        cwe:
+          type: [string, 'null']
+          examples: ['CWE-639']
+        status:
+          $ref: '#/components/schemas/FindingStatus'
+        operation:
+          description: '`null` en los hallazgos de toda la API (por ejemplo, CORS en Configuración).'
+          oneOf:
+            - $ref: '#/components/schemas/OperationRef'
+            - type: 'null'
+        identity:
+          $ref: '#/components/schemas/IdentityRef'
+        detected_at:
+          type: string
+          format: date-time
+          description: Primera detección.
+        last_detected_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: [string, 'null']
+          format: date-time
+          description: Solo en `resolved`.
+        first_run:
+          $ref: '#/components/schemas/RunRef'
+        last_run:
+          $ref: '#/components/schemas/RunRef'
+          description: La última ejecución que lo detectó.
+    Finding:
+      type: object
+      additionalProperties: false
+      description: |
+        Un hallazgo con su clasificación, recomendación, evidencia e historial (RF-62, RF-66, RF-72). Tiene
+        los campos de `FindingSummary` y además `recommendation`, `dismissal`, `resolution_reason`,
+        `last_occurrence` y `history`.
+      required: [id, module, finding_type, title, severity, owasp_category, cwe, status, operation, identity, detected_at, last_detected_at, resolved_at, first_run, last_run, recommendation, dismissal, resolution_reason, last_occurrence, history]
+      properties:
+        id:
+          type: string
+          format: uuid
+        module:
+          $ref: '#/components/schemas/Module'
+        finding_type:
+          type: string
+          maxLength: 200
+        title:
+          type: string
+        severity:
+          $ref: '#/components/schemas/Severity'
+        owasp_category:
+          type: string
+        cwe:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/FindingStatus'
+        operation:
+          oneOf:
+            - $ref: '#/components/schemas/OperationRef'
+            - type: 'null'
+        identity:
+          $ref: '#/components/schemas/IdentityRef'
+        detected_at:
+          type: string
+          format: date-time
+        last_detected_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: [string, 'null']
+          format: date-time
+        first_run:
+          $ref: '#/components/schemas/RunRef'
+        last_run:
+          $ref: '#/components/schemas/RunRef'
+        recommendation:
+          type: string
+          description: Recomendación de corrección en español (RF-62), escrita por la plataforma.
+        dismissal:
+          description: Solo en `accepted_risk`.
+          oneOf:
+            - $ref: '#/components/schemas/Dismissal'
+            - type: 'null'
+        resolution_reason:
+          description: Solo en `resolved`.
+          oneOf:
+            - $ref: '#/components/schemas/ResolutionReason'
+            - type: 'null'
+        last_occurrence:
+          $ref: '#/components/schemas/FindingOccurrence'
+        history:
+          type: array
+          description: |
+            Cambios de estado, del más antiguo al más reciente (RF-72). El primero es siempre `detected`.
+            Una ejecución que lo vuelve a detectar sin cambiarle el estado no agrega un evento: eso está
+            en sus ocurrencias.
+          items:
+            $ref: '#/components/schemas/FindingEvent'
+    Dismissal:
+      type: object
+      additionalProperties: false
+      required: [reason, justification, dismissed_at]
+      properties:
+        reason:
+          $ref: '#/components/schemas/DismissalReason'
+        justification:
+          type: string
+        dismissed_at:
+          type: string
+          format: date-time
+    DismissalCreate:
+      type: object
+      additionalProperties: false
+      required: [reason, justification]
+      properties:
+        reason:
+          $ref: '#/components/schemas/DismissalReason'
+        justification:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: '^[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F]*$'
+          description: |
+            Obligatoria (RN-09). Se recortan los espacios de los extremos; si no queda texto, es
+            `validation.required`. Admite tabulador y saltos de línea; ningún otro carácter de control.
+    FindingOccurrence:
+      type: object
+      additionalProperties: false
+      description: Una detección del hallazgo en una ejecución, con su evidencia (RF-66).
+      required: [run, severity, explanation, evidence, detected_at]
+      properties:
+        run:
+          $ref: '#/components/schemas/RunRef'
+        severity:
+          $ref: '#/components/schemas/Severity'
+        explanation:
+          type: string
+          description: |
+            Por qué es una falla, en español, escrita por la plataforma. Puede citar nombres de
+            identidades y valores de recursos del analista.
+        evidence:
+          $ref: '#/components/schemas/Evidence'
+        detected_at:
+          type: string
+          format: date-time
+    Evidence:
+      type: object
+      additionalProperties: false
+      description: |
+        La petición y la respuesta que reproducen la falla (RF-66). Las credenciales y los tokens ya
+        vienen enmascarados, con solo sus últimos 4 caracteres (`****abcd`, RN-11, RF-31), también si la
+        API los repitió en la respuesta. Las cabeceras y el cuerpo de la respuesta vienen de la API del
+        analista y **no son confiables**: se muestran siempre como texto.
+      required: [request, response, context]
+      properties:
+        request:
+          type: object
+          additionalProperties: false
+          required: [method, url, headers, body]
+          properties:
+            method:
+              $ref: '#/components/schemas/HttpMethod'
+            url:
+              type: string
+            headers:
+              type: object
+              description: Nombres en minúsculas. Hasta 50 cabeceras de hasta 500 caracteres.
+              additionalProperties:
+                type: string
+            body:
+              type: [string, 'null']
+              description: |
+                El cuerpo enviado, hasta 1 KB y con las credenciales enmascaradas; `null` si la petición no llevó.
+                Solo lo llevan propiedades (asignación masiva) y consumo de recursos (límite de cuerpo).
+        response:
+          type: object
+          additionalProperties: false
+          required: [status_code, headers, body, body_truncated]
+          properties:
+            status_code:
+              type: integer
+              minimum: 100
+              maximum: 599
+            headers:
+              type: object
+              description: Nombres en minúsculas. Hasta 50 cabeceras de hasta 500 caracteres.
+              additionalProperties:
+                type: string
+            body:
+              type: string
+              description: Hasta 10 KB (RF-67), decodificado como UTF-8.
+            body_truncated:
+              type: boolean
+              description: El cuerpo original era más largo y se truncó (RF-67).
+        context:
+          type: object
+          description: |
+            Datos del módulo que ayudan a leer la evidencia. Sus claves dependen del módulo; el frontend
+            muestra las que conoce y puede ignorar las demás. Vacío si el módulo no agrega nada. Hoy:
+            - acceso a objetos: `resource` (`type`, `value`, `owner`);
+            - acceso a funciones: `control_identity`;
+            - propiedades: `undeclared` (campos sobrantes) o `accepted_fields` y `created_resource`
+              (`deleted` o `failed`);
+            - consumo de recursos: `operation` y `requests` (ráfaga) o `request_body_bytes` (cuerpo);
+            - inyección SQL: `parameter` y `payload`.
+          additionalProperties: true
+    FindingEvent:
+      type: object
+      additionalProperties: false
+      description: |
+        Un cambio de estado (RF-72). Lo causa una ejecución (`run`) o el analista (`run: null`): aceptar,
+        revertir o eliminar una identidad.
+      required: [from_status, to_status, reason, run, justification, occurred_at]
+      properties:
+        from_status:
+          description: '`null` en la primera detección.'
+          oneOf:
+            - $ref: '#/components/schemas/FindingStatus'
+            - type: 'null'
+        to_status:
+          $ref: '#/components/schemas/FindingStatus'
+        reason:
+          $ref: '#/components/schemas/FindingEventReason'
+        run:
+          oneOf:
+            - $ref: '#/components/schemas/RunRef'
+            - type: 'null'
+        justification:
+          type: [string, 'null']
+          description: Solo en `accepted` y `false_positive`.
+        occurred_at:
+          type: string
+          format: date-time
+    FindingPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FindingSummary'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+    FindingOccurrencePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FindingOccurrence'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+
+    # ---------- Admin ----------
+    AdminStats:
+      type: object
+      additionalProperties: false
+      description: Estadísticas agregadas y anónimas del periodo (CU-20, RF-78, RF-79, RF-89).
+      required: [period, users, projects, runs, activity, findings]
+      properties:
+        period:
+          type: object
+          additionalProperties: false
+          description: El periodo aplicado, con los valores por omisión ya resueltos.
+          required: [date_from, date_to, group]
+          properties:
+            date_from:
+              type: string
+              format: date
+            date_to:
+              type: string
+              format: date
+            group:
+              type: string
+              enum: [day, week]
+        users:
+          type: object
+          additionalProperties: false
+          required: [total, new, deleted]
+          properties:
+            total:
+              type: integer
+              minimum: 0
+              description: Cuentas al terminar el periodo.
+            new:
+              type: integer
+              minimum: 0
+            deleted:
+              type: integer
+              minimum: 0
+        projects:
+          type: object
+          additionalProperties: false
+          required: [created]
+          properties:
+            created:
+              type: integer
+              minimum: 0
+        runs:
+          type: object
+          additionalProperties: false
+          description: |
+            Lanzadas (incluye las repetidas) y, de todas las que terminaron en el periodo, cuántas se
+            cancelaron o fallaron. Una ejecución lanzada el último día puede terminar en el siguiente.
+          required: [started, cancelled, failed]
+          properties:
+            started:
+              type: integer
+              minimum: 0
+            cancelled:
+              type: integer
+              minimum: 0
+            failed:
+              type: integer
+              minimum: 0
+        activity:
+          type: array
+          description: Un elemento por día o por semana (`group`), en orden, sin huecos.
+          items:
+            $ref: '#/components/schemas/AdminStatsActivity'
+        findings:
+          $ref: '#/components/schemas/AdminStatsFindings'
+    AdminStatsActivity:
+      type: object
+      additionalProperties: false
+      required: [start, new_users, deleted_accounts, projects_created, runs_started, runs_cancelled, runs_failed]
+      properties:
+        start:
+          type: string
+          format: date
+          description: El día, o el lunes de la semana.
+        new_users:
+          type: integer
+          minimum: 0
+        deleted_accounts:
+          type: integer
+          minimum: 0
+        projects_created:
+          type: integer
+          minimum: 0
+        runs_started:
+          type: integer
+          minimum: 0
+        runs_cancelled:
+          type: integer
+          minimum: 0
+        runs_failed:
+          type: integer
+          minimum: 0
+    AdminStatsFindings:
+      type: object
+      additionalProperties: false
+      description: |
+        Hallazgos detectados por primera vez en las semanas del periodo. `by_module` y
+        `by_owasp_category` van de más a menos frecuente (el nombre desempata) y solo traen los que
+        tienen alguno.
+      required: [detected, resolved, regressions, average_days_to_resolve, by_severity, by_module, by_owasp_category, weekly]
+      properties:
+        detected:
+          type: integer
+          minimum: 0
+        resolved:
+          type: integer
+          minimum: 0
+          description: Cuántos de ellos una ejecución confirmó corregidos (`not_detected`).
+        regressions:
+          type: integer
+          minimum: 0
+          description: Veces que alguno de ellos volvió a aparecer después de resuelto.
+        average_days_to_resolve:
+          type: [number, 'null']
+          minimum: 0
+          description: Días promedio entre la primera detección y la corrección confirmada, con dos decimales.
+        by_severity:
+          $ref: '#/components/schemas/SeverityCount'
+        by_module:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [module, detected]
+            properties:
+              module:
+                $ref: '#/components/schemas/Module'
+              detected:
+                type: integer
+                minimum: 1
+        by_owasp_category:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [owasp_category, detected]
+            properties:
+              owasp_category:
+                type: string
+                description: Categoría del OWASP API Security Top 10 2023 (`API1:2023`).
+              detected:
+                type: integer
+                minimum: 1
+        weekly:
+          type: array
+          description: Detectados por semana, del lunes de `date_from` al de `date_to`, sin huecos.
+          items:
+            type: object
+            additionalProperties: false
+            required: [week, detected]
+            properties:
+              week:
+                type: string
+                format: date
+              detected:
+                type: integer
+                minimum: 0
+    AuditLogPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEntry'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+    AuditLogEntry:
+      type: object
+      additionalProperties: false
+      description: |
+        Una acción sensible (RF-82). Sin credenciales, justificaciones, texto libre ni hosts en claro
+        (RF-83). `user_id` y `project_id` son identificadores opacos: siguen ahí aunque la cuenta o el
+        proyecto ya no existan.
+      required: [id, occurred_at, action, user_id, project_id, source_ip, details]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          description: Secuencial. Sirve para citar un registro y desempatar el orden.
+        occurred_at:
+          type: string
+          format: date-time
+        action:
+          $ref: '#/components/schemas/AuditAction'
+        user_id:
+          type: [string, 'null']
+          format: uuid
+          description: Quien actuó, o el dueño del proyecto en las acciones del motor. `null` solo si no se conoce.
+        project_id:
+          type: [string, 'null']
+          format: uuid
+          description: '`null` en las acciones de cuenta y en un bloqueo al crear un proyecto.'
+        source_ip:
+          type: [string, 'null']
+          description: |
+            IP del navegador que informó el servidor de Next.js (`X-Hindama-Client-IP`). `null` en las
+            acciones del motor de pruebas o si no llegó una IP válida.
+          examples: ['203.0.113.25', '2001:db8::1']
+        details:
+          $ref: '#/components/schemas/AuditDetails'
+    AuditAction:
+      type: string
+      description: |
+        Catálogo de RF-81, más RN-09 y la pérdida de verificación.
+        - `account_created`: primer acceso de una cuenta a la API.
+        - `account_deleted`: el analista eliminó su cuenta (CU-25, RF-88). `user_id` queda como UUID opaco.
+        - `project_created`, `project_deleted`.
+        - `project_verified`: verificación de propiedad exitosa. `project_verification_lost`: la
+          reverificación al iniciar una ejecución falló (RF-20).
+        - `identity_created`, `identity_deleted`.
+        - `run_launched` (también al volver a probar) y `run_cancelled` (cancelada por el analista).
+        - `finding_dismissed`: aceptar el riesgo o marcar un falso positivo (RN-09);
+          `finding_dismissal_reverted`: revertirlo.
+        - `destination_blocked`: la guardia SSRF impidió una petición o rechazó la URL de un proyecto (RF-11, RF-50).
+      enum:
+        - account_created
+        - account_deleted
+        - project_created
+        - project_deleted
+        - project_verified
+        - project_verification_lost
+        - identity_created
+        - identity_deleted
+        - run_launched
+        - run_cancelled
+        - finding_dismissed
+        - finding_dismissal_reverted
+        - destination_blocked
+    AuditDetails:
+      type: object
+      additionalProperties: false
+      description: |
+        Datos propios de cada acción; los que no aplican no aparecen. Nunca credenciales,
+        justificaciones ni texto libre del analista (RF-83).
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          description: '`run_launched`, `run_cancelled`, `project_verification_lost` y un `destination_blocked` del motor.'
+        source_run_id:
+          type: string
+          format: uuid
+          description: '`run_launched` al volver a probar (RF-71).'
+        modules:
+          type: array
+          description: '`run_launched`.'
+          items:
+            $ref: '#/components/schemas/Module'
+        limits:
+          $ref: '#/components/schemas/RunLimits'
+        verification_method:
+          $ref: '#/components/schemas/VerificationMethod'
+        identity_id:
+          type: string
+          format: uuid
+          description: '`identity_created` e `identity_deleted`.'
+        finding_id:
+          type: string
+          format: uuid
+          description: '`finding_dismissed` y `finding_dismissal_reverted`.'
+        dismissal_reason:
+          $ref: '#/components/schemas/DismissalReason'
+        stage:
+          $ref: '#/components/schemas/BlockStage'
+        block_reason:
+          $ref: '#/components/schemas/BlockReason'
+    BlockStage:
+      type: string
+      description: |
+        Dónde se bloqueó el destino (`destination_blocked`): al crear o editar el proyecto, al
+        verificarlo, al importar el contrato por URL, al probar una identidad, al descubrir recursos o
+        durante una ejecución.
+      enum: [project_url, verification, contract_import, identity_test, resource_discovery, run]
+    BlockReason:
+      type: string
+      description: |
+        Motivo del bloqueo (RF-11, RF-50): `address_not_allowed` (IP privada, loopback, enlace local,
+        metadatos de nube o propia de Hindama), `host_mismatch` (redirección fuera del host del
+        proyecto), `unresolved`, `invalid_url`, `scheme_not_allowed` o `too_many_redirects`.
+      enum: [address_not_allowed, host_mismatch, unresolved, invalid_url, scheme_not_allowed, too_many_redirects]

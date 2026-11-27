@@ -1,0 +1,9 @@
+# Caddy obtiene y renueva el certificado del dominio solo (Let's Encrypt). Agrega la IP del cliente
+# al final de X-Forwarded-For, que el BFF lee para X-Hindama-Client-IP (RF-82).
+{$HINDAMA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:3000 {
+		# El progreso de una ejecución viaja por SSE: sin búfer, para que llegue en vivo.
+		flush_interval -1
+	}
+}

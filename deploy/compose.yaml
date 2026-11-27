@@ -1,0 +1,54 @@
+# Frontend de Hindama en su EC2: Caddy (TLS público) -> Next.js (BFF) -> API privada del backend.
+# Se arranca con deploy/start.sh, que escribe /run/hindama/frontend.env con los secretos de SSM.
+name: hindama-frontend
+
+services:
+  frontend:
+    image: hindama-frontend:${HINDAMA_FRONTEND_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: /run/hindama/frontend.env
+    environment:
+      # Raíz de la CA interna de Caddy del backend (HTTPS privado, puerto 8443).
+      NODE_EXTRA_CA_CERTS: /etc/hindama/caddy-root.crt
+    extra_hosts:
+      - "backend.internal:${HINDAMA_BACKEND_IP:?IP privada de la EC2 del backend}"
+    volumes:
+      - /etc/hindama/caddy-root.crt:/etc/hindama/caddy-root.crt:ro
+      - next-cache:/app/.next/cache
+      - next-route-cache:/app/.next/server/route-cache
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    environment:
+      HINDAMA_DOMAIN: ${HINDAMA_DOMAIN:?Dominio público del frontend}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  next-cache:
+  next-route-cache:
+  caddy-data:
+  caddy-config:
