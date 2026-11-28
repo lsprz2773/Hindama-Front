@@ -13,7 +13,7 @@ La documentación del proyecto (requerimientos, arquitectura, contrato de la API
 ## Requisitos
 
 - Node.js 22 (el mismo de la imagen de Docker) y npm.
-- Para trabajar con datos reales: el backend en local (ver [entorno local y conexiones](https://github.com/The-Tito/hindama-docs/blob/main/03-api/entorno-local.md)) y un User Pool de Cognito. Sin backend se puede usar el simulador del contrato (`npm run mock:api`).
+- Para trabajar con datos reales: el backend en local (con HTTPS en Windows: ver [entorno local y conexiones](https://github.com/The-Tito/hindama-docs/blob/main/03-api/entorno-local.md)) y un User Pool de Cognito. Sin backend se puede usar el simulador del contrato (`npm run mock:api`).
 
 ## Estructura
 
@@ -38,11 +38,11 @@ docs/               Notas del frontend (errores, animaciones, logo, inventario d
 ```bash
 cp .env.example .env.local   # y completa las variables (ver el archivo)
 npm install
-npm run dev                  # https://localhost:3000
+npx next dev -H localhost -p 3000 --experimental-https   # https://localhost:3000 (la cookie __Host- exige HTTPS)
 npm run lint                 # ESLint
 npm run typecheck            # tsc --noEmit
 npm run format:check         # Prettier
-npm test                     # Vitest (antes verifica que la copia del contrato esté al día)
+npm test                     # Vitest (antes verifica que los tipos estén al día con el contrato)
 npm run e2e                  # Playwright
 npm run build                # compilación de producción (salida standalone)
 ```
@@ -50,7 +50,7 @@ npm run build                # compilación de producción (salida standalone)
 ### Contrato de la API
 
 - `npm run contract:types` regenera los tipos de `src/lib/api/schema.d.ts` desde `contract/openapi.yaml`.
-- `npm run contract:check` compara la copia local con la de `hindama-docs`; corre solo antes de `npm test`.
+- `npm run contract:check` verifica que los tipos generados correspondan a la versión del contrato; corre solo antes de `npm test`.
 - `npm run mock:api` levanta un simulador del contrato con Prism en `127.0.0.1:4010`.
 
 ### Seguridad del BFF
